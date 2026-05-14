@@ -332,7 +332,12 @@ window.onload = function() {
       scope: SCOPES,
       callback: (tokenResponse) => {
         if (tokenResponse && tokenResponse.access_token) {
-          // Cache the token to survive page refreshes (expires in 1 hour)
+          // Verify the user actually granted the Drive scope and didn't just click "Continue"
+          if (!google.accounts.oauth2.hasGrantedAllScopes(tokenResponse, SCOPES)) {
+            alert("Warning: You did not grant Google Drive permissions. The app cannot save or load files until you check the permission box on the Google login screen.");
+            return;
+          }
+          
           const tokenData = { token: tokenResponse.access_token, expiresAt: Date.now() + (tokenResponse.expires_in * 1000) };
           sessionStorage.setItem('newslab_drive_token', JSON.stringify(tokenData));
           
@@ -352,7 +357,6 @@ async function initializeGapiClient() {
   const savedFolder = localStorage.getItem('newslab-drive-folder');
   document.getElementById('driveFolderId').value = savedFolder || '1c4WDZlXaWREt_luuf7cy03n6Iu0He97M';
   
-  // Try to restore session silently
   const savedToken = sessionStorage.getItem('newslab_drive_token');
   if (savedToken) {
     try {
@@ -383,9 +387,18 @@ async function fetchDriveFiles() {
   if (!folderId) return;
   try {
     updateCloudStatus('Syncing...');
-    // IMPORTANT: "name contains '.json'" fixes the issue where manually uploaded files have the wrong mimeType
-    const response = await gapi.client.drive.files.list({ q: `'${folderId}' in parents and trashed=false and name contains '.json'`, fields: 'files(id, name)', spaces: 'drive' });
-    const files = response.result.files; const select = document.getElementById('driveFileSelect');
+    // We now just ask for ALL files in the folder and filter them locally.
+    // This bypasses the Google Drive bug where manually uploaded .json files hide themselves.
+    const response = await gapi.client.drive.files.list({ 
+      q: `'${folderId}' in parents and trashed=false`, 
+      fields: 'files(id, name, mimeType)', 
+      spaces: 'drive' 
+    });
+    
+    // Locally filter out anything that clearly isn't our JSON data
+    const files = response.result.files.filter(f => f.name.endsWith('.json') || f.mimeType === 'application/json');
+    
+    const select = document.getElementById('driveFileSelect');
     select.innerHTML = '<option value="">Select a file...</option>';
     if (files && files.length > 0) {
       files.forEach(file => {
@@ -417,12 +430,40 @@ document.getElementById('btnNewDriveFile').addEventListener('click', async () =>
   if (!folderId) return alert('Please enter a Folder ID');
   const safeTitle = (state.title || 'Untitled Project').replace(/[^a-z0-9 _-]/gi, '').trim();
   const fileName = prompt("Enter a name for the new file:", safeTitle); if (!fileName) return;
+  
   try {
     updateCloudStatus('Creating...');
-    const metadata = { name: fileName + '.json', mimeType: 'application/json', parents: [folderId] }; state.lang = currentLang; const fileContent = JSON.stringify(state);
-    const form = new FormData(); form.append('metadata', new Blob([JSON.stringify(metadata)], { type: 'application/json' })); form.append('file', new Blob([fileContent], { type: 'application/json' }));
-    const res = await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart', { method: 'POST', headers: new Headers({ 'Authorization': 'Bearer ' + gapi.client.getToken().access_token }), body: form });
-    const data = await res.json(); currentDriveFileId = data.id; localStorage.setItem('newslab-current-drive-file', currentDriveFileId); await fetchDriveFiles(); updateCloudStatus('Saved');
+    
+    // Step 1: Create an empty file with the correct metadata in the specific folder
+    const metadata = { 
+      name: fileName + (fileName.endsWith('.json') ? '' : '.json'), 
+      mimeType: 'application/json', 
+      parents: [folderId] 
+    };
+    
+    const createRes = await gapi.client.drive.files.create({
+        resource: metadata,
+        fields: 'id'
+    });
+    
+    currentDriveFileId = createRes.result.id;
+    localStorage.setItem('newslab-current-drive-file', currentDriveFileId);
+    
+    // Step 2: Upload the actual project data into that newly created file
+    state.lang = currentLang;
+    const fileContent = JSON.stringify(state);
+    
+    await fetch(`https://www.googleapis.com/upload/drive/v3/files/${currentDriveFileId}?uploadType=media`, {
+      method: 'PATCH',
+      headers: new Headers({
+        'Authorization': 'Bearer ' + gapi.client.getToken().access_token,
+        'Content-Type': 'application/json'
+      }),
+      body: fileContent
+    });
+
+    await fetchDriveFiles();
+    updateCloudStatus('Saved');
   } catch(err) { updateCloudStatus('Error'); alert("Failed to create file in Drive."); }
 });
 
@@ -619,7 +660,10 @@ function layoutEventBars() {
       
       const startCol = Math.floor((segStart - weekStart) / 86400000); const endCol = Math.floor((segEnd - weekStart) / 86400000); const span = endCol - startCol + 1;
       const bar = document.createElement('div'); bar.className = 'event-bar';
-      bar.draggable = !window.__isReadOnly && !(window.__resizeData && window.__resizeData.id === ev.id); bar.dataset.id = ev.id; bar.dataset.color = ev.color;
+      
+      bar.draggable = !window.__isReadOnly && !(window.__resizeData && window.__resizeData.id === ev.id);
+      bar.dataset.id = ev.id; bar.dataset.color = ev.color;
+      
       if (window.__resizeData && window.__resizeData.id === ev.id) bar.classList.add('is-preview');
       bar.style.top = `${28 + ev._track * 28}px`; const colors = resolveColor(ev.color); bar.style.background = colors.bg; bar.style.borderColor = colors.edge;
       bar.style.left = `calc(${startCol * 100 / daysToShow}% + 4px)`; bar.style.width = `calc(${span * 100 / daysToShow}% - 8px)`;
@@ -859,7 +903,7 @@ document.getElementById('importJsonInput').addEventListener('change', (event) =>
   document.getElementById('settingsMenu').classList.remove('open'); const file = event.target.files[0]; if (!file) return;
   const reader = new FileReader();
   reader.onload = (e) => {
-    try { const importedState = JSON.parse(e.target.result); if (importedState && importedState.events) { state = migrateData(importedState); if (state.lang) setLanguage(state.lang); saveState(); render(); alert('Plan loaded successfully!'); } else { alert('Invalid file format.'); } } catch (err) { alert('Error parsing the file.'); }
+    try { const importedState = JSON.parse(e.target.result); if (importedState && importedState.events) { state = migrateData(importedState); if (state.lang) setLanguage(state.lang); saveState(); render(); alert('Plan loaded successfully!'); } else { alert('Invalid file format. Ensure it is a valid plan file.'); } } catch (err) { alert('Error parsing the file.'); }
     event.target.value = '';
   };
   reader.readAsText(file);
