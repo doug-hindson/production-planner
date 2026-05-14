@@ -332,6 +332,10 @@ window.onload = function() {
       scope: SCOPES,
       callback: (tokenResponse) => {
         if (tokenResponse && tokenResponse.access_token) {
+          // Cache the token to survive page refreshes (expires in 1 hour)
+          const tokenData = { token: tokenResponse.access_token, expiresAt: Date.now() + (tokenResponse.expires_in * 1000) };
+          sessionStorage.setItem('newslab_drive_token', JSON.stringify(tokenData));
+          
           document.getElementById('driveLoginSection').style.display = 'none';
           document.getElementById('driveWorkspaceSection').style.display = 'flex';
           updateCloudStatus('Connected'); fetchDriveFiles();
@@ -347,6 +351,20 @@ async function initializeGapiClient() {
   gapiInited = true;
   const savedFolder = localStorage.getItem('newslab-drive-folder');
   document.getElementById('driveFolderId').value = savedFolder || '1c4WDZlXaWREt_luuf7cy03n6Iu0He97M';
+  
+  // Try to restore session silently
+  const savedToken = sessionStorage.getItem('newslab_drive_token');
+  if (savedToken) {
+    try {
+      const parsed = JSON.parse(savedToken);
+      if (Date.now() < parsed.expiresAt - 60000) { 
+        gapi.client.setToken({ access_token: parsed.token });
+        document.getElementById('driveLoginSection').style.display = 'none';
+        document.getElementById('driveWorkspaceSection').style.display = 'flex';
+        updateCloudStatus('Connected'); fetchDriveFiles();
+      }
+    } catch(e) {}
+  }
 }
 
 document.getElementById('btnDriveLogin').addEventListener('click', () => {
@@ -365,7 +383,8 @@ async function fetchDriveFiles() {
   if (!folderId) return;
   try {
     updateCloudStatus('Syncing...');
-    const response = await gapi.client.drive.files.list({ q: `'${folderId}' in parents and trashed=false and mimeType='application/json'`, fields: 'files(id, name)', spaces: 'drive' });
+    // IMPORTANT: "name contains '.json'" fixes the issue where manually uploaded files have the wrong mimeType
+    const response = await gapi.client.drive.files.list({ q: `'${folderId}' in parents and trashed=false and name contains '.json'`, fields: 'files(id, name)', spaces: 'drive' });
     const files = response.result.files; const select = document.getElementById('driveFileSelect');
     select.innerHTML = '<option value="">Select a file...</option>';
     if (files && files.length > 0) {
