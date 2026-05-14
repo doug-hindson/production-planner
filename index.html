@@ -206,6 +206,16 @@
     background: var(--danger); color: var(--bg);
   }
 
+  /* Cloud Status */
+  .cloud-status {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px; text-transform: uppercase;
+    letter-spacing: 0.08em; color: var(--ink-faint);
+    display: flex; align-items: center; gap: 6px;
+  }
+  .cloud-status.saved { color: #539853; }
+  .cloud-status.saving { color: #d99587; }
+
   /* Settings Dropdown */
   .settings-dropdown-wrap { position: relative; }
   .settings-menu {
@@ -214,7 +224,7 @@
     background: var(--bg-card);
     border: 1px solid var(--ink);
     z-index: 100;
-    min-width: 220px;
+    min-width: 260px;
     display: none;
     flex-direction: column;
     box-shadow: 0 6px 16px rgba(0,0,0,0.08);
@@ -245,7 +255,22 @@
     cursor: pointer;
   }
   .settings-toggle-row:hover { background: rgba(0,0,0,0.03); }
-  .settings-checkbox { margin: 0; }
+  
+  /* Drive UI */
+  .drive-panel {
+    padding: 12px 16px;
+    background: rgba(0,0,0,0.02);
+    display: flex; flex-direction: column; gap: 10px;
+  }
+  .drive-panel label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--ink-soft);
+  }
+  .drive-input {
+    width: 100%; padding: 6px; font-family: 'JetBrains Mono', monospace; font-size: 10px;
+    border: 1px solid var(--line); background: var(--bg-card); color: var(--ink); outline: none;
+  }
+  .drive-input:focus { border-color: var(--ink); }
 
   .month-label {
     font-weight: 500; font-size: 17px; letter-spacing: -0.02em; color: var(--ink);
@@ -263,7 +288,7 @@
     margin-top: 24px;
     margin-bottom: 24px;
   }
-  .calendar { width: 100%; position: relative; }
+  .calendar { width: 100%; position: relative; overflow: hidden; }
 
   .weekday-row {
     display: grid;
@@ -372,8 +397,6 @@
   /* DRAG AND DROP STYLING */
   .day-cell.drag-hover { background: rgba(0,0,0,0.06); }
   body.is-resizing * { user-select: none !important; }
-  
-  /* CRITICAL FIX: Make ALL event bars invisible to the mouse during a resize so the grid below can be detected */
   body.is-resizing .phase-layer,
   body.is-resizing .event-bar { 
     pointer-events: none !important; 
@@ -615,6 +638,8 @@
     .legend-item { color: #333 !important; }
   }
 </style>
+<script async defer src="https://apis.google.com/js/api.js"></script>
+<script async defer src="https://accounts.google.com/gsi/client"></script>
 </head>
 <body>
 
@@ -625,9 +650,12 @@
         <div class="brand">NewsLab</div>
         <div class="brand-mark" data-i18n="brand_mark">PRODUCTION PLANNER</div>
       </div>
-      <div class="header-meta">
-        <div id="metaDate">—</div>
-        <div>N_</div>
+      <div class="header-meta" style="display:flex; align-items:center; gap: 16px;">
+        <div class="cloud-status" id="cloudStatus"></div>
+        <div>
+          <div id="metaDate">—</div>
+          <div>N_</div>
+        </div>
       </div>
     </header>
 
@@ -659,6 +687,27 @@
           <button class="action-btn" id="settingsBtn" data-i18n="settings">Settings</button>
           
           <div class="settings-menu" id="settingsMenu">
+            <div class="drive-panel">
+              <div id="driveLoginSection">
+                <button class="action-btn primary" style="width: 100%;" id="btnDriveLogin">Sign In with Google</button>
+              </div>
+              <div id="driveWorkspaceSection" style="display: none; flex-direction: column; gap: 10px;">
+                <div>
+                  <label>Drive Folder ID</label>
+                  <input type="text" class="drive-input" id="driveFolderId" />
+                </div>
+                <div>
+                  <label>Load Plan</label>
+                  <select class="drive-input" id="driveFileSelect" style="cursor: pointer;">
+                    <option value="">Select a file...</option>
+                  </select>
+                </div>
+                <button class="action-btn" style="width: 100%;" id="btnNewDriveFile">+ Save as New File in Drive</button>
+              </div>
+            </div>
+
+            <div class="settings-menu-divider"></div>
+
             <div class="settings-toggle-row" id="readOnlyToggleWrapper">
               <span data-i18n="read_only_link">Read-Only Link</span>
               <div class="toggle-switch ctl" id="shareReadOnly">
@@ -666,8 +715,8 @@
               </div>
             </div>
             <button class="settings-menu-item" id="shareLinkBtn" data-i18n="share_link">Copy Share Link</button>
-            <button class="settings-menu-item" id="exportJsonBtn" data-i18n="export_data">Save Plan (JSON)</button>
-            <label class="settings-menu-item" for="importJsonInput" style="margin: 0;" data-i18n="import_data">Load Plan</label>
+            <button class="settings-menu-item" id="exportJsonBtn" data-i18n="export_data">Download Backup (JSON)</button>
+            <label class="settings-menu-item" for="importJsonInput" style="margin: 0;" data-i18n="import_data">Load Local File</label>
             <input type="file" id="importJsonInput" accept=".json" style="display: none;" />
             <button class="settings-menu-item" id="exportCsvBtn" data-i18n="export_csv">Export to CSV</button>
             <button class="settings-menu-item" id="exportBtn" data-i18n="export_pdf">Export PDF</button>
@@ -719,6 +768,184 @@
 </div>
 
 <script>
+// ============ GOOGLE DRIVE API INTEGRATION ============
+const GOOGLE_API_KEY = 'AIzaSyBrUd4L-IfFrfULoWYo8_d4cQEDIi6ir-I';
+const GOOGLE_CLIENT_ID = '832442581745-q05f99oh25br5aeqkrtaj7f2tthc2l3q.apps.googleusercontent.com';
+const DRIVE_DISCOVERY_DOC = 'https://www.googleapis.com/discovery/v1/apis/drive/v3/rest';
+const SCOPES = 'https://www.googleapis.com/auth/drive';
+
+let tokenClient;
+let gapiInited = false;
+let gisInited = false;
+let currentDriveFileId = localStorage.getItem('newslab-current-drive-file') || null;
+
+window.onload = function() {
+  if (typeof gapi !== 'undefined') {
+    gapi.load('client', initializeGapiClient);
+  }
+  if (typeof google !== 'undefined') {
+    tokenClient = google.accounts.oauth2.initTokenClient({
+      client_id: GOOGLE_CLIENT_ID,
+      scope: SCOPES,
+      callback: (tokenResponse) => {
+        if (tokenResponse && tokenResponse.access_token) {
+          document.getElementById('driveLoginSection').style.display = 'none';
+          document.getElementById('driveWorkspaceSection').style.display = 'flex';
+          updateCloudStatus('Connected');
+          fetchDriveFiles();
+        }
+      },
+    });
+    gisInited = true;
+  }
+};
+
+async function initializeGapiClient() {
+  await gapi.client.init({ apiKey: GOOGLE_API_KEY, discoveryDocs: [DRIVE_DISCOVERY_DOC] });
+  gapiInited = true;
+  const savedFolder = localStorage.getItem('newslab-drive-folder');
+  document.getElementById('driveFolderId').value = savedFolder || '1c4WDZlXaWREt_luuf7cy03n6Iu0He97M';
+}
+
+document.getElementById('btnDriveLogin').addEventListener('click', () => {
+  if (gapiInited && gisInited) {
+    if (gapi.client.getToken() === null) tokenClient.requestAccessToken({prompt: 'consent'});
+    else tokenClient.requestAccessToken({prompt: ''});
+  }
+});
+
+document.getElementById('driveFolderId').addEventListener('change', (e) => {
+  localStorage.setItem('newslab-drive-folder', e.target.value.trim());
+  fetchDriveFiles();
+});
+
+async function fetchDriveFiles() {
+  const folderId = document.getElementById('driveFolderId').value.trim();
+  if (!folderId) return;
+
+  try {
+    updateCloudStatus('Syncing...');
+    const response = await gapi.client.drive.files.list({
+      q: `'${folderId}' in parents and trashed=false and mimeType='application/json'`,
+      fields: 'files(id, name)',
+      spaces: 'drive',
+    });
+    
+    const files = response.result.files;
+    const select = document.getElementById('driveFileSelect');
+    select.innerHTML = '<option value="">Select a file...</option>';
+    
+    if (files && files.length > 0) {
+      files.forEach(file => {
+        const option = document.createElement('option');
+        option.value = file.id;
+        option.textContent = file.name.replace('.json', '');
+        if (file.id === currentDriveFileId) option.selected = true;
+        select.appendChild(option);
+      });
+    }
+    updateCloudStatus('Connected');
+  } catch (err) {
+    updateCloudStatus('Sync Error');
+    console.error(err);
+  }
+}
+
+document.getElementById('driveFileSelect').addEventListener('change', async (e) => {
+  const fileId = e.target.value;
+  if (!fileId) return;
+  
+  try {
+    updateCloudStatus('Downloading...');
+    const response = await gapi.client.drive.files.get({ fileId: fileId, alt: 'media' });
+    const driveState = typeof response.body === 'string' ? JSON.parse(response.body) : response.body;
+    
+    if (driveState && driveState.events) {
+      state = migrateData(driveState);
+      currentDriveFileId = fileId;
+      localStorage.setItem('newslab-current-drive-file', currentDriveFileId);
+      if (state.lang) setLanguage(state.lang);
+      
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); 
+      initHistory();
+      render();
+      updateCloudStatus('Connected');
+      document.getElementById('settingsMenu').classList.remove('open');
+    }
+  } catch(err) {
+    updateCloudStatus('Error');
+    alert("Could not load file from Drive.");
+  }
+});
+
+document.getElementById('btnNewDriveFile').addEventListener('click', async () => {
+  const folderId = document.getElementById('driveFolderId').value.trim();
+  if (!folderId) return alert('Please enter a Folder ID');
+  
+  const safeTitle = (state.title || 'Untitled Project').replace(/[^a-z0-9 _-]/gi, '').trim();
+  const fileName = prompt("Enter a name for the new file:", safeTitle);
+  if (!fileName) return;
+
+  try {
+    updateCloudStatus('Creating...');
+    const metadata = { name: fileName + '.json', mimeType: 'application/json', parents: [folderId] };
+    state.lang = currentLang;
+    const fileContent = JSON.stringify(state);
+
+    const form = new FormData();
+    form.append('metadata', new Blob([JSON.stringify(metadata)], { type: 'application/json' }));
+    form.append('file', new Blob([fileContent], { type: 'application/json' }));
+
+    const res = await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart', {
+      method: 'POST',
+      headers: new Headers({ 'Authorization': 'Bearer ' + gapi.client.getToken().access_token }),
+      body: form
+    });
+    
+    const data = await res.json();
+    currentDriveFileId = data.id;
+    localStorage.setItem('newslab-current-drive-file', currentDriveFileId);
+    await fetchDriveFiles();
+    updateCloudStatus('Saved');
+  } catch(err) {
+    updateCloudStatus('Error');
+    alert("Failed to create file in Drive.");
+  }
+});
+
+let autoSaveTimeout = null;
+function triggerAutoSave() {
+  if (!currentDriveFileId || window.__isReadOnly || !gapi.client || !gapi.client.getToken()) return;
+  
+  updateCloudStatus('Saving...');
+  clearTimeout(autoSaveTimeout);
+  
+  autoSaveTimeout = setTimeout(async () => {
+    try {
+      state.lang = currentLang;
+      const fileContent = JSON.stringify(state);
+      await fetch(`https://www.googleapis.com/upload/drive/v3/files/${currentDriveFileId}?uploadType=media`, {
+        method: 'PATCH',
+        headers: new Headers({
+          'Authorization': 'Bearer ' + gapi.client.getToken().access_token,
+          'Content-Type': 'application/json'
+        }),
+        body: fileContent
+      });
+      updateCloudStatus('Saved');
+    } catch(err) {
+      updateCloudStatus('Save Failed');
+    }
+  }, 1500); 
+}
+
+function updateCloudStatus(msg) {
+  const el = document.getElementById('cloudStatus');
+  el.textContent = '☁️ ' + msg;
+  el.className = 'cloud-status ' + (msg === 'Saved' || msg === 'Connected' ? 'saved' : (msg === 'Saving...' ? 'saving' : ''));
+}
+
+
 // ============ I18N ============
 const i18n = {
   en: {
@@ -736,7 +963,7 @@ const i18n = {
     link_copied_fallback: 'Copy this link to share:',
     export_pdf: 'Export PDF',
     export_csv: 'Export to CSV',
-    export_data: 'Save Plan (JSON)', import_data: 'Load Plan',
+    export_data: 'Save Backup (JSON)', import_data: 'Load Local File',
     show_weekends: 'Weekends',
     clear_all: 'Clear all',
     uke: 'WK',
@@ -771,7 +998,7 @@ const i18n = {
     link_copied_fallback: 'Kopier denne lenken for å dele:',
     export_pdf: 'Eksporter PDF',
     export_csv: 'Eksporter til CSV',
-    export_data: 'Lagre fil (JSON)', import_data: 'Åpne fil',
+    export_data: 'Lagre Backup (JSON)', import_data: 'Åpne Lokal Fil',
     show_weekends: 'Helger',
     clear_all: 'Nullstill',
     uke: 'UKE',
@@ -851,61 +1078,69 @@ function darken(hex, amount) {
 }
 
 // ============ STATE, HISTORY & MIGRATION ============
-const STORAGE_KEY = 'newslab-planner-v4';
 
-let historyStack = [];
-let historyIndex = -1;
-
-function uid() { return 'id_' + Math.random().toString(36).slice(2, 10); }
+// Universal migration adapter to ensure all old file formats instantly upgrade themselves to v4
+function migrateData(data) {
+  if (data.items && !data.events) {
+    data.events = data.items;
+    delete data.items;
+  }
+  if (data.phases) {
+    const unifiedEvents = [];
+    data.phases.forEach(p => unifiedEvents.push({ id: p.id, name: p.name, start: p.start, end: p.end, color: p.color, notes: '' }));
+    if (data.events && Array.isArray(data.events)) {
+      data.events.forEach(e => {
+         const start = e.date || e.start;
+         unifiedEvents.push({ id: e.id, name: e.name, start: start, end: start, color: e.color, notes: e.notes || '' });
+      });
+    }
+    data.events = unifiedEvents;
+    delete data.phases;
+  }
+  if (!data.events) data.events = [];
+  if (data.showWeekends === undefined) data.showWeekends = true;
+  return data;
+}
 
 function loadState() {
   try {
-    // 1. Check if the user is opening a Shared URL Link
     if (window.location.hash.startsWith('#plan=')) {
       try {
         const hashParts = window.location.hash.split('&ro=1');
-        const encoded = hashParts[0].substring(6); // remove #plan=
+        const encoded = hashParts[0].substring(6); 
         const json = decodeURIComponent(escape(atob(encoded)));
-        const sharedState = JSON.parse(json);
+        const sharedState = migrateData(JSON.parse(json));
         
-        // Check for Read-Only flag
         if (hashParts.length > 1 || window.location.href.includes('&ro=1')) {
           window.__isReadOnly = true;
           document.body.classList.add('read-only');
         }
         
-        history.replaceState(null, null, window.location.pathname); // Clean URL
+        history.replaceState(null, null, window.location.pathname); 
         localStorage.setItem(STORAGE_KEY, JSON.stringify(sharedState));
         if (sharedState.lang) {
           currentLang = sharedState.lang;
           localStorage.setItem('newslab-planner-lang', currentLang);
         }
+        
+        currentDriveFileId = null; 
+        localStorage.removeItem('newslab-current-drive-file');
+        
         return sharedState;
-      } catch(e) {
-        console.error("Could not load the shared plan.");
-      }
+      } catch(e) {}
     }
 
-    // 2. Load normally from local storage
     const raw = localStorage.getItem(STORAGE_KEY);
-    if (raw) {
-      const s = JSON.parse(raw);
-      if (s.showWeekends === undefined) s.showWeekends = true;
-      return s;
-    }
+    if (raw) return migrateData(JSON.parse(raw));
     
-    // Migrations...
     const v3Raw = localStorage.getItem('newslab-planner-v3');
-    if (v3Raw) {
-      const v3 = JSON.parse(v3Raw);
-      return {
-        title: v3.title || '', desc: v3.desc || '', start: v3.start || null, end: v3.end || null,
-        showWeekends: v3.showWeekends ?? true, events: v3.items || []
-      };
-    }
+    if (v3Raw) return migrateData(JSON.parse(v3Raw));
+    
+    const v2Raw = localStorage.getItem('newslab-planner-v2');
+    if (v2Raw) return migrateData(JSON.parse(v2Raw));
+
   } catch(e){}
   
-  // Default Template Data
   const today = new Date();
   const start = new Date(today.getFullYear(), today.getMonth(), 1);
   const end = addDays(start, 70);
@@ -933,15 +1168,17 @@ function initHistory() {
 initHistory();
 
 function saveState(pushToHistory = true) {
-  if (window.__isReadOnly) return; // Prevent overwriting shared states accidentally
+  if (window.__isReadOnly) return; 
   localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
   
   if (pushToHistory) {
-    historyStack = historyStack.slice(0, historyIndex + 1); // Truncate forward history
+    historyStack = historyStack.slice(0, historyIndex + 1); 
     historyStack.push(JSON.stringify(state));
-    if (historyStack.length > 50) historyStack.shift(); // Keep max 50 states
+    if (historyStack.length > 50) historyStack.shift(); 
     else historyIndex++;
   }
+  
+  triggerAutoSave();
 }
 
 function undo() {
@@ -949,6 +1186,7 @@ function undo() {
   historyIndex--;
   state = JSON.parse(historyStack[historyIndex]);
   localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  triggerAutoSave();
   render();
 }
 
@@ -957,6 +1195,7 @@ function redo() {
   historyIndex++;
   state = JSON.parse(historyStack[historyIndex]);
   localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  triggerAutoSave();
   render();
 }
 
@@ -1286,7 +1525,6 @@ function layoutEventBars() {
         });
       }
 
-      // Respect current filter (applied via inline opacity)
       if (currentLegendFilter && ev.color !== currentLegendFilter) {
         bar.style.opacity = '0.15';
       }
@@ -1316,7 +1554,6 @@ function renderLegend() {
     el.className = 'legend-item';
     if (currentLegendFilter && currentLegendFilter !== ev.color) el.classList.add('dimmed');
     
-    // Grouping by color conceptually in the legend (using the first name found)
     el.innerHTML = `<span class="legend-swatch" style="background:${colors.bg};border-color:${colors.edge}"></span> ${escapeHtml(ev.name)}`;
     
     el.addEventListener('click', () => {
@@ -1355,7 +1592,6 @@ document.addEventListener('mousemove', (e) => {
             }
           }
           
-          // Only re-render if the actual date boundaries have crossed a threshold
           if (changed) layoutEventBars(); 
         }
       }
@@ -1887,7 +2123,7 @@ document.getElementById('importJsonInput').addEventListener('change', (event) =>
     try {
       const importedState = JSON.parse(e.target.result);
       if (importedState && importedState.events) {
-        state = importedState;
+        state = migrateData(importedState);
         if (state.lang) setLanguage(state.lang);
         saveState();
         render();
