@@ -71,7 +71,7 @@
   
   /* ===== Calendar ===== */
   .calendar-wrap { background: var(--bg-card); border: 1px solid var(--line); margin-top: 24px; margin-bottom: 24px; }
-  .calendar { width: 100%; position: relative; } /* NO OVERFLOW HIDDEN HERE! */
+  .calendar { width: 100%; position: relative; } 
   .weekday-row { display: grid; grid-template-columns: 60px repeat(7, 1fr); border-bottom: 1px solid var(--line); background: var(--bg-card); position: sticky; top: var(--sticky-h); z-index: 10; }
   .weekday-row.hide-weekends { grid-template-columns: 60px repeat(5, 1fr); }
   .weekday-row > div { padding: 11px 12px; font-family: 'JetBrains Mono', monospace; font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--ink-faint); border-right: 1px solid var(--line-soft); }
@@ -332,12 +332,14 @@ window.onload = function() {
       scope: SCOPES,
       callback: (tokenResponse) => {
         if (tokenResponse && tokenResponse.access_token) {
-          // Verify the user actually granted the Drive scope and didn't just click "Continue"
           if (!google.accounts.oauth2.hasGrantedAllScopes(tokenResponse, SCOPES)) {
             alert("Warning: You did not grant Google Drive permissions. The app cannot save or load files until you check the permission box on the Google login screen.");
             return;
           }
           
+          // CRITICAL FIX 1: Hand the token securely to the GAPI client so it can authenticate requests
+          gapi.client.setToken({ access_token: tokenResponse.access_token });
+
           const tokenData = { token: tokenResponse.access_token, expiresAt: Date.now() + (tokenResponse.expires_in * 1000) };
           sessionStorage.setItem('newslab_drive_token', JSON.stringify(tokenData));
           
@@ -384,18 +386,19 @@ document.getElementById('driveFolderId').addEventListener('change', (e) => {
 
 async function fetchDriveFiles() {
   const folderId = document.getElementById('driveFolderId').value.trim();
-  if (!folderId) return;
+  if (!folderId || !gapi.client.getToken()) return;
   try {
     updateCloudStatus('Syncing...');
-    // We now just ask for ALL files in the folder and filter them locally.
-    // This bypasses the Google Drive bug where manually uploaded .json files hide themselves.
+    
+    // CRITICAL FIX 2: Added "supportsAllDrives" to ensure agency Workspace folders are searchable
     const response = await gapi.client.drive.files.list({ 
       q: `'${folderId}' in parents and trashed=false`, 
       fields: 'files(id, name, mimeType)', 
-      spaces: 'drive' 
+      spaces: 'drive',
+      supportsAllDrives: true,
+      includeItemsFromAllDrives: true
     });
     
-    // Locally filter out anything that clearly isn't our JSON data
     const files = response.result.files.filter(f => f.name.endsWith('.json') || f.mimeType === 'application/json');
     
     const select = document.getElementById('driveFileSelect');
@@ -414,7 +417,11 @@ document.getElementById('driveFileSelect').addEventListener('change', async (e) 
   const fileId = e.target.value; if (!fileId) return;
   try {
     updateCloudStatus('Downloading...');
-    const response = await gapi.client.drive.files.get({ fileId: fileId, alt: 'media' });
+    const response = await gapi.client.drive.files.get({ 
+        fileId: fileId, 
+        alt: 'media',
+        supportsAllDrives: true
+    });
     const driveState = typeof response.body === 'string' ? JSON.parse(response.body) : response.body;
     if (driveState && driveState.events) {
       state = migrateData(driveState); currentDriveFileId = fileId; localStorage.setItem('newslab-current-drive-file', currentDriveFileId);
@@ -434,7 +441,6 @@ document.getElementById('btnNewDriveFile').addEventListener('click', async () =>
   try {
     updateCloudStatus('Creating...');
     
-    // Step 1: Create an empty file with the correct metadata in the specific folder
     const metadata = { 
       name: fileName + (fileName.endsWith('.json') ? '' : '.json'), 
       mimeType: 'application/json', 
@@ -443,17 +449,17 @@ document.getElementById('btnNewDriveFile').addEventListener('click', async () =>
     
     const createRes = await gapi.client.drive.files.create({
         resource: metadata,
-        fields: 'id'
+        fields: 'id',
+        supportsAllDrives: true
     });
     
     currentDriveFileId = createRes.result.id;
     localStorage.setItem('newslab-current-drive-file', currentDriveFileId);
     
-    // Step 2: Upload the actual project data into that newly created file
     state.lang = currentLang;
     const fileContent = JSON.stringify(state);
     
-    await fetch(`https://www.googleapis.com/upload/drive/v3/files/${currentDriveFileId}?uploadType=media`, {
+    await fetch(`https://www.googleapis.com/upload/drive/v3/files/${currentDriveFileId}?uploadType=media&supportsAllDrives=true`, {
       method: 'PATCH',
       headers: new Headers({
         'Authorization': 'Bearer ' + gapi.client.getToken().access_token,
@@ -475,7 +481,11 @@ function triggerAutoSave() {
   autoSaveTimeout = setTimeout(async () => {
     try {
       state.lang = currentLang; const fileContent = JSON.stringify(state);
-      await fetch(`https://www.googleapis.com/upload/drive/v3/files/${currentDriveFileId}?uploadType=media`, { method: 'PATCH', headers: new Headers({ 'Authorization': 'Bearer ' + gapi.client.getToken().access_token, 'Content-Type': 'application/json' }), body: fileContent });
+      await fetch(`https://www.googleapis.com/upload/drive/v3/files/${currentDriveFileId}?uploadType=media&supportsAllDrives=true`, { 
+          method: 'PATCH', 
+          headers: new Headers({ 'Authorization': 'Bearer ' + gapi.client.getToken().access_token, 'Content-Type': 'application/json' }), 
+          body: fileContent 
+      });
       updateCloudStatus('Saved');
     } catch(err) { updateCloudStatus('Save Failed'); }
   }, 1500); 
