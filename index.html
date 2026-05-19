@@ -129,6 +129,14 @@
   .hz-grid { display: flex; position: relative; min-height: 50vh; }
   .hz-col { width: 48px; flex-shrink: 0; border-right: 1px solid var(--line-soft); position: relative; box-sizing: border-box; }
 
+  /* ===== OVERVIEW VIEW (A4 One-Pager) ===== */
+  .ov-header { display: flex; border-bottom: 1px solid var(--line); background: var(--bg-card); position: sticky; top: var(--sticky-h); z-index: 10;}
+  .ov-month { font-family: 'JetBrains Mono', monospace; font-size: 11px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--ink-soft); padding: 11px 12px; border-right: 1px solid var(--line); box-sizing: border-box; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .ov-month:last-child { border-right: none; }
+  .ov-grid { position: relative; width: 100%; background: var(--bg-card); }
+  .ov-line { position: absolute; top: 0; bottom: 0; width: 1px; background: var(--line-soft); z-index: 1; pointer-events: none; }
+  body[data-view="overview"] .phase-layer { left: 0; }
+
   /* DRAGGING GLOBALS */
   body.is-resizing * { user-select: none !important; }
   body.is-resizing .phase-layer, body.is-resizing .event-bar { pointer-events: none !important; }
@@ -254,6 +262,7 @@
           <button id="viewVerticalBtn">Vertical</button>
           <button id="viewHorizontalBtn">Horizontal</button>
           <button id="viewSingleBtn">Single Week</button>
+          <button id="viewOverviewBtn">Overview</button>
         </div>
 
         <div style="display: flex; gap: 4px;">
@@ -570,7 +579,7 @@ function bindDayCellEvents(cell, day) {
 }
 
 function bindEventBarEvents(bar, ev, pxPerDay, segStart) {
-  if (!window.__isReadOnly) {
+  if (!window.__isReadOnly && state.viewMode !== 'overview') {
     const rLeft = document.createElement('div'); rLeft.className = 'resize-handle left'; const rRight = document.createElement('div'); rRight.className = 'resize-handle right';
     bar.appendChild(rLeft); bar.appendChild(rRight);
     const startResize = (e, edge) => {
@@ -580,7 +589,7 @@ function bindEventBarEvents(bar, ev, pxPerDay, segStart) {
     rLeft.addEventListener('mousedown', (e) => startResize(e, 'left')); rRight.addEventListener('mousedown', (e) => startResize(e, 'right'));
   }
   bar.addEventListener('click', (e) => { if(window.__isDraggingOrResizing) return; e.stopPropagation(); openEventModal(ev); });
-  if (!window.__isReadOnly) {
+  if (!window.__isReadOnly && state.viewMode !== 'overview') {
     bar.addEventListener('dragstart', (e) => {
       window.__isDraggingOrResizing = true; const rect = bar.getBoundingClientRect(); let offsetDaysInSeg = Math.floor((e.clientX - rect.left) / pxPerDay); 
       const maxSpan = Math.round(rect.width / pxPerDay); offsetDaysInSeg = Math.max(0, Math.min(offsetDaysInSeg, maxSpan - 1));
@@ -597,6 +606,8 @@ function render() {
   document.getElementById('viewVerticalBtn').classList.toggle('active', state.viewMode === 'vertical');
   document.getElementById('viewHorizontalBtn').classList.toggle('active', state.viewMode === 'horizontal');
   document.getElementById('viewSingleBtn').classList.toggle('active', state.viewMode === 'single_week');
+  document.getElementById('viewOverviewBtn').classList.toggle('active', state.viewMode === 'overview');
+  
   document.getElementById('prevWeekBtn').style.display = state.viewMode === 'single_week' ? 'inline-flex' : 'none';
   document.getElementById('nextWeekBtn').style.display = state.viewMode === 'single_week' ? 'inline-flex' : 'none';
 
@@ -606,6 +617,7 @@ function render() {
   if (currentLegendFilter) document.body.setAttribute('data-filter-color', currentLegendFilter); else document.body.removeAttribute('data-filter-color');
   
   if (state.viewMode === 'horizontal') { renderHorizontalCalendar(); } 
+  else if (state.viewMode === 'overview') { renderOverviewCalendar(); }
   else { renderVerticalCalendar(); }
   
   renderLegend(); setupScrollAnchor(); setupStickyHeader();
@@ -650,7 +662,6 @@ function renderVerticalCalendar() {
     cal.appendChild(row);
   }
   
-  // Track layout
   const events = [...state.events].sort((a, b) => new Date(a.start) - new Date(b.start) || new Date(b.end) - new Date(a.end));
   const tracks = [];
   events.forEach(ev => { let placed = false; for (let i = 0; i < tracks.length; i++) { if (fromISO(tracks[i]) < fromISO(ev.start)) { tracks[i] = ev.end; ev._track = i; placed = true; break; } } if (!placed) { ev._track = tracks.length; tracks.push(ev.end); } });
@@ -680,7 +691,6 @@ function renderVerticalCalendar() {
       if (ev.notes) { const notesEl = document.createElement('span'); notesEl.className = 'event-notes'; notesEl.textContent = ev.notes; bar.appendChild(notesEl); }
       const dateText = ev.start !== ev.end ? `${ev.start} → ${ev.end}` : ev.start; bar.title = `${ev.name} · ${dateText}${ev.notes ? '\n\n' + ev.notes : ''}`;
       
-      // Calculate dynamic pxPerDay since it's % based layout
       const rectWidth = (cal.clientWidth - 60) * (span / daysToShow);
       bindEventBarEvents(bar, ev, rectWidth / span, segStart);
       if (currentLegendFilter && ev.color !== currentLegendFilter) bar.style.opacity = '0.15';
@@ -756,6 +766,67 @@ function renderHorizontalCalendar() {
   grid.style.minHeight = Math.max(300, (maxTrack + 1) * 28 + 40) + 'px';
 }
 
+function renderOverviewCalendar() {
+  const cal = document.getElementById('calendar'); cal.innerHTML = '';
+  const spanStart = state.start ? fromISO(state.start) : new Date(new Date().getFullYear(), new Date().getMonth(), 1);
+  const spanEnd = state.end ? fromISO(state.end) : addDays(spanStart, 70);
+  const totalDays = diffDays(toISO(spanStart), toISO(spanEnd)) + 1;
+
+  document.getElementById('monthLabel').textContent = `${getMonthNames()[spanStart.getMonth()]} ${spanStart.getFullYear()} — ${getMonthNames()[spanEnd.getMonth()]} ${spanEnd.getFullYear()}`;
+  document.getElementById('weekRange').textContent = `${t('uke')} ${getISOWeek(spanStart)}–${getISOWeek(spanEnd)}`;
+
+  let monthHtml = ''; let lineHtml = ''; let curr = new Date(spanStart);
+  while (curr <= spanEnd) {
+    const m = curr.getMonth(); const y = curr.getFullYear(); 
+    let endOfMonth = new Date(y, m + 1, 0); if (endOfMonth > spanEnd) endOfMonth = spanEnd;
+    const daysInMonth = diffDays(toISO(curr), toISO(endOfMonth)) + 1; const widthPct = (daysInMonth / totalDays) * 100;
+    monthHtml += `<div class="ov-month" style="width: ${widthPct}%">${getMonthNames()[m]} '${y.toString().substring(2)}</div>`;
+    
+    const daysToStart = diffDays(toISO(spanStart), toISO(curr)); const leftPct = (daysToStart / totalDays) * 100;
+    if (leftPct > 0) lineHtml += `<div class="ov-line" style="left: ${leftPct}%"></div>`;
+    curr = addDays(endOfMonth, 1);
+  }
+
+  cal.innerHTML = `<div class="ov-header">${monthHtml}</div><div class="ov-grid" id="ovGrid">${lineHtml}</div>`;
+  const grid = document.getElementById('ovGrid');
+  const layer = document.createElement('div'); layer.className = 'phase-layer';
+  const events = [...state.events].sort((a, b) => new Date(a.start) - new Date(b.start) || new Date(b.end) - new Date(a.end));
+  const tracks = []; let maxTrack = -1;
+
+  events.forEach(ev => {
+    let placed = false;
+    for (let i = 0; i < tracks.length; i++) { if (fromISO(tracks[i]) < fromISO(ev.start)) { tracks[i] = ev.end; ev._track = i; placed = true; break; } }
+    if (!placed) { ev._track = tracks.length; tracks.push(ev.end); }
+    maxTrack = Math.max(maxTrack, ev._track);
+
+    const eStart = fromISO(ev.start) < spanStart ? spanStart : fromISO(ev.start);
+    const eEnd = fromISO(ev.end) > spanEnd ? spanEnd : fromISO(ev.end);
+    if (eStart > spanEnd || eEnd < spanStart) return;
+
+    const startOffset = diffDays(toISO(spanStart), toISO(eStart));
+    const span = diffDays(toISO(eStart), toISO(eEnd)) + 1;
+
+    const bar = document.createElement('div'); bar.className = 'event-bar';
+    bar.dataset.id = ev.id; bar.dataset.color = ev.color;
+    bar.style.top = `${16 + ev._track * 28}px`; const colors = resolveColor(ev.color); bar.style.background = colors.bg; bar.style.borderColor = colors.edge;
+    bar.style.left = `calc(${(startOffset / totalDays) * 100}% + 4px)`; bar.style.width = `calc(${(span / totalDays) * 100}% - 8px)`;
+    if (fromISO(ev.start) < spanStart) bar.classList.add('continues-left'); if (fromISO(ev.end) > spanEnd) bar.classList.add('continues-right');
+
+    const label = document.createElement('span'); label.className = 'event-label'; label.textContent = ev.name; bar.appendChild(label);
+    const dateText = ev.start !== ev.end ? `${ev.start} → ${ev.end}` : ev.start; bar.title = `${ev.name} · ${dateText}${ev.notes ? '\n\n' + ev.notes : ''}`;
+    
+    // Overview mode disables dragging because the math of mapping pixels to liquid % widths is unstable, but click-to-edit still works perfectly!
+    bar.draggable = false;
+    bar.addEventListener('click', (e) => { e.stopPropagation(); openEventModal(ev); });
+
+    if (currentLegendFilter && ev.color !== currentLegendFilter) bar.style.opacity = '0.15';
+    layer.appendChild(bar);
+  });
+  
+  grid.appendChild(layer);
+  grid.style.minHeight = Math.max(300, (maxTrack + 1) * 28 + 40) + 'px';
+}
+
 function renderLegend() {
   const wrap = document.getElementById('phaseLegend'); wrap.innerHTML = ''; const seen = new Set();
   state.events.forEach(ev => {
@@ -770,7 +841,7 @@ function renderLegend() {
 
 // ============ GLOBAL RESIZE LOGIC ============
 document.addEventListener('mousemove', (e) => {
-  if (window.__resizeData) {
+  if (window.__resizeData && state.viewMode !== 'overview') {
     const el = document.elementFromPoint(e.clientX, e.clientY); const cell = el ? el.closest('.day-cell') : null;
     if (cell) {
       const hoverDate = cell.dataset.date;
@@ -805,7 +876,7 @@ function setupStickyHeader() {
 }
 
 function setupScrollAnchor() {
-  if (state.viewMode === 'single_week' || state.viewMode === 'horizontal') return;
+  if (state.viewMode === 'single_week' || state.viewMode === 'horizontal' || state.viewMode === 'overview') return;
   const updateAnchor = () => {
     const stickyH = document.getElementById('stickyZone').getBoundingClientRect().height; const weekdayH = document.querySelector('.weekday-row')?.getBoundingClientRect().height || 0; const targetY = stickyH + weekdayH + 4;
     const rows = document.querySelectorAll('.week-row'); let chosen = null;
@@ -903,6 +974,7 @@ function openClearAllModal() {
 document.getElementById('viewVerticalBtn').addEventListener('click', () => { state.viewMode = 'vertical'; saveState(false); render(); });
 document.getElementById('viewHorizontalBtn').addEventListener('click', () => { state.viewMode = 'horizontal'; saveState(false); render(); });
 document.getElementById('viewSingleBtn').addEventListener('click', () => { state.viewMode = 'single_week'; saveState(false); render(); });
+document.getElementById('viewOverviewBtn').addEventListener('click', () => { state.viewMode = 'overview'; saveState(false); render(); });
 document.getElementById('prevWeekBtn').addEventListener('click', () => { state.currentWeekStart = toISO(addDays(fromISO(state.currentWeekStart), -7)); saveState(false); render(); });
 document.getElementById('nextWeekBtn').addEventListener('click', () => { state.currentWeekStart = toISO(addDays(fromISO(state.currentWeekStart), 7)); saveState(false); render(); });
 
