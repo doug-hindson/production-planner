@@ -677,9 +677,22 @@ function renderVerticalCalendar() {
     cal.appendChild(row);
   }
   
-  const events = [...state.events].sort((a, b) => new Date(a.start) - new Date(b.start) || new Date(b.end) - new Date(a.end));
+  const events = [...state.events].sort((a, b) => {
+      const durA = fromISO(a.end).getTime() - fromISO(a.start).getTime();
+      const durB = fromISO(b.end).getTime() - fromISO(b.start).getTime();
+      return durB - durA || fromISO(a.start).getTime() - fromISO(b.start).getTime();
+  });
   const tracks = [];
-  events.forEach(ev => { let placed = false; for (let i = 0; i < tracks.length; i++) { if (fromISO(tracks[i]) < fromISO(ev.start)) { tracks[i] = ev.end; ev._track = i; placed = true; break; } } if (!placed) { ev._track = tracks.length; tracks.push(ev.end); } });
+  events.forEach(ev => {
+      let placed = false;
+      const evS = fromISO(ev.start).getTime(); const evE = fromISO(ev.end).getTime();
+      for (let i = 0; i < tracks.length; i++) {
+          let overlap = false;
+          for (let j = 0; j < tracks[i].length; j++) { if (evS <= tracks[i][j].e && evE >= tracks[i][j].s) { overlap = true; break; } }
+          if (!overlap) { tracks[i].push({s: evS, e: evE}); ev._track = i; placed = true; break; }
+      }
+      if (!placed) { ev._track = tracks.length; tracks.push([{s: evS, e: evE}]); }
+  });
   
   const isSingleWeek = state.viewMode === 'single_week'; const trackSpacing = isSingleWeek ? 120 : 28;
   
@@ -747,13 +760,22 @@ function renderHorizontalCalendar() {
 
   const grid = document.getElementById('hzGrid');
   const layer = document.createElement('div'); layer.className = 'phase-layer';
-  const events = [...state.events].sort((a, b) => new Date(a.start) - new Date(b.start) || new Date(b.end) - new Date(a.end));
+  const events = [...state.events].sort((a, b) => {
+      const durA = fromISO(a.end).getTime() - fromISO(a.start).getTime();
+      const durB = fromISO(b.end).getTime() - fromISO(b.start).getTime();
+      return durB - durA || fromISO(a.start).getTime() - fromISO(b.start).getTime();
+  });
+  
   const tracks = []; let maxTrack = -1;
-
   events.forEach(ev => {
     let placed = false;
-    for (let i = 0; i < tracks.length; i++) { if (fromISO(tracks[i]) < fromISO(ev.start)) { tracks[i] = ev.end; ev._track = i; placed = true; break; } }
-    if (!placed) { ev._track = tracks.length; tracks.push(ev.end); }
+    const evS = fromISO(ev.start).getTime(); const evE = fromISO(ev.end).getTime();
+    for (let i = 0; i < tracks.length; i++) {
+        let overlap = false;
+        for (let j = 0; j < tracks[i].length; j++) { if (evS <= tracks[i][j].e && evE >= tracks[i][j].s) { overlap = true; break; } }
+        if (!overlap) { tracks[i].push({s: evS, e: evE}); ev._track = i; placed = true; break; }
+    }
+    if (!placed) { ev._track = tracks.length; tracks.push([{s: evS, e: evE}]); }
     maxTrack = Math.max(maxTrack, ev._track);
     
     let startIdx = days.findIndex(d => d >= fromISO(ev.start)); if (startIdx === -1 && days[days.length-1] < fromISO(ev.start)) return;
@@ -805,11 +827,13 @@ function renderOverviewCalendar() {
   cal.innerHTML = `<div class="ov-header">${monthHtml}</div><div class="ov-grid" id="ovGrid">${lineHtml}</div>`;
   const grid = document.getElementById('ovGrid');
   const layer = document.createElement('div'); layer.className = 'phase-layer';
-  const events = [...state.events].sort((a, b) => new Date(a.start) - new Date(b.start) || new Date(b.end) - new Date(a.end));
+  const events = [...state.events].sort((a, b) => {
+      const durA = fromISO(a.end).getTime() - fromISO(a.start).getTime();
+      const durB = fromISO(b.end).getTime() - fromISO(b.start).getTime();
+      return durB - durA || fromISO(a.start).getTime() - fromISO(b.start).getTime();
+  });
+  
   const tracks = []; let maxTrack = -1;
-
-  // Overview Collision Logic: Measure screen width to calculate how many "days" the 120px text spill takes up,
-  // then pad the tracks algorithm so overlapping text forces the next event onto a new track!
   const calWidth = document.getElementById('calendar').clientWidth || 1000;
   const daysPerPixel = totalDays / calWidth;
   const textPaddingDays = Math.ceil(120 * daysPerPixel);
@@ -820,14 +844,19 @@ function renderOverviewCalendar() {
     if (eStart > spanEnd || eEnd < spanStart) return;
 
     const actualSpan = diffDays(toISO(eStart), toISO(eEnd)) + 1;
-    const effectiveSpan = Math.max(actualSpan, textPaddingDays); // Reserve track space for spilled text
-    const effectiveEnd = addDays(eStart, effectiveSpan);
+    const effectiveSpan = Math.max(actualSpan, textPaddingDays);
+    const effectiveEnd = addDays(eStart, effectiveSpan - 1);
 
+    const evS = eStart.getTime();
+    const evE = effectiveEnd.getTime();
+    
     let placed = false;
-    for (let i = 0; i < tracks.length; i++) { 
-      if (fromISO(tracks[i]) < eStart) { tracks[i] = toISO(effectiveEnd); ev._track = i; placed = true; break; } 
+    for (let i = 0; i < tracks.length; i++) {
+      let overlap = false;
+      for (let j = 0; j < tracks[i].length; j++) { if (evS <= tracks[i][j].e && evE >= tracks[i][j].s) { overlap = true; break; } }
+      if (!overlap) { tracks[i].push({s: evS, e: evE}); ev._track = i; placed = true; break; }
     }
-    if (!placed) { ev._track = tracks.length; tracks.push(toISO(effectiveEnd)); }
+    if (!placed) { ev._track = tracks.length; tracks.push([{s: evS, e: evE}]); }
     maxTrack = Math.max(maxTrack, ev._track);
 
     const startOffset = diffDays(toISO(spanStart), toISO(eStart));
