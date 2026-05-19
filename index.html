@@ -51,6 +51,7 @@
   .action-btn.primary:hover { background: transparent; color: var(--ink); }
   .action-btn.ghost-danger { border-color: transparent; color: var(--ink-faint); padding: 6px 10px; }
   .action-btn.ghost-danger:hover { border-color: var(--danger); background: var(--danger); color: var(--bg); }
+  
   .view-toggle { display: flex; border: 1px solid var(--line); border-radius: 2px; overflow: hidden; }
   .view-toggle button { border: none; font-family: 'JetBrains Mono', monospace; font-size: 10px; text-transform: uppercase; letter-spacing: 0.08em; padding: 8px 12px; cursor: pointer; background: transparent; color: var(--ink-soft); transition: all 0.15s ease; }
   .view-toggle button.active { background: var(--line); color: var(--ink); font-weight: 500; }
@@ -73,12 +74,21 @@
   .drive-panel label { font-family: 'JetBrains Mono', monospace; font-size: 9px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--ink-soft); }
   .drive-input { width: 100%; padding: 6px; font-family: 'JetBrains Mono', monospace; font-size: 10px; border: 1px solid var(--line); background: var(--bg-card); color: var(--ink); outline: none; }
   .drive-input:focus { border-color: var(--ink); }
+  
   .month-label { font-weight: 500; font-size: 17px; letter-spacing: -0.02em; color: var(--ink); }
   .week-range { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--ink-faint); letter-spacing: 0.06em; margin-left: 10px; }
   
-  /* ===== Calendar ===== */
+  /* ===== Generic Calendar ===== */
   .calendar-wrap { background: var(--bg-card); border: 1px solid var(--line); margin-top: 24px; margin-bottom: 24px; }
-  .calendar { width: 100%; position: relative; }
+  .calendar { width: 100%; position: relative; } 
+  .day-cell { position: relative; cursor: pointer; transition: background 0.12s ease; display: flex; flex-direction: column; }
+  .day-cell:hover { background: rgba(0,0,0,0.015); }
+  .day-cell.weekend { background: rgba(0,0,0,0.012); }
+  .day-cell.outside-project::after { content: ''; position: absolute; inset: 0; background: repeating-linear-gradient(45deg, transparent, transparent 6px, rgba(0,0,0,0.025) 6px, rgba(0,0,0,0.025) 7px); pointer-events: none; }
+  .day-cell.drag-hover { background: rgba(0,0,0,0.06); }
+  .day-num { position: absolute; top: 6px; left: 8px; font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 500; color: var(--ink); margin-bottom: 3px; flex-shrink: 0; z-index: 5; }
+
+  /* ===== VERTICAL VIEW (Original & Single Week) ===== */
   .weekday-row { display: grid; grid-template-columns: 60px repeat(7, 1fr); border-bottom: 1px solid var(--line); background: var(--bg-card); position: sticky; top: var(--sticky-h); z-index: 10; }
   .weekday-row.hide-weekends { grid-template-columns: 60px repeat(5, 1fr); }
   .weekday-row > div { padding: 11px 12px; font-family: 'JetBrains Mono', monospace; font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--ink-faint); border-right: 1px solid var(--line-soft); }
@@ -94,90 +104,48 @@
   .week-row:last-child { border-bottom: none; }
   .uke-cell { padding: 8px; font-family: 'JetBrains Mono', monospace; font-size: 10px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--ink-soft); border-right: 1px solid var(--line); background: rgba(245,236,184,0.25); }
   .uke-cell .uke-num { font-size: 11px; font-weight: 500; color: var(--ink); }
-  .day-cell { padding: 6px 8px; border-right: 1px solid var(--line-soft); position: relative; cursor: pointer; transition: background 0.12s ease; min-height: 55px; display: flex; flex-direction: column; }
-  .day-cell:last-child { border-right: none; }
-  .day-cell:hover { background: rgba(0,0,0,0.015); }
-  .day-cell.today .day-num { background: var(--ink); color: var(--bg); border-radius: 50%; width: 20px; height: 20px; display: inline-flex; align-items: center; justify-content: center; font-size: 10px; }
-  .day-cell.weekend { background: rgba(0,0,0,0.012); }
-  .day-cell.outside-project::after { content: ''; position: absolute; inset: 0; background: repeating-linear-gradient(45deg, transparent, transparent 6px, rgba(0,0,0,0.025) 6px, rgba(0,0,0,0.025) 7px); pointer-events: none; }
-  .day-num { position: absolute; top: 6px; left: 8px; font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 500; color: var(--ink); margin-bottom: 3px; flex-shrink: 0; z-index: 5; }
+  .vertical-cell { padding: 6px 8px; border-right: 1px solid var(--line-soft); min-height: 55px; }
+  .vertical-cell:last-child { border-right: none; }
+  .vertical-cell.today .day-num { background: var(--ink); color: var(--bg); border-radius: 50%; width: 20px; height: 20px; display: inline-flex; align-items: center; justify-content: center; font-size: 10px; }
 
-  /* ===== SINGLE WEEK VIEW OVERRIDES ===== */
-  body[data-view="single_week"] .day-cell { min-height: 40vh; }
+  /* OVERRIDES FOR SINGLE WEEK */
+  body[data-view="single_week"] .vertical-cell { min-height: 40vh; }
   body[data-view="single_week"] .month-divider { display: none; }
+  body[data-view="single_week"] .event-bar { height: 112px; flex-direction: column; align-items: flex-start; padding: 8px 10px; overflow-y: auto; }
+  body[data-view="single_week"] .event-label { white-space: normal; overflow: visible; font-weight: 600; margin-bottom: 4px; width: 100%; line-height: 1.2; }
+  body[data-view="single_week"] .event-notes { display: block; font-family: 'ABC Diatype', Arial, sans-serif; font-size: 12px; text-transform: none; letter-spacing: 0; white-space: pre-wrap; opacity: 0.85; pointer-events: none; line-height: 1.4; width: 100%; }
 
-  /* DRAG AND DROP STYLING */
-  .day-cell.drag-hover { background: rgba(0,0,0,0.06); }
+  /* ===== HORIZONTAL GANTT VIEW ===== */
+  body[data-view="horizontal"] .calendar-wrap { overflow-x: auto; }
+  body[data-view="horizontal"] .calendar { min-width: max-content; padding-bottom: 24px; }
+  .hz-sticky-headers { position: sticky; top: var(--sticky-h); z-index: 10; background: var(--bg-card); }
+  .hz-months { display: flex; border-bottom: 1px solid var(--line); }
+  .hz-month { font-family: 'JetBrains Mono', monospace; font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--ink-faint); padding: 8px 12px; border-right: 1px solid var(--line); box-sizing: border-box; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .hz-days { display: flex; border-bottom: 1px solid var(--line); }
+  .hz-day { width: 48px; flex-shrink: 0; padding: 6px; border-right: 1px solid var(--line-soft); text-align: center; display: flex; flex-direction: column; align-items: center; gap: 4px; box-sizing: border-box; }
+  .hz-day .wk { font-family: 'JetBrains Mono', monospace; font-size: 9px; color: var(--ink-faint); }
+  .hz-day .nm { font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 500; color: var(--ink); }
+  .hz-day.today .nm { background: var(--ink); color: var(--bg); border-radius: 50%; width: 20px; height: 20px; display: inline-flex; justify-content: center; align-items: center; }
+  .hz-grid { display: flex; position: relative; min-height: 50vh; }
+  .hz-col { width: 48px; flex-shrink: 0; border-right: 1px solid var(--line-soft); position: relative; box-sizing: border-box; }
+
+  /* DRAGGING GLOBALS */
   body.is-resizing * { user-select: none !important; }
   body.is-resizing .phase-layer, body.is-resizing .event-bar { pointer-events: none !important; }
-
-  /* FILTERING */
   body[data-filter-color] .event-bar { opacity: 0.15; transition: opacity 0.2s ease; }
   
-  /* Event block styling */
+  /* EVENT BARS */
   .phase-layer { position: absolute; left: 60px; right: 0; top: 0; bottom: 0; pointer-events: none; z-index: 2; }
-  
-  /* Standard UI for Event Bars */
-  .event-bar { 
-    position: absolute; 
-    height: 24px; 
-    display: flex; 
-    align-items: center; 
-    padding: 0 10px; 
-    font-family: 'JetBrains Mono', monospace; 
-    font-size: 10px; 
-    text-transform: uppercase; 
-    letter-spacing: 0.08em; 
-    color: var(--ink); 
-    pointer-events: auto; 
-    cursor: grab; 
-    transition: filter 0.12s ease, transform 0.12s ease, opacity 0.2s ease; 
-    border: 1px solid; 
-    border-radius: 4px; 
-    box-shadow: 0 2px 4px rgba(0,0,0,0.03); 
-    -ms-overflow-style: none; /* IE/Edge */
-    scrollbar-width: none;    /* Firefox */
-  }
-  .event-bar::-webkit-scrollbar { display: none; /* Chrome/Safari */ }
+  body[data-view="horizontal"] .phase-layer { left: 0; }
+  .event-bar { position: absolute; height: 24px; display: flex; align-items: center; padding: 0 10px; font-family: 'JetBrains Mono', monospace; font-size: 10px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--ink); pointer-events: auto; cursor: grab; transition: filter 0.12s ease, transform 0.12s ease, opacity 0.2s ease; border: 1px solid; border-radius: 4px; box-shadow: 0 2px 4px rgba(0,0,0,0.03); -ms-overflow-style: none; scrollbar-width: none; }
+  .event-bar::-webkit-scrollbar { display: none; }
   .event-bar:active { cursor: grabbing; }
   .event-bar:hover { filter: brightness(0.96); transform: translateY(-1px); z-index: 10; }
   .event-bar.is-preview { opacity: 0.5; border-style: dashed; z-index: 20; pointer-events: none !important; }
   .event-bar.continues-left { border-left: 1px dashed var(--ink); border-top-left-radius: 0; border-bottom-left-radius: 0; padding-left: 6px; }
   .event-bar.continues-right { border-right: 1px dashed var(--ink); border-top-right-radius: 0; border-bottom-right-radius: 0; }
   .event-label { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; pointer-events: none; }
-  
-  /* The hidden notes */
   .event-notes { display: none; }
-
-  /* OVERRIDES FOR SINGLE WEEK EVENT BARS */
-  body[data-view="single_week"] .event-bar {
-    height: 112px;
-    flex-direction: column;
-    align-items: flex-start;
-    padding: 8px 10px;
-    overflow-y: auto;
-  }
-  body[data-view="single_week"] .event-label {
-    white-space: normal;
-    overflow: visible;
-    font-weight: 600;
-    margin-bottom: 4px;
-    width: 100%;
-    line-height: 1.2;
-  }
-  body[data-view="single_week"] .event-notes {
-    display: block;
-    font-family: 'ABC Diatype', Arial, sans-serif;
-    font-size: 12px;
-    text-transform: none;
-    letter-spacing: 0;
-    white-space: pre-wrap;
-    opacity: 0.85;
-    pointer-events: none;
-    line-height: 1.4;
-    width: 100%;
-  }
-
   .resize-handle { position: absolute; top: 0; bottom: 0; width: 10px; cursor: ew-resize; z-index: 5; }
   .resize-handle.left { left: 0; }
   .resize-handle.right { right: 0; }
@@ -237,7 +205,8 @@
     .app { max-width: none; padding: 0; }
     .sticky-zone { position: static; padding: 0; }
     .controls, .settings-dropdown-wrap, .modal-backdrop { display: none !important; }
-    .calendar-wrap { page-break-inside: auto; border-color: #999; }
+    .calendar-wrap { page-break-inside: auto; border-color: #999; overflow: visible !important; }
+    .calendar { min-width: 0 !important; }
     .week-row, .month-divider { page-break-inside: avoid; }
     .weekday-row { position: static; }
     header.top { margin-bottom: 14px; padding-bottom: 8px; }
@@ -282,7 +251,8 @@
         </div>
         
         <div class="view-toggle">
-          <button id="viewVerticalBtn" class="active">Vertical</button>
+          <button id="viewVerticalBtn">Vertical</button>
+          <button id="viewHorizontalBtn">Horizontal</button>
           <button id="viewSingleBtn">Single Week</button>
         </div>
 
@@ -395,30 +365,20 @@ const GOOGLE_CLIENT_ID = '832442581745-q05f99oh25br5aeqkrtaj7f2tthc2l3q.apps.goo
 const DRIVE_DISCOVERY_DOC = 'https://www.googleapis.com/discovery/v1/apis/drive/v3/rest';
 const SCOPES = 'https://www.googleapis.com/auth/drive';
 
-let tokenClient;
-let gapiInited = false;
-let gisInited = false;
+let tokenClient; let gapiInited = false; let gisInited = false;
 let currentDriveFileId = localStorage.getItem('newslab-current-drive-file') || null;
 
 window.onload = function() {
   if (typeof gapi !== 'undefined') { gapi.load('client', initializeGapiClient); }
   if (typeof google !== 'undefined') {
     tokenClient = google.accounts.oauth2.initTokenClient({
-      client_id: GOOGLE_CLIENT_ID,
-      scope: SCOPES,
+      client_id: GOOGLE_CLIENT_ID, scope: SCOPES,
       callback: (tokenResponse) => {
         if (tokenResponse && tokenResponse.access_token) {
-          if (!google.accounts.oauth2.hasGrantedAllScopes(tokenResponse, SCOPES)) {
-            alert("Warning: You did not grant Google Drive permissions. The app cannot save or load files until you check the permission box on the Google login screen.");
-            return;
-          }
-          
+          if (!google.accounts.oauth2.hasGrantedAllScopes(tokenResponse, SCOPES)) { alert("Warning: You did not grant Google Drive permissions."); return; }
           gapi.client.setToken({ access_token: tokenResponse.access_token });
-          const tokenData = { token: tokenResponse.access_token, expiresAt: Date.now() + (tokenResponse.expires_in * 1000) };
-          sessionStorage.setItem('newslab_drive_token', JSON.stringify(tokenData));
-          
-          document.getElementById('driveLoginSection').style.display = 'none';
-          document.getElementById('driveWorkspaceSection').style.display = 'flex';
+          sessionStorage.setItem('newslab_drive_token', JSON.stringify({ token: tokenResponse.access_token, expiresAt: Date.now() + (tokenResponse.expires_in * 1000) }));
+          document.getElementById('driveLoginSection').style.display = 'none'; document.getElementById('driveWorkspaceSection').style.display = 'flex';
           updateCloudStatus('Connected'); fetchDriveFiles();
         }
       },
@@ -428,136 +388,72 @@ window.onload = function() {
 };
 
 async function initializeGapiClient() {
-  await gapi.client.init({ apiKey: GOOGLE_API_KEY, discoveryDocs: [DRIVE_DISCOVERY_DOC] });
-  gapiInited = true;
-  const savedFolder = localStorage.getItem('newslab-drive-folder');
-  document.getElementById('driveFolderId').value = savedFolder || '1c4WDZlXaWREt_luuf7cy03n6Iu0He97M';
-  
+  await gapi.client.init({ apiKey: GOOGLE_API_KEY, discoveryDocs: [DRIVE_DISCOVERY_DOC] }); gapiInited = true;
+  document.getElementById('driveFolderId').value = localStorage.getItem('newslab-drive-folder') || '1c4WDZlXaWREt_luuf7cy03n6Iu0He97M';
   const savedToken = sessionStorage.getItem('newslab_drive_token');
   if (savedToken) {
     try {
       const parsed = JSON.parse(savedToken);
       if (Date.now() < parsed.expiresAt - 60000) { 
-        gapi.client.setToken({ access_token: parsed.token });
-        document.getElementById('driveLoginSection').style.display = 'none';
-        document.getElementById('driveWorkspaceSection').style.display = 'flex';
+        gapi.client.setToken({ access_token: parsed.token }); document.getElementById('driveLoginSection').style.display = 'none'; document.getElementById('driveWorkspaceSection').style.display = 'flex';
         updateCloudStatus('Connected'); fetchDriveFiles();
       }
     } catch(e) {}
   }
 }
 
-document.getElementById('btnDriveLogin').addEventListener('click', () => {
-  if (gapiInited && gisInited) {
-    if (gapi.client.getToken() === null) tokenClient.requestAccessToken({prompt: 'consent'});
-    else tokenClient.requestAccessToken({prompt: ''});
-  }
-});
-
-document.getElementById('driveFolderId').addEventListener('change', (e) => {
-  localStorage.setItem('newslab-drive-folder', e.target.value.trim()); fetchDriveFiles();
-});
+document.getElementById('btnDriveLogin').addEventListener('click', () => { if (gapiInited && gisInited) { if (gapi.client.getToken() === null) tokenClient.requestAccessToken({prompt: 'consent'}); else tokenClient.requestAccessToken({prompt: ''}); } });
+document.getElementById('driveFolderId').addEventListener('change', (e) => { localStorage.setItem('newslab-drive-folder', e.target.value.trim()); fetchDriveFiles(); });
 
 async function fetchDriveFiles() {
-  const folderId = document.getElementById('driveFolderId').value.trim();
-  if (!folderId || !gapi.client.getToken()) return;
+  const folderId = document.getElementById('driveFolderId').value.trim(); if (!folderId || !gapi.client.getToken()) return;
   try {
     updateCloudStatus('Syncing...');
-    const response = await gapi.client.drive.files.list({ 
-      q: `'${folderId}' in parents and trashed=false`, 
-      fields: 'files(id, name, mimeType)', 
-      spaces: 'drive',
-      supportsAllDrives: true,
-      includeItemsFromAllDrives: true
-    });
-    
+    const response = await gapi.client.drive.files.list({ q: `'${folderId}' in parents and trashed=false`, fields: 'files(id, name, mimeType)', spaces: 'drive', supportsAllDrives: true, includeItemsFromAllDrives: true });
     const files = response.result.files.filter(f => f.name.endsWith('.json') || f.mimeType === 'application/json');
-    
-    const select = document.getElementById('driveFileSelect');
-    select.innerHTML = '<option value="">Select a file...</option>';
+    const select = document.getElementById('driveFileSelect'); select.innerHTML = '<option value="">Select a file...</option>';
     if (files && files.length > 0) {
-      files.forEach(file => {
-        const option = document.createElement('option'); option.value = file.id; option.textContent = file.name.replace('.json', '');
-        if (file.id === currentDriveFileId) option.selected = true; select.appendChild(option);
-      });
+      files.forEach(file => { const option = document.createElement('option'); option.value = file.id; option.textContent = file.name.replace('.json', ''); if (file.id === currentDriveFileId) option.selected = true; select.appendChild(option); });
     }
     updateCloudStatus('Connected');
-  } catch (err) { updateCloudStatus('Sync Error'); console.error(err); }
+  } catch (err) { updateCloudStatus('Sync Error'); }
 }
 
 document.getElementById('driveFileSelect').addEventListener('change', async (e) => {
   const fileId = e.target.value; if (!fileId) return;
   try {
     updateCloudStatus('Downloading...');
-    const response = await gapi.client.drive.files.get({ 
-        fileId: fileId, 
-        alt: 'media',
-        supportsAllDrives: true
-    });
+    const response = await gapi.client.drive.files.get({ fileId: fileId, alt: 'media', supportsAllDrives: true });
     const driveState = typeof response.body === 'string' ? JSON.parse(response.body) : response.body;
     if (driveState && driveState.events) {
       state = migrateData(driveState); currentDriveFileId = fileId; localStorage.setItem('newslab-current-drive-file', currentDriveFileId);
-      if (state.lang) setLanguage(state.lang);
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); 
-      initHistory(); render(); updateCloudStatus('Connected'); document.getElementById('settingsMenu').classList.remove('open');
+      if (state.lang) setLanguage(state.lang); localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); initHistory(); render(); updateCloudStatus('Connected'); document.getElementById('settingsMenu').classList.remove('open');
     }
   } catch(err) { updateCloudStatus('Error'); alert("Could not load file from Drive."); }
 });
 
 document.getElementById('btnNewDriveFile').addEventListener('click', async () => {
-  const folderId = document.getElementById('driveFolderId').value.trim();
-  if (!folderId) return alert('Please enter a Folder ID');
-  const safeTitle = (state.title || 'Untitled Project').replace(/[^a-z0-9 _-]/gi, '').trim();
-  const fileName = prompt("Enter a name for the new file:", safeTitle); if (!fileName) return;
-  
+  const folderId = document.getElementById('driveFolderId').value.trim(); if (!folderId) return alert('Please enter a Folder ID');
+  const safeTitle = (state.title || 'Untitled Project').replace(/[^a-z0-9 _-]/gi, '').trim(); const fileName = prompt("Enter a name for the new file:", safeTitle); if (!fileName) return;
   try {
     updateCloudStatus('Creating...');
-    
-    const metadata = { 
-      name: fileName + (fileName.endsWith('.json') ? '' : '.json'), 
-      mimeType: 'application/json', 
-      parents: [folderId] 
-    };
-    
-    const createRes = await gapi.client.drive.files.create({
-        resource: metadata,
-        fields: 'id',
-        supportsAllDrives: true
-    });
-    
-    currentDriveFileId = createRes.result.id;
-    localStorage.setItem('newslab-current-drive-file', currentDriveFileId);
-    
-    state.lang = currentLang;
-    const fileContent = JSON.stringify(state);
-    
-    await fetch(`https://www.googleapis.com/upload/drive/v3/files/${currentDriveFileId}?uploadType=media&supportsAllDrives=true`, {
-      method: 'PATCH',
-      headers: new Headers({
-        'Authorization': 'Bearer ' + gapi.client.getToken().access_token,
-        'Content-Type': 'application/json'
-      }),
-      body: fileContent
-    });
-
-    await fetchDriveFiles();
-    updateCloudStatus('Saved');
+    const metadata = { name: fileName + (fileName.endsWith('.json') ? '' : '.json'), mimeType: 'application/json', parents: [folderId] };
+    const createRes = await gapi.client.drive.files.create({ resource: metadata, fields: 'id', supportsAllDrives: true });
+    currentDriveFileId = createRes.result.id; localStorage.setItem('newslab-current-drive-file', currentDriveFileId);
+    state.lang = currentLang; const fileContent = JSON.stringify(state);
+    await fetch(`https://www.googleapis.com/upload/drive/v3/files/${currentDriveFileId}?uploadType=media&supportsAllDrives=true`, { method: 'PATCH', headers: new Headers({ 'Authorization': 'Bearer ' + gapi.client.getToken().access_token, 'Content-Type': 'application/json' }), body: fileContent });
+    await fetchDriveFiles(); updateCloudStatus('Saved');
   } catch(err) { updateCloudStatus('Error'); alert("Failed to create file in Drive."); }
 });
 
 let autoSaveTimeout = null;
 function triggerAutoSave() {
-  if (typeof gapi === 'undefined' || !gapi.client || !gapi.client.getToken()) return;
-  if (!currentDriveFileId || window.__isReadOnly) return;
+  if (typeof gapi === 'undefined' || !gapi.client || !gapi.client.getToken() || !currentDriveFileId || window.__isReadOnly) return;
   updateCloudStatus('Saving...'); clearTimeout(autoSaveTimeout);
   autoSaveTimeout = setTimeout(async () => {
     try {
       state.lang = currentLang; const fileContent = JSON.stringify(state);
-      await fetch(`https://www.googleapis.com/upload/drive/v3/files/${currentDriveFileId}?uploadType=media&supportsAllDrives=true`, { 
-          method: 'PATCH', 
-          headers: new Headers({ 'Authorization': 'Bearer ' + gapi.client.getToken().access_token, 'Content-Type': 'application/json' }), 
-          body: fileContent 
-      });
+      await fetch(`https://www.googleapis.com/upload/drive/v3/files/${currentDriveFileId}?uploadType=media&supportsAllDrives=true`, { method: 'PATCH', headers: new Headers({ 'Authorization': 'Bearer ' + gapi.client.getToken().access_token, 'Content-Type': 'application/json' }), body: fileContent });
       updateCloudStatus('Saved');
     } catch(err) { updateCloudStatus('Save Failed'); }
   }, 1500); 
@@ -570,12 +466,8 @@ function updateCloudStatus(msg) {
 
 // ============ I18N ============
 const i18n = {
-  en: {
-    brand_mark: 'PRODUCTION PLANNER', title_placeholder: 'Title', desc_placeholder: 'Project description, scope notes, context…', start: 'START', end: 'END', today: 'Today', add_event: '+ Add Event', settings: 'Settings', language: 'Language', read_only_link: 'Read-Only Link', share_link: 'Copy Share Link', link_copied: 'Link copied to clipboard!', link_copied_fallback: 'Copy this link to share:', export_pdf: 'Export PDF', export_csv: 'Export to CSV', export_data: 'Save Backup (JSON)', import_data: 'Load Local File', show_weekends: 'Weekends', clear_all: 'Clear all', uke: 'WK', weekdays_full: ['MON','TUE','WED','THU','FRI','SAT','SUN'], weekdays_no_weekend: ['MON','TUE','WED','THU','FRI'], months: ['January','February','March','April','May','June','July','August','September','October','November','December'], new_event: 'New event', edit_event: 'Edit event', label_title: 'Title', label_start: 'Start date', label_end: 'End date', label_color: 'Color', label_notes: 'Notes', event_name_placeholder: 'e.g. Concept Phase or Workshop', save: 'Save', add_event_btn: 'Add event', delete: 'Delete', cancel: 'Cancel', clear_title: 'Clear everything?', clear_description: 'This will permanently remove all project details and events from this planner. The action cannot be undone.', clear_events: (n) => `→ ${n} event${n === 1 ? '' : 's'}`, clear_meta: '→ Title, description & dates', clear_confirm_prefix: 'Type', clear_confirm_word: 'CLEAR', clear_confirm_suffix: 'to confirm.', clear_button: 'Clear everything'
-  },
-  nb: {
-    brand_mark: 'PRODUKSJONSPLANLEGGER', title_placeholder: 'Tittel', desc_placeholder: 'Prosjektbeskrivelse, omfang, kontekst…', start: 'START', end: 'SLUTT', today: 'I dag', add_event: '+ Nytt element', settings: 'Innstillinger', language: 'Språk', read_only_link: 'Skrivebeskyttet', share_link: 'Kopier delingslenke', link_copied: 'Lenken er kopiert til utklippstavlen!', link_copied_fallback: 'Kopier denne lenken for å dele:', export_pdf: 'Eksporter PDF', export_csv: 'Eksporter til CSV', export_data: 'Lagre Backup (JSON)', import_data: 'Åpne Lokal Fil', show_weekends: 'Helger', clear_all: 'Nullstill', uke: 'UKE', weekdays_full: ['MAN','TIR','ONS','TOR','FRE','LØR','SØN'], weekdays_no_weekend: ['MAN','TIR','ONS','TOR','FRE'], months: ['Januar','Februar','Mars','April','Mai','Juni','Juli','August','September','Oktober','November','Desember'], new_event: 'Nytt element', edit_event: 'Rediger element', label_title: 'Tittel', label_start: 'Startdato', label_end: 'Sluttdato', label_color: 'Farge', label_notes: 'Notater', event_name_placeholder: 'F.eks. Konseptfase eller Workshop', save: 'Lagre', add_event_btn: 'Legg til element', delete: 'Slett', cancel: 'Avbryt', clear_title: 'Nullstill alt?', clear_description: 'Dette fjerner permanent alle prosjektdetaljer og elementer fra denne planleggeren. Handlingen kan ikke angres.', clear_events: (n) => `→ ${n} element${n === 1 ? '' : 'er'}`, clear_meta: '→ Tittel, beskrivelse og datoer', clear_confirm_prefix: 'Skriv', clear_confirm_word: 'SLETT', clear_confirm_suffix: 'for å bekrefte.', clear_button: 'Nullstill alt'
-  }
+  en: { brand_mark: 'PRODUCTION PLANNER', title_placeholder: 'Title', desc_placeholder: 'Project description, scope notes, context…', start: 'START', end: 'END', today: 'Today', add_event: '+ Add Event', settings: 'Settings', language: 'Language', read_only_link: 'Read-Only Link', share_link: 'Copy Share Link', link_copied: 'Link copied to clipboard!', link_copied_fallback: 'Copy this link to share:', export_pdf: 'Export PDF', export_csv: 'Export to CSV', export_data: 'Save Backup (JSON)', import_data: 'Load Local File', show_weekends: 'Weekends', clear_all: 'Clear all', uke: 'WK', weekdays_full: ['MON','TUE','WED','THU','FRI','SAT','SUN'], weekdays_no_weekend: ['MON','TUE','WED','THU','FRI'], months: ['January','February','March','April','May','June','July','August','September','October','November','December'], new_event: 'New event', edit_event: 'Edit event', label_title: 'Title', label_start: 'Start date', label_end: 'End date', label_color: 'Color', label_notes: 'Notes', event_name_placeholder: 'e.g. Concept Phase or Workshop', save: 'Save', add_event_btn: 'Add event', delete: 'Delete', cancel: 'Cancel', clear_title: 'Clear everything?', clear_description: 'This will permanently remove all project details and events from this planner. The action cannot be undone.', clear_events: (n) => `→ ${n} event${n === 1 ? '' : 's'}`, clear_meta: '→ Title, description & dates', clear_confirm_prefix: 'Type', clear_confirm_word: 'CLEAR', clear_confirm_suffix: 'to confirm.', clear_button: 'Clear everything' },
+  nb: { brand_mark: 'PRODUKSJONSPLANLEGGER', title_placeholder: 'Tittel', desc_placeholder: 'Prosjektbeskrivelse, omfang, kontekst…', start: 'START', end: 'SLUTT', today: 'I dag', add_event: '+ Nytt element', settings: 'Innstillinger', language: 'Språk', read_only_link: 'Skrivebeskyttet', share_link: 'Kopier delingslenke', link_copied: 'Lenken er kopiert til utklippstavlen!', link_copied_fallback: 'Kopier denne lenken for å dele:', export_pdf: 'Eksporter PDF', export_csv: 'Eksporter til CSV', export_data: 'Lagre Backup (JSON)', import_data: 'Åpne Lokal Fil', show_weekends: 'Helger', clear_all: 'Nullstill', uke: 'UKE', weekdays_full: ['MAN','TIR','ONS','TOR','FRE','LØR','SØN'], weekdays_no_weekend: ['MAN','TIR','ONS','TOR','FRE'], months: ['Januar','Februar','Mars','April','Mai','Juni','Juli','August','September','Oktober','November','Desember'], new_event: 'Nytt element', edit_event: 'Rediger element', label_title: 'Tittel', label_start: 'Startdato', label_end: 'Sluttdato', label_color: 'Farge', label_notes: 'Notater', event_name_placeholder: 'F.eks. Konseptfase eller Workshop', save: 'Lagre', add_event_btn: 'Legg til element', delete: 'Slett', cancel: 'Avbryt', clear_title: 'Nullstill alt?', clear_description: 'Dette fjerner permanent alle prosjektdetaljer og elementer fra denne planleggeren. Handlingen kan ikke angres.', clear_events: (n) => `→ ${n} element${n === 1 ? '' : 'er'}`, clear_meta: '→ Tittel, beskrivelse og datoer', clear_confirm_prefix: 'Skriv', clear_confirm_word: 'SLETT', clear_confirm_suffix: 'for å bekrefte.', clear_button: 'Nullstill alt' }
 };
 
 let currentLang = localStorage.getItem('newslab-planner-lang') || 'en';
@@ -596,20 +488,13 @@ function uid() { return 'id_' + Math.random().toString(36).slice(2, 10); }
 
 function migrateData(data) {
   if (!data.viewMode) data.viewMode = 'vertical';
-  if (!data.currentWeekStart) {
-    const d = data.start ? fromISO(data.start) : new Date();
-    data.currentWeekStart = toISO(startOfWeek(d));
-  }
-  
+  if (!data.currentWeekStart) { const d = data.start ? fromISO(data.start) : new Date(); data.currentWeekStart = toISO(startOfWeek(d)); }
   if (data.items && !data.events) { data.events = data.items; delete data.items; }
   if (data.phases) {
     const unifiedEvents = [];
     data.phases.forEach(p => unifiedEvents.push({ id: p.id, name: p.name, start: p.start, end: p.end, color: p.color, notes: '' }));
     if (data.events && Array.isArray(data.events)) {
-      data.events.forEach(e => {
-         const start = e.date || e.start;
-         unifiedEvents.push({ id: e.id, name: e.name, start: start, end: start, color: e.color, notes: e.notes || '' });
-      });
+      data.events.forEach(e => { const start = e.date || e.start; unifiedEvents.push({ id: e.id, name: e.name, start: start, end: start, color: e.color, notes: e.notes || '' }); });
     }
     data.events = unifiedEvents; delete data.phases;
   }
@@ -638,12 +523,7 @@ function loadState() {
   } catch(e){}
   
   const today = new Date(); const start = new Date(today.getFullYear(), today.getMonth(), 1); const end = addDays(start, 70);
-  return { 
-    title: 'Vampyr — Pre-teaser', desc: 'Pre-teaser, teaser and main campaign for the Norwegian horror film Vampyr.', 
-    start: toISO(start), end: toISO(end), 
-    viewMode: 'vertical', currentWeekStart: toISO(startOfWeek(today)),
-    showWeekends: true, events: [] 
-  };
+  return { title: 'Vampyr — Pre-teaser', desc: 'Pre-teaser, teaser and main campaign.', start: toISO(start), end: toISO(end), viewMode: 'vertical', currentWeekStart: toISO(startOfWeek(today)), showWeekends: true, events: [] };
 }
 
 let state = loadState();
@@ -673,11 +553,50 @@ let anchorDateISO = null;
 function getDefaultDate() { if (anchorDateISO) return anchorDateISO; if (state.start) return state.start; return toISO(new Date()); }
 const getMonthNames = () => t('months'); const getDayShort = () => state.showWeekends ? t('weekdays_full') : t('weekdays_no_weekend'); let currentLegendFilter = null;
 
+// ============ UNIVERSAL DOM BINDINGS ============
+function bindDayCellEvents(cell, day) {
+  const addBtn = cell.querySelector('.day-add-btn');
+  if (addBtn) addBtn.addEventListener('click', (e) => { if(window.__isReadOnly) return; e.stopPropagation(); openEventModal(null, toISO(day), toISO(day)); });
+  cell.addEventListener('click', (e) => { if(window.__isReadOnly || e.target.closest('.event-bar') || window.__isDraggingOrResizing) return; openEventModal(null, toISO(day), toISO(day)); });
+  cell.addEventListener('dragover', (e) => { if(window.__isReadOnly) return; e.preventDefault(); e.dataTransfer.dropEffect = 'move'; cell.classList.add('drag-hover'); });
+  cell.addEventListener('dragleave', () => cell.classList.remove('drag-hover'));
+  cell.addEventListener('drop', (e) => {
+    if(window.__isReadOnly) return; e.preventDefault(); cell.classList.remove('drag-hover'); const dataStr = e.dataTransfer.getData('application/json'); if (!dataStr) return;
+    try { const data = JSON.parse(dataStr); const ev = state.events.find(i => i.id === data.id); if (!ev) return;
+      const targetDate = cell.dataset.date; const dur = diffDays(ev.start, ev.end); const newStart = toISO(addDays(fromISO(targetDate), -data.offsetDays));
+      ev.start = newStart; ev.end = toISO(addDays(fromISO(newStart), dur)); saveState(); render();
+    } catch (err) {}
+  });
+}
+
+function bindEventBarEvents(bar, ev, pxPerDay, segStart) {
+  if (!window.__isReadOnly) {
+    const rLeft = document.createElement('div'); rLeft.className = 'resize-handle left'; const rRight = document.createElement('div'); rRight.className = 'resize-handle right';
+    bar.appendChild(rLeft); bar.appendChild(rRight);
+    const startResize = (e, edge) => {
+      e.preventDefault(); e.stopPropagation(); window.__isDraggingOrResizing = true; document.body.classList.add('is-resizing');
+      window.__resizeData = { id: ev.id, edge, origStart: ev.start, origEnd: ev.end }; document.querySelectorAll('.event-bar').forEach(b => b.removeAttribute('draggable'));
+    };
+    rLeft.addEventListener('mousedown', (e) => startResize(e, 'left')); rRight.addEventListener('mousedown', (e) => startResize(e, 'right'));
+  }
+  bar.addEventListener('click', (e) => { if(window.__isDraggingOrResizing) return; e.stopPropagation(); openEventModal(ev); });
+  if (!window.__isReadOnly) {
+    bar.addEventListener('dragstart', (e) => {
+      window.__isDraggingOrResizing = true; const rect = bar.getBoundingClientRect(); let offsetDaysInSeg = Math.floor((e.clientX - rect.left) / pxPerDay); 
+      const maxSpan = Math.round(rect.width / pxPerDay); offsetDaysInSeg = Math.max(0, Math.min(offsetDaysInSeg, maxSpan - 1));
+      const totalOffsetDays = diffDays(ev.start, toISO(segStart)) + offsetDaysInSeg;
+      e.dataTransfer.effectAllowed = 'move'; e.dataTransfer.setData('application/json', JSON.stringify({ id: ev.id, offsetDays: totalOffsetDays })); setTimeout(() => bar.style.opacity = '0.3', 0);
+    });
+    bar.addEventListener('dragend', () => { bar.style.opacity = ''; setTimeout(() => window.__isDraggingOrResizing = false, 100); });
+  }
+}
+
+// ============ RENDERERS ============
 function render() {
   document.body.setAttribute('data-view', state.viewMode);
   document.getElementById('viewVerticalBtn').classList.toggle('active', state.viewMode === 'vertical');
+  document.getElementById('viewHorizontalBtn').classList.toggle('active', state.viewMode === 'horizontal');
   document.getElementById('viewSingleBtn').classList.toggle('active', state.viewMode === 'single_week');
-  
   document.getElementById('prevWeekBtn').style.display = state.viewMode === 'single_week' ? 'inline-flex' : 'none';
   document.getElementById('nextWeekBtn').style.display = state.viewMode === 'single_week' ? 'inline-flex' : 'none';
 
@@ -686,27 +605,23 @@ function render() {
   document.getElementById('weekendToggle').classList.toggle('on', !!state.showWeekends);
   if (currentLegendFilter) document.body.setAttribute('data-filter-color', currentLegendFilter); else document.body.removeAttribute('data-filter-color');
   
-  renderCalendar(); renderLegend(); setupScrollAnchor(); setupStickyHeader();
+  if (state.viewMode === 'horizontal') { renderHorizontalCalendar(); } 
+  else { renderVerticalCalendar(); }
+  
+  renderLegend(); setupScrollAnchor(); setupStickyHeader();
 }
 
-function renderCalendar() {
+function renderVerticalCalendar() {
   const cal = document.getElementById('calendar'); cal.innerHTML = '';
-  
   let gridStart, gridEnd, totalWeeks, startLabel, endLabel;
-  
   if (state.viewMode === 'single_week') {
-      gridStart = fromISO(state.currentWeekStart);
-      gridEnd = addDays(gridStart, 6);
-      totalWeeks = 1;
-      startLabel = `${getMonthNames()[gridStart.getMonth()]} ${gridStart.getFullYear()}`;
-      endLabel = `${getMonthNames()[gridEnd.getMonth()]} ${gridEnd.getFullYear()}`;
+      gridStart = fromISO(state.currentWeekStart); gridEnd = addDays(gridStart, 6); totalWeeks = 1;
+      startLabel = `${getMonthNames()[gridStart.getMonth()]} ${gridStart.getFullYear()}`; endLabel = `${getMonthNames()[gridEnd.getMonth()]} ${gridEnd.getFullYear()}`;
   } else {
       let spanStart, spanEnd;
       if (state.start && state.end) { spanStart = fromISO(state.start); spanEnd = fromISO(state.end); } else { const today = new Date(); spanStart = new Date(today.getFullYear(), today.getMonth(), 1); spanEnd = addDays(spanStart, 70); }
-      gridStart = startOfWeek(spanStart); gridEnd = addDays(startOfWeek(spanEnd), 6); 
-      totalWeeks = Math.round((gridEnd - gridStart) / 86400000 / 7) + 1;
-      startLabel = `${getMonthNames()[spanStart.getMonth()]} ${spanStart.getFullYear()}`; 
-      endLabel = `${getMonthNames()[spanEnd.getMonth()]} ${spanEnd.getFullYear()}`;
+      gridStart = startOfWeek(spanStart); gridEnd = addDays(startOfWeek(spanEnd), 6); totalWeeks = Math.round((gridEnd - gridStart) / 86400000 / 7) + 1;
+      startLabel = `${getMonthNames()[spanStart.getMonth()]} ${spanStart.getFullYear()}`; endLabel = `${getMonthNames()[spanEnd.getMonth()]} ${spanEnd.getFullYear()}`;
   }
 
   document.getElementById('monthLabel').textContent = startLabel === endLabel ? startLabel : `${startLabel} — ${endLabel}`;
@@ -726,50 +641,23 @@ function renderCalendar() {
     const ukeCell = document.createElement('div'); ukeCell.className = 'uke-cell'; ukeCell.innerHTML = `<span class="uke-num">${t('uke')} ${weekNum}</span>`; row.appendChild(ukeCell);
 
     for (let i = 0; i < daysToShow; i++) {
-      const day = addDays(weekStart, i); const cell = document.createElement('div'); cell.className = 'day-cell'; cell.dataset.date = toISO(day);
-      if (sameDay(day, new Date())) cell.classList.add('today');
-      if (isWeekend(day)) cell.classList.add('weekend');
+      const day = addDays(weekStart, i); const cell = document.createElement('div'); cell.className = 'day-cell vertical-cell'; cell.dataset.date = toISO(day);
+      if (sameDay(day, new Date())) cell.classList.add('today'); if (isWeekend(day)) cell.classList.add('weekend');
       if (state.start && state.end) { const ps = fromISO(state.start), pe = fromISO(state.end); if (day < ps || day > pe) cell.classList.add('outside-project'); }
-      const dayNumEl = document.createElement('div'); dayNumEl.className = 'day-num'; dayNumEl.innerHTML = `<span>${day.getDate()}</span>`; cell.appendChild(dayNumEl);
-      
-      const addBtn = document.createElement('button'); addBtn.className = 'day-add-btn'; addBtn.textContent = '+';
-      addBtn.addEventListener('click', (e) => { if(window.__isReadOnly) return; e.stopPropagation(); openEventModal(null, toISO(day), toISO(day)); }); cell.appendChild(addBtn);
-      cell.addEventListener('click', (e) => { if(window.__isReadOnly || e.target.closest('.event-bar') || window.__isDraggingOrResizing) return; openEventModal(null, toISO(day), toISO(day)); });
-      
-      cell.addEventListener('dragover', (e) => { if(window.__isReadOnly) return; e.preventDefault(); e.dataTransfer.dropEffect = 'move'; cell.classList.add('drag-hover'); });
-      cell.addEventListener('dragleave', () => cell.classList.remove('drag-hover'));
-      cell.addEventListener('drop', (e) => {
-        if(window.__isReadOnly) return; e.preventDefault(); cell.classList.remove('drag-hover'); const dataStr = e.dataTransfer.getData('application/json'); if (!dataStr) return;
-        try { const data = JSON.parse(dataStr); const ev = state.events.find(i => i.id === data.id); if (!ev) return;
-          const targetDate = cell.dataset.date; const dur = diffDays(ev.start, ev.end); const newStart = toISO(addDays(fromISO(targetDate), -data.offsetDays));
-          ev.start = newStart; ev.end = toISO(addDays(fromISO(newStart), dur)); saveState(); render();
-        } catch (err) {}
-      });
-      row.appendChild(cell);
+      cell.innerHTML = `<div class="day-num"><span>${day.getDate()}</span></div><button class="day-add-btn">+</button>`;
+      bindDayCellEvents(cell, day); row.appendChild(cell);
     }
     cal.appendChild(row);
   }
-  layoutEventBars();
-}
-
-function layoutEventBars() {
-  const cal = document.getElementById('calendar'); cal.querySelectorAll('.phase-layer').forEach(l => l.remove());
+  
+  // Track layout
   const events = [...state.events].sort((a, b) => new Date(a.start) - new Date(b.start) || new Date(b.end) - new Date(a.end));
   const tracks = [];
+  events.forEach(ev => { let placed = false; for (let i = 0; i < tracks.length; i++) { if (fromISO(tracks[i]) < fromISO(ev.start)) { tracks[i] = ev.end; ev._track = i; placed = true; break; } } if (!placed) { ev._track = tracks.length; tracks.push(ev.end); } });
   
-  // Track calculation ALWAYS considers all events so they don't randomly change vertical position when clicking through weeks
-  events.forEach(ev => {
-    let placed = false;
-    for (let i = 0; i < tracks.length; i++) { if (fromISO(tracks[i]) < fromISO(ev.start)) { tracks[i] = ev.end; ev._track = i; placed = true; break; } }
-    if (!placed) { ev._track = tracks.length; tracks.push(ev.end); }
-  });
+  const isSingleWeek = state.viewMode === 'single_week'; const trackSpacing = isSingleWeek ? 120 : 28;
   
-  const daysToShow = state.showWeekends ? 7 : 5; const rows = cal.querySelectorAll('.week-row');
-  
-  const isSingleWeek = state.viewMode === 'single_week';
-  const trackSpacing = isSingleWeek ? 120 : 28;
-  
-  rows.forEach(row => {
+  cal.querySelectorAll('.week-row').forEach(row => {
     const weekStart = fromISO(row.dataset.weekStart); const weekFullEnd = addDays(weekStart, 6); const weekVisibleEnd = addDays(weekStart, daysToShow - 1);
     const layer = document.createElement('div'); layer.className = 'phase-layer'; let weekMaxTrack = -1;
 
@@ -782,52 +670,90 @@ function layoutEventBars() {
       
       const startCol = Math.floor((segStart - weekStart) / 86400000); const endCol = Math.floor((segEnd - weekStart) / 86400000); const span = endCol - startCol + 1;
       const bar = document.createElement('div'); bar.className = 'event-bar';
-      
-      bar.draggable = !window.__isReadOnly && !(window.__resizeData && window.__resizeData.id === ev.id);
-      bar.dataset.id = ev.id; bar.dataset.color = ev.color;
-      
+      bar.draggable = !window.__isReadOnly && !(window.__resizeData && window.__resizeData.id === ev.id); bar.dataset.id = ev.id; bar.dataset.color = ev.color;
       if (window.__resizeData && window.__resizeData.id === ev.id) bar.classList.add('is-preview');
-      bar.style.top = `${28 + ev._track * trackSpacing}px`; 
-      const colors = resolveColor(ev.color); bar.style.background = colors.bg; bar.style.borderColor = colors.edge;
+      bar.style.top = `${28 + ev._track * trackSpacing}px`; const colors = resolveColor(ev.color); bar.style.background = colors.bg; bar.style.borderColor = colors.edge;
       bar.style.left = `calc(${startCol * 100 / daysToShow}% + 4px)`; bar.style.width = `calc(${span * 100 / daysToShow}% - 8px)`;
       if (pStart < weekStart) bar.classList.add('continues-left'); if (pEnd > weekFullEnd) bar.classList.add('continues-right');
       
       const label = document.createElement('span'); label.className = 'event-label'; label.textContent = ev.name; bar.appendChild(label);
-      
-      if (ev.notes) {
-        const notesEl = document.createElement('span');
-        notesEl.className = 'event-notes';
-        notesEl.textContent = ev.notes;
-        bar.appendChild(notesEl);
-      }
-      
+      if (ev.notes) { const notesEl = document.createElement('span'); notesEl.className = 'event-notes'; notesEl.textContent = ev.notes; bar.appendChild(notesEl); }
       const dateText = ev.start !== ev.end ? `${ev.start} → ${ev.end}` : ev.start; bar.title = `${ev.name} · ${dateText}${ev.notes ? '\n\n' + ev.notes : ''}`;
       
-      if (!window.__isReadOnly) {
-        const rLeft = document.createElement('div'); rLeft.className = 'resize-handle left'; const rRight = document.createElement('div'); rRight.className = 'resize-handle right';
-        bar.appendChild(rLeft); bar.appendChild(rRight);
-        const startResize = (e, edge) => {
-          e.preventDefault(); e.stopPropagation(); window.__isDraggingOrResizing = true; document.body.classList.add('is-resizing');
-          window.__resizeData = { id: ev.id, edge, origStart: ev.start, origEnd: ev.end }; document.querySelectorAll('.event-bar').forEach(b => b.removeAttribute('draggable'));
-        };
-        rLeft.addEventListener('mousedown', (e) => startResize(e, 'left')); rRight.addEventListener('mousedown', (e) => startResize(e, 'right'));
-      }
-      bar.addEventListener('click', (e) => { if(window.__isDraggingOrResizing) return; e.stopPropagation(); openEventModal(ev); });
-      if (!window.__isReadOnly) {
-        bar.addEventListener('dragstart', (e) => {
-          window.__isDraggingOrResizing = true; const rect = bar.getBoundingClientRect(); const pxPerDay = rect.width / (span || 1); 
-          let offsetDaysInSeg = Math.floor((e.clientX - rect.left) / pxPerDay); offsetDaysInSeg = Math.max(0, Math.min(offsetDaysInSeg, span - 1));
-          const totalOffsetDays = diffDays(ev.start, toISO(segStart)) + offsetDaysInSeg;
-          e.dataTransfer.effectAllowed = 'move'; e.dataTransfer.setData('application/json', JSON.stringify({ id: ev.id, offsetDays: totalOffsetDays })); setTimeout(() => bar.style.opacity = '0.3', 0);
-        });
-        bar.addEventListener('dragend', () => { bar.style.opacity = ''; setTimeout(() => window.__isDraggingOrResizing = false, 100); });
-      }
+      // Calculate dynamic pxPerDay since it's % based layout
+      const rectWidth = (cal.clientWidth - 60) * (span / daysToShow);
+      bindEventBarEvents(bar, ev, rectWidth / span, segStart);
       if (currentLegendFilter && ev.color !== currentLegendFilter) bar.style.opacity = '0.15';
       layer.appendChild(bar);
     });
     row.appendChild(layer);
     row.querySelectorAll('.day-cell').forEach(c => { c.style.paddingTop = weekMaxTrack >= 0 ? `${36 + (weekMaxTrack + 1) * trackSpacing}px` : '36px'; });
   });
+}
+
+function renderHorizontalCalendar() {
+  const cal = document.getElementById('calendar'); cal.innerHTML = '';
+  const spanStart = state.start ? fromISO(state.start) : new Date(new Date().getFullYear(), new Date().getMonth(), 1);
+  const spanEnd = state.end ? fromISO(state.end) : addDays(spanStart, 70);
+  const gridStart = startOfWeek(spanStart); const gridEnd = addDays(startOfWeek(spanEnd), 6);
+  
+  document.getElementById('monthLabel').textContent = `${getMonthNames()[spanStart.getMonth()]} ${spanStart.getFullYear()} — ${getMonthNames()[spanEnd.getMonth()]} ${spanEnd.getFullYear()}`;
+  document.getElementById('weekRange').textContent = `${t('uke')} ${getISOWeek(gridStart)}–${getISOWeek(addDays(gridEnd, -6))}`;
+
+  let days = []; let curr = gridStart;
+  while(curr <= gridEnd) { if (state.showWeekends || !isWeekend(curr)) { days.push(new Date(curr)); } curr = addDays(curr, 1); }
+  const totalDays = days.length; const dayWidth = 48;
+
+  let monthHtml = ''; let currentMonth = -1; let daysInMonth = 0;
+  days.forEach((d, i) => {
+    if (d.getMonth() !== currentMonth) {
+      if (currentMonth !== -1) monthHtml += `<div class="hz-month" style="width: ${daysInMonth * dayWidth}px">${getMonthNames()[currentMonth]} '${days[i-1].getFullYear().toString().substring(2)}</div>`;
+      currentMonth = d.getMonth(); daysInMonth = 1;
+    } else { daysInMonth++; }
+  });
+  if (daysInMonth > 0) monthHtml += `<div class="hz-month" style="width: ${daysInMonth * dayWidth}px">${getMonthNames()[currentMonth]}</div>`;
+
+  let daysHtml = days.map(d => `<div class="hz-day ${sameDay(d, new Date()) ? 'today' : ''}"><div class="wk">${getDayShort()[d.getDay() === 0 ? 6 : d.getDay() - 1][0]}</div><div class="nm">${d.getDate()}</div></div>`).join('');
+  let gridHtml = days.map(d => `<div class="hz-col day-cell ${isWeekend(d) ? 'weekend' : ''}" data-date="${toISO(d)}"><button class="day-add-btn">+</button></div>`).join('');
+
+  cal.innerHTML = `<div class="hz-sticky-headers"><div class="hz-months">${monthHtml}</div><div class="hz-days">${daysHtml}</div></div><div class="hz-grid" id="hzGrid" style="width:${totalDays*dayWidth}px">${gridHtml}</div>`;
+  
+  cal.querySelectorAll('.day-cell').forEach((cell, i) => bindDayCellEvents(cell, days[i]));
+
+  const grid = document.getElementById('hzGrid');
+  const layer = document.createElement('div'); layer.className = 'phase-layer';
+  const events = [...state.events].sort((a, b) => new Date(a.start) - new Date(b.start) || new Date(b.end) - new Date(a.end));
+  const tracks = []; let maxTrack = -1;
+
+  events.forEach(ev => {
+    let placed = false;
+    for (let i = 0; i < tracks.length; i++) { if (fromISO(tracks[i]) < fromISO(ev.start)) { tracks[i] = ev.end; ev._track = i; placed = true; break; } }
+    if (!placed) { ev._track = tracks.length; tracks.push(ev.end); }
+    maxTrack = Math.max(maxTrack, ev._track);
+    
+    let startIdx = days.findIndex(d => d >= fromISO(ev.start)); if (startIdx === -1 && days[days.length-1] < fromISO(ev.start)) return;
+    let endIdx = -1; for (let j = days.length - 1; j >= 0; j--) { if (days[j] <= fromISO(ev.end)) { endIdx = j; break; } }
+    if (endIdx === -1 || startIdx > endIdx) return;
+    
+    const span = endIdx - startIdx + 1;
+    const bar = document.createElement('div'); bar.className = 'event-bar';
+    bar.draggable = !window.__isReadOnly && !(window.__resizeData && window.__resizeData.id === ev.id); bar.dataset.id = ev.id; bar.dataset.color = ev.color;
+    if (window.__resizeData && window.__resizeData.id === ev.id) bar.classList.add('is-preview');
+    
+    bar.style.top = `${12 + ev._track * 28}px`; const colors = resolveColor(ev.color); bar.style.background = colors.bg; bar.style.borderColor = colors.edge;
+    bar.style.left = `${startIdx * dayWidth + 4}px`; bar.style.width = `${span * dayWidth - 8}px`;
+    if (fromISO(ev.start) < days[0]) bar.classList.add('continues-left'); if (fromISO(ev.end) > days[days.length-1]) bar.classList.add('continues-right');
+    
+    const label = document.createElement('span'); label.className = 'event-label'; label.textContent = ev.name; bar.appendChild(label);
+    const dateText = ev.start !== ev.end ? `${ev.start} → ${ev.end}` : ev.start; bar.title = `${ev.name} · ${dateText}${ev.notes ? '\n\n' + ev.notes : ''}`;
+    
+    bindEventBarEvents(bar, ev, dayWidth, days[startIdx]);
+    if (currentLegendFilter && ev.color !== currentLegendFilter) bar.style.opacity = '0.15';
+    layer.appendChild(bar);
+  });
+  
+  grid.appendChild(layer);
+  grid.style.minHeight = Math.max(300, (maxTrack + 1) * 28 + 40) + 'px';
 }
 
 function renderLegend() {
@@ -842,6 +768,7 @@ function renderLegend() {
   });
 }
 
+// ============ GLOBAL RESIZE LOGIC ============
 document.addEventListener('mousemove', (e) => {
   if (window.__resizeData) {
     const el = document.elementFromPoint(e.clientX, e.clientY); const cell = el ? el.closest('.day-cell') : null;
@@ -858,7 +785,7 @@ document.addEventListener('mousemove', (e) => {
             if (fromISO(hoverDate) >= fromISO(ev.start)) { if (ev.end !== hoverDate) { ev.end = hoverDate; changed = true; } } 
             else { ev.end = ev.start; ev.start = hoverDate; window.__resizeData.edge = 'left'; changed = true; }
           }
-          if (changed) layoutEventBars(); 
+          if (changed) { if(state.viewMode === 'horizontal') renderHorizontalCalendar(); else renderVerticalCalendar(); }
         }
       }
     }
@@ -878,7 +805,7 @@ function setupStickyHeader() {
 }
 
 function setupScrollAnchor() {
-  if (state.viewMode === 'single_week') return;
+  if (state.viewMode === 'single_week' || state.viewMode === 'horizontal') return;
   const updateAnchor = () => {
     const stickyH = document.getElementById('stickyZone').getBoundingClientRect().height; const weekdayH = document.querySelector('.weekday-row')?.getBoundingClientRect().height || 0; const targetY = stickyH + weekdayH + 4;
     const rows = document.querySelectorAll('.week-row'); let chosen = null;
@@ -974,6 +901,7 @@ function openClearAllModal() {
 
 // WIRING
 document.getElementById('viewVerticalBtn').addEventListener('click', () => { state.viewMode = 'vertical'; saveState(false); render(); });
+document.getElementById('viewHorizontalBtn').addEventListener('click', () => { state.viewMode = 'horizontal'; saveState(false); render(); });
 document.getElementById('viewSingleBtn').addEventListener('click', () => { state.viewMode = 'single_week'; saveState(false); render(); });
 document.getElementById('prevWeekBtn').addEventListener('click', () => { state.currentWeekStart = toISO(addDays(fromISO(state.currentWeekStart), -7)); saveState(false); render(); });
 document.getElementById('nextWeekBtn').addEventListener('click', () => { state.currentWeekStart = toISO(addDays(fromISO(state.currentWeekStart), 7)); saveState(false); render(); });
@@ -987,7 +915,7 @@ document.getElementById('todayBtn').addEventListener('click', () => {
     state.currentWeekStart = toISO(startOfWeek(new Date())); saveState(false); render();
   } else {
     const todayCell = document.querySelector('.day-cell.today');
-    if (todayCell) { const stickyH = document.getElementById('stickyZone').getBoundingClientRect().height; const weekdayH = document.querySelector('.weekday-row').getBoundingClientRect().height; window.scrollTo({ top: todayCell.getBoundingClientRect().top + window.scrollY - stickyH - weekdayH - 20, behavior: 'smooth' }); } 
+    if (todayCell) { const stickyH = document.getElementById('stickyZone').getBoundingClientRect().height; const weekdayH = document.querySelector('.weekday-row')?.getBoundingClientRect().height || 0; window.scrollTo({ top: todayCell.getBoundingClientRect().top + window.scrollY - stickyH - weekdayH - 20, behavior: 'smooth' }); } 
     else { const firstWeek = document.querySelector('.week-row'); if (firstWeek) firstWeek.scrollIntoView({ behavior: 'smooth', block: 'start' }); }
   }
 });
