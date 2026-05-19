@@ -139,7 +139,8 @@
   
   /* CRITICAL CSS: OVERRIDES FOR OVERVIEW EVENT BARS (Text Spill Logic) */
   body[data-view="overview"] .event-bar {
-      height: 38px; /* Taller boxes to allow two lines */
+      min-height: 38px; /* Taller boxes to allow multiple lines */
+      height: auto; /* Allow box to grow with text */
       padding: 4px 6px;
       align-items: flex-start;
       overflow: visible; /* Allows text to spill horizontally */
@@ -149,11 +150,6 @@
       min-width: 120px; /* Forces spill on tiny 1-day boxes */
       white-space: normal; /* Enables wrapping */
       line-height: 1.2;
-      display: -webkit-box;
-      -webkit-line-clamp: 2; /* Exactly 2 lines before truncating vertically */
-      -webkit-box-orient: vertical;
-      overflow: hidden; /* Clips vertically so it stays within the 38px block */
-      text-shadow: 1px 1px 0px var(--bg-card), -1px -1px 0px var(--bg-card), 1px -1px 0px var(--bg-card), -1px 1px 0px var(--bg-card); /* Halo effect */
   }
 
   /* DRAGGING GLOBALS */
