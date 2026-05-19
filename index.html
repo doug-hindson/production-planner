@@ -116,13 +116,67 @@
   
   /* Event block styling */
   .phase-layer { position: absolute; left: 60px; right: 0; top: 0; bottom: 0; pointer-events: none; z-index: 2; }
-  .event-bar { position: absolute; height: 24px; display: flex; align-items: center; padding: 0 10px; font-family: 'JetBrains Mono', monospace; font-size: 10px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--ink); pointer-events: auto; cursor: grab; transition: filter 0.12s ease, transform 0.12s ease, opacity 0.2s ease; border: 1px solid; border-radius: 4px; box-shadow: 0 2px 4px rgba(0,0,0,0.03); }
+  
+  /* Standard UI for Event Bars */
+  .event-bar { 
+    position: absolute; 
+    height: 24px; 
+    display: flex; 
+    align-items: center; 
+    padding: 0 10px; 
+    font-family: 'JetBrains Mono', monospace; 
+    font-size: 10px; 
+    text-transform: uppercase; 
+    letter-spacing: 0.08em; 
+    color: var(--ink); 
+    pointer-events: auto; 
+    cursor: grab; 
+    transition: filter 0.12s ease, transform 0.12s ease, opacity 0.2s ease; 
+    border: 1px solid; 
+    border-radius: 4px; 
+    box-shadow: 0 2px 4px rgba(0,0,0,0.03); 
+    -ms-overflow-style: none; /* IE/Edge */
+    scrollbar-width: none;    /* Firefox */
+  }
+  .event-bar::-webkit-scrollbar { display: none; /* Chrome/Safari */ }
   .event-bar:active { cursor: grabbing; }
   .event-bar:hover { filter: brightness(0.96); transform: translateY(-1px); z-index: 10; }
   .event-bar.is-preview { opacity: 0.5; border-style: dashed; z-index: 20; pointer-events: none !important; }
   .event-bar.continues-left { border-left: 1px dashed var(--ink); border-top-left-radius: 0; border-bottom-left-radius: 0; padding-left: 6px; }
   .event-bar.continues-right { border-right: 1px dashed var(--ink); border-top-right-radius: 0; border-bottom-right-radius: 0; }
   .event-label { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; pointer-events: none; }
+  
+  /* The hidden notes */
+  .event-notes { display: none; }
+
+  /* OVERRIDES FOR SINGLE WEEK EVENT BARS */
+  body[data-view="single_week"] .event-bar {
+    height: 112px;
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 8px 10px;
+    overflow-y: auto;
+  }
+  body[data-view="single_week"] .event-label {
+    white-space: normal;
+    overflow: visible;
+    font-weight: 600;
+    margin-bottom: 4px;
+    width: 100%;
+    line-height: 1.2;
+  }
+  body[data-view="single_week"] .event-notes {
+    display: block;
+    font-family: 'ABC Diatype', Arial, sans-serif;
+    font-size: 12px;
+    text-transform: none;
+    letter-spacing: 0;
+    white-space: pre-wrap;
+    opacity: 0.85;
+    pointer-events: none;
+    line-height: 1.4;
+    width: 100%;
+  }
 
   .resize-handle { position: absolute; top: 0; bottom: 0; width: 10px; cursor: ew-resize; z-index: 5; }
   .resize-handle.left { left: 0; }
@@ -712,6 +766,9 @@ function layoutEventBars() {
   
   const daysToShow = state.showWeekends ? 7 : 5; const rows = cal.querySelectorAll('.week-row');
   
+  const isSingleWeek = state.viewMode === 'single_week';
+  const trackSpacing = isSingleWeek ? 120 : 28;
+  
   rows.forEach(row => {
     const weekStart = fromISO(row.dataset.weekStart); const weekFullEnd = addDays(weekStart, 6); const weekVisibleEnd = addDays(weekStart, daysToShow - 1);
     const layer = document.createElement('div'); layer.className = 'phase-layer'; let weekMaxTrack = -1;
@@ -730,11 +787,20 @@ function layoutEventBars() {
       bar.dataset.id = ev.id; bar.dataset.color = ev.color;
       
       if (window.__resizeData && window.__resizeData.id === ev.id) bar.classList.add('is-preview');
-      bar.style.top = `${28 + ev._track * 28}px`; const colors = resolveColor(ev.color); bar.style.background = colors.bg; bar.style.borderColor = colors.edge;
+      bar.style.top = `${28 + ev._track * trackSpacing}px`; 
+      const colors = resolveColor(ev.color); bar.style.background = colors.bg; bar.style.borderColor = colors.edge;
       bar.style.left = `calc(${startCol * 100 / daysToShow}% + 4px)`; bar.style.width = `calc(${span * 100 / daysToShow}% - 8px)`;
       if (pStart < weekStart) bar.classList.add('continues-left'); if (pEnd > weekFullEnd) bar.classList.add('continues-right');
       
       const label = document.createElement('span'); label.className = 'event-label'; label.textContent = ev.name; bar.appendChild(label);
+      
+      if (ev.notes) {
+        const notesEl = document.createElement('span');
+        notesEl.className = 'event-notes';
+        notesEl.textContent = ev.notes;
+        bar.appendChild(notesEl);
+      }
+      
       const dateText = ev.start !== ev.end ? `${ev.start} → ${ev.end}` : ev.start; bar.title = `${ev.name} · ${dateText}${ev.notes ? '\n\n' + ev.notes : ''}`;
       
       if (!window.__isReadOnly) {
@@ -760,7 +826,7 @@ function layoutEventBars() {
       layer.appendChild(bar);
     });
     row.appendChild(layer);
-    row.querySelectorAll('.day-cell').forEach(c => { c.style.paddingTop = weekMaxTrack >= 0 ? `${36 + (weekMaxTrack + 1) * 28}px` : '36px'; });
+    row.querySelectorAll('.day-cell').forEach(c => { c.style.paddingTop = weekMaxTrack >= 0 ? `${36 + (weekMaxTrack + 1) * trackSpacing}px` : '36px'; });
   });
 }
 
