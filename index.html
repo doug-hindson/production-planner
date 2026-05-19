@@ -136,6 +136,25 @@
   .ov-grid { position: relative; width: 100%; background: var(--bg-card); }
   .ov-line { position: absolute; top: 0; bottom: 0; width: 1px; background: var(--line-soft); z-index: 1; pointer-events: none; }
   body[data-view="overview"] .phase-layer { left: 0; }
+  
+  /* CRITICAL CSS: OVERRIDES FOR OVERVIEW EVENT BARS (Text Spill Logic) */
+  body[data-view="overview"] .event-bar {
+      height: 38px; /* Taller boxes to allow two lines */
+      padding: 4px 6px;
+      align-items: flex-start;
+      overflow: visible; /* Allows text to spill horizontally */
+  }
+  body[data-view="overview"] .event-label {
+      width: 100%;
+      min-width: 120px; /* Forces spill on tiny 1-day boxes */
+      white-space: normal; /* Enables wrapping */
+      line-height: 1.2;
+      display: -webkit-box;
+      -webkit-line-clamp: 2; /* Exactly 2 lines before truncating vertically */
+      -webkit-box-orient: vertical;
+      overflow: hidden; /* Clips vertically so it stays within the 38px block */
+      text-shadow: 1px 1px 0px var(--bg-card), -1px -1px 0px var(--bg-card), 1px -1px 0px var(--bg-card), -1px 1px 0px var(--bg-card); /* Halo effect */
+  }
 
   /* DRAGGING GLOBALS */
   body.is-resizing * { user-select: none !important; }
@@ -793,29 +812,39 @@ function renderOverviewCalendar() {
   const events = [...state.events].sort((a, b) => new Date(a.start) - new Date(b.start) || new Date(b.end) - new Date(a.end));
   const tracks = []; let maxTrack = -1;
 
-  events.forEach(ev => {
-    let placed = false;
-    for (let i = 0; i < tracks.length; i++) { if (fromISO(tracks[i]) < fromISO(ev.start)) { tracks[i] = ev.end; ev._track = i; placed = true; break; } }
-    if (!placed) { ev._track = tracks.length; tracks.push(ev.end); }
-    maxTrack = Math.max(maxTrack, ev._track);
+  // Overview Collision Logic: Measure screen width to calculate how many "days" the 120px text spill takes up,
+  // then pad the tracks algorithm so overlapping text forces the next event onto a new track!
+  const calWidth = document.getElementById('calendar').clientWidth || 1000;
+  const daysPerPixel = totalDays / calWidth;
+  const textPaddingDays = Math.ceil(120 * daysPerPixel);
 
+  events.forEach(ev => {
     const eStart = fromISO(ev.start) < spanStart ? spanStart : fromISO(ev.start);
     const eEnd = fromISO(ev.end) > spanEnd ? spanEnd : fromISO(ev.end);
     if (eStart > spanEnd || eEnd < spanStart) return;
 
+    const actualSpan = diffDays(toISO(eStart), toISO(eEnd)) + 1;
+    const effectiveSpan = Math.max(actualSpan, textPaddingDays); // Reserve track space for spilled text
+    const effectiveEnd = addDays(eStart, effectiveSpan);
+
+    let placed = false;
+    for (let i = 0; i < tracks.length; i++) { 
+      if (fromISO(tracks[i]) < eStart) { tracks[i] = toISO(effectiveEnd); ev._track = i; placed = true; break; } 
+    }
+    if (!placed) { ev._track = tracks.length; tracks.push(toISO(effectiveEnd)); }
+    maxTrack = Math.max(maxTrack, ev._track);
+
     const startOffset = diffDays(toISO(spanStart), toISO(eStart));
-    const span = diffDays(toISO(eStart), toISO(eEnd)) + 1;
 
     const bar = document.createElement('div'); bar.className = 'event-bar';
     bar.dataset.id = ev.id; bar.dataset.color = ev.color;
-    bar.style.top = `${16 + ev._track * 28}px`; const colors = resolveColor(ev.color); bar.style.background = colors.bg; bar.style.borderColor = colors.edge;
-    bar.style.left = `calc(${(startOffset / totalDays) * 100}% + 4px)`; bar.style.width = `calc(${(span / totalDays) * 100}% - 8px)`;
+    bar.style.top = `${16 + ev._track * 46}px`; const colors = resolveColor(ev.color); bar.style.background = colors.bg; bar.style.borderColor = colors.edge;
+    bar.style.left = `calc(${(startOffset / totalDays) * 100}% + 4px)`; bar.style.width = `calc(${(actualSpan / totalDays) * 100}% - 8px)`;
     if (fromISO(ev.start) < spanStart) bar.classList.add('continues-left'); if (fromISO(ev.end) > spanEnd) bar.classList.add('continues-right');
 
     const label = document.createElement('span'); label.className = 'event-label'; label.textContent = ev.name; bar.appendChild(label);
     const dateText = ev.start !== ev.end ? `${ev.start} → ${ev.end}` : ev.start; bar.title = `${ev.name} · ${dateText}${ev.notes ? '\n\n' + ev.notes : ''}`;
     
-    // Overview mode disables dragging because the math of mapping pixels to liquid % widths is unstable, but click-to-edit still works perfectly!
     bar.draggable = false;
     bar.addEventListener('click', (e) => { e.stopPropagation(); openEventModal(ev); });
 
@@ -824,7 +853,7 @@ function renderOverviewCalendar() {
   });
   
   grid.appendChild(layer);
-  grid.style.minHeight = Math.max(300, (maxTrack + 1) * 28 + 40) + 'px';
+  grid.style.minHeight = Math.max(300, (maxTrack + 1) * 46 + 40) + 'px';
 }
 
 function renderLegend() {
