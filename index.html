@@ -43,12 +43,19 @@
   .lang-toggle-wrap.is-nb .lbl-nb { color: var(--ink); }
   .lang-toggle-wrap:not(.is-nb) .lbl-en { color: var(--ink); }
   input[type="checkbox"] { accent-color: var(--ink); width: 16px; height: 16px; cursor: pointer; }
+  
+  /* Buttons & Toggles */
   .nav-btn, .action-btn { font-family: 'JetBrains Mono', monospace; font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; background: transparent; border: 1px solid var(--line); color: var(--ink); padding: 8px 14px; cursor: pointer; transition: all 0.15s ease; display: inline-flex; align-items: center; justify-content: center; }
   .nav-btn:hover, .action-btn:hover { border-color: var(--ink); background: var(--ink); color: var(--bg); }
   .action-btn.primary { background: var(--ink); color: var(--bg); border-color: var(--ink); }
   .action-btn.primary:hover { background: transparent; color: var(--ink); }
   .action-btn.ghost-danger { border-color: transparent; color: var(--ink-faint); padding: 6px 10px; }
   .action-btn.ghost-danger:hover { border-color: var(--danger); background: var(--danger); color: var(--bg); }
+  .view-toggle { display: flex; border: 1px solid var(--line); border-radius: 2px; overflow: hidden; }
+  .view-toggle button { border: none; font-family: 'JetBrains Mono', monospace; font-size: 10px; text-transform: uppercase; letter-spacing: 0.08em; padding: 8px 12px; cursor: pointer; background: transparent; color: var(--ink-soft); transition: all 0.15s ease; }
+  .view-toggle button.active { background: var(--line); color: var(--ink); font-weight: 500; }
+  .view-toggle button:hover:not(.active) { background: rgba(0,0,0,0.03); }
+
   .cloud-status { font-family: 'JetBrains Mono', monospace; font-size: 10px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--ink-faint); display: flex; align-items: center; gap: 6px; }
   .cloud-status.saved { color: #539853; }
   .cloud-status.saving { color: #d99587; }
@@ -71,7 +78,7 @@
   
   /* ===== Calendar ===== */
   .calendar-wrap { background: var(--bg-card); border: 1px solid var(--line); margin-top: 24px; margin-bottom: 24px; }
-  .calendar { width: 100%; position: relative; } 
+  .calendar { width: 100%; position: relative; }
   .weekday-row { display: grid; grid-template-columns: 60px repeat(7, 1fr); border-bottom: 1px solid var(--line); background: var(--bg-card); position: sticky; top: var(--sticky-h); z-index: 10; }
   .weekday-row.hide-weekends { grid-template-columns: 60px repeat(5, 1fr); }
   .weekday-row > div { padding: 11px 12px; font-family: 'JetBrains Mono', monospace; font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--ink-faint); border-right: 1px solid var(--line-soft); }
@@ -94,6 +101,10 @@
   .day-cell.weekend { background: rgba(0,0,0,0.012); }
   .day-cell.outside-project::after { content: ''; position: absolute; inset: 0; background: repeating-linear-gradient(45deg, transparent, transparent 6px, rgba(0,0,0,0.025) 6px, rgba(0,0,0,0.025) 7px); pointer-events: none; }
   .day-num { position: absolute; top: 6px; left: 8px; font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 500; color: var(--ink); margin-bottom: 3px; flex-shrink: 0; z-index: 5; }
+
+  /* ===== SINGLE WEEK VIEW OVERRIDES ===== */
+  body[data-view="single_week"] .day-cell { min-height: 40vh; }
+  body[data-view="single_week"] .month-divider { display: none; }
 
   /* DRAG AND DROP STYLING */
   .day-cell.drag-hover { background: rgba(0,0,0,0.06); }
@@ -153,7 +164,7 @@
 
   /* ===== READ-ONLY MODE STYLING ===== */
   body.read-only .day-add-btn, body.read-only .resize-handle, body.read-only #addEventBtn { display: none !important; }
-  body.read-only .project-title, body.read-only .project-desc, body.read-only .controls-left input { pointer-events: none; border-color: transparent; }
+  body.read-only .project-title, body.read-only .project-desc, body.read-only .controls-left input, body.read-only .view-toggle { pointer-events: none; border-color: transparent; }
   body.read-only .modal-actions-right { display: none !important; }
   body.read-only .event-bar { cursor: pointer; }
 
@@ -171,7 +182,7 @@
     body { background: #fff; }
     .app { max-width: none; padding: 0; }
     .sticky-zone { position: static; padding: 0; }
-    .controls, .settings-dropdown-wrap, #todayBtn, .modal-backdrop { display: none !important; }
+    .controls, .settings-dropdown-wrap, .modal-backdrop { display: none !important; }
     .calendar-wrap { page-break-inside: auto; border-color: #999; }
     .week-row, .month-divider { page-break-inside: avoid; }
     .weekday-row { position: static; }
@@ -215,7 +226,18 @@
           <span id="monthLabel">—</span>
           <span class="week-range" id="weekRange"></span>
         </div>
-        <button class="nav-btn" id="todayBtn" data-i18n="today">Today</button>
+        
+        <div class="view-toggle">
+          <button id="viewVerticalBtn" class="active">Vertical</button>
+          <button id="viewSingleBtn">Single Week</button>
+        </div>
+
+        <div style="display: flex; gap: 4px;">
+          <button class="nav-btn" id="prevWeekBtn" style="display: none;">&larr;</button>
+          <button class="nav-btn" id="todayBtn" data-i18n="today">Today</button>
+          <button class="nav-btn" id="nextWeekBtn" style="display: none;">&rarr;</button>
+        </div>
+        
         <div class="ctl">
           <label data-i18n="start">START</label>
           <input type="date" id="projectStart" />
@@ -337,9 +359,7 @@ window.onload = function() {
             return;
           }
           
-          // CRITICAL FIX 1: Hand the token securely to the GAPI client so it can authenticate requests
           gapi.client.setToken({ access_token: tokenResponse.access_token });
-
           const tokenData = { token: tokenResponse.access_token, expiresAt: Date.now() + (tokenResponse.expires_in * 1000) };
           sessionStorage.setItem('newslab_drive_token', JSON.stringify(tokenData));
           
@@ -389,8 +409,6 @@ async function fetchDriveFiles() {
   if (!folderId || !gapi.client.getToken()) return;
   try {
     updateCloudStatus('Syncing...');
-    
-    // CRITICAL FIX 2: Added "supportsAllDrives" to ensure agency Workspace folders are searchable
     const response = await gapi.client.drive.files.list({ 
       q: `'${folderId}' in parents and trashed=false`, 
       fields: 'files(id, name, mimeType)', 
@@ -523,6 +541,12 @@ let historyStack = []; let historyIndex = -1;
 function uid() { return 'id_' + Math.random().toString(36).slice(2, 10); }
 
 function migrateData(data) {
+  if (!data.viewMode) data.viewMode = 'vertical';
+  if (!data.currentWeekStart) {
+    const d = data.start ? fromISO(data.start) : new Date();
+    data.currentWeekStart = toISO(startOfWeek(d));
+  }
+  
   if (data.items && !data.events) { data.events = data.items; delete data.items; }
   if (data.phases) {
     const unifiedEvents = [];
@@ -558,8 +582,14 @@ function loadState() {
     const v3Raw = localStorage.getItem('newslab-planner-v3'); if (v3Raw) return migrateData(JSON.parse(v3Raw));
     const v2Raw = localStorage.getItem('newslab-planner-v2'); if (v2Raw) return migrateData(JSON.parse(v2Raw));
   } catch(e){}
+  
   const today = new Date(); const start = new Date(today.getFullYear(), today.getMonth(), 1); const end = addDays(start, 70);
-  return { title: 'Vampyr — Pre-teaser', desc: 'Pre-teaser, teaser and main campaign for the Norwegian horror film Vampyr.', start: toISO(start), end: toISO(end), showWeekends: true, events: [] };
+  return { 
+    title: 'Vampyr — Pre-teaser', desc: 'Pre-teaser, teaser and main campaign for the Norwegian horror film Vampyr.', 
+    start: toISO(start), end: toISO(end), 
+    viewMode: 'vertical', currentWeekStart: toISO(startOfWeek(today)),
+    showWeekends: true, events: [] 
+  };
 }
 
 let state = loadState();
@@ -590,19 +620,41 @@ function getDefaultDate() { if (anchorDateISO) return anchorDateISO; if (state.s
 const getMonthNames = () => t('months'); const getDayShort = () => state.showWeekends ? t('weekdays_full') : t('weekdays_no_weekend'); let currentLegendFilter = null;
 
 function render() {
+  document.body.setAttribute('data-view', state.viewMode);
+  document.getElementById('viewVerticalBtn').classList.toggle('active', state.viewMode === 'vertical');
+  document.getElementById('viewSingleBtn').classList.toggle('active', state.viewMode === 'single_week');
+  
+  document.getElementById('prevWeekBtn').style.display = state.viewMode === 'single_week' ? 'inline-flex' : 'none';
+  document.getElementById('nextWeekBtn').style.display = state.viewMode === 'single_week' ? 'inline-flex' : 'none';
+
   document.getElementById('projectTitle').value = state.title; document.getElementById('projectDesc').value = state.desc; document.getElementById('projectStart').value = state.start || ''; document.getElementById('projectEnd').value = state.end || '';
   const now = new Date(); document.getElementById('metaDate').textContent = `${String(now.getDate()).padStart(2,'0')}.${String(now.getMonth()+1).padStart(2,'0')}.${now.getFullYear()}`;
   document.getElementById('weekendToggle').classList.toggle('on', !!state.showWeekends);
   if (currentLegendFilter) document.body.setAttribute('data-filter-color', currentLegendFilter); else document.body.removeAttribute('data-filter-color');
+  
   renderCalendar(); renderLegend(); setupScrollAnchor(); setupStickyHeader();
 }
 
 function renderCalendar() {
   const cal = document.getElementById('calendar'); cal.innerHTML = '';
-  let spanStart, spanEnd;
-  if (state.start && state.end) { spanStart = fromISO(state.start); spanEnd = fromISO(state.end); } else { const today = new Date(); spanStart = new Date(today.getFullYear(), today.getMonth(), 1); spanEnd = addDays(spanStart, 70); }
-  const gridStart = startOfWeek(spanStart); const gridEnd = addDays(startOfWeek(spanEnd), 6); const totalWeeks = Math.round((gridEnd - gridStart) / 86400000 / 7) + 1;
-  const startLabel = `${getMonthNames()[spanStart.getMonth()]} ${spanStart.getFullYear()}`; const endLabel = `${getMonthNames()[spanEnd.getMonth()]} ${spanEnd.getFullYear()}`;
+  
+  let gridStart, gridEnd, totalWeeks, startLabel, endLabel;
+  
+  if (state.viewMode === 'single_week') {
+      gridStart = fromISO(state.currentWeekStart);
+      gridEnd = addDays(gridStart, 6);
+      totalWeeks = 1;
+      startLabel = `${getMonthNames()[gridStart.getMonth()]} ${gridStart.getFullYear()}`;
+      endLabel = `${getMonthNames()[gridEnd.getMonth()]} ${gridEnd.getFullYear()}`;
+  } else {
+      let spanStart, spanEnd;
+      if (state.start && state.end) { spanStart = fromISO(state.start); spanEnd = fromISO(state.end); } else { const today = new Date(); spanStart = new Date(today.getFullYear(), today.getMonth(), 1); spanEnd = addDays(spanStart, 70); }
+      gridStart = startOfWeek(spanStart); gridEnd = addDays(startOfWeek(spanEnd), 6); 
+      totalWeeks = Math.round((gridEnd - gridStart) / 86400000 / 7) + 1;
+      startLabel = `${getMonthNames()[spanStart.getMonth()]} ${spanStart.getFullYear()}`; 
+      endLabel = `${getMonthNames()[spanEnd.getMonth()]} ${spanEnd.getFullYear()}`;
+  }
+
   document.getElementById('monthLabel').textContent = startLabel === endLabel ? startLabel : `${startLabel} — ${endLabel}`;
   const firstWeekNum = getISOWeek(gridStart); const lastWeekNum = getISOWeek(addDays(gridEnd, -6));
   document.getElementById('weekRange').textContent = firstWeekNum === lastWeekNum ? `${t('uke')} ${firstWeekNum}` : `${t('uke')} ${firstWeekNum}–${lastWeekNum}`;
@@ -650,11 +702,14 @@ function layoutEventBars() {
   const cal = document.getElementById('calendar'); cal.querySelectorAll('.phase-layer').forEach(l => l.remove());
   const events = [...state.events].sort((a, b) => new Date(a.start) - new Date(b.start) || new Date(b.end) - new Date(a.end));
   const tracks = [];
+  
+  // Track calculation ALWAYS considers all events so they don't randomly change vertical position when clicking through weeks
   events.forEach(ev => {
     let placed = false;
     for (let i = 0; i < tracks.length; i++) { if (fromISO(tracks[i]) < fromISO(ev.start)) { tracks[i] = ev.end; ev._track = i; placed = true; break; } }
     if (!placed) { ev._track = tracks.length; tracks.push(ev.end); }
   });
+  
   const daysToShow = state.showWeekends ? 7 : 5; const rows = cal.querySelectorAll('.week-row');
   
   rows.forEach(row => {
@@ -757,6 +812,7 @@ function setupStickyHeader() {
 }
 
 function setupScrollAnchor() {
+  if (state.viewMode === 'single_week') return;
   const updateAnchor = () => {
     const stickyH = document.getElementById('stickyZone').getBoundingClientRect().height; const weekdayH = document.querySelector('.weekday-row')?.getBoundingClientRect().height || 0; const targetY = stickyH + weekdayH + 4;
     const rows = document.querySelectorAll('.week-row'); let chosen = null;
@@ -845,20 +901,29 @@ function openClearAllModal() {
   confirmBtn.addEventListener('click', () => {
     if (confirmBtn.disabled || window.__isReadOnly) return;
     localStorage.removeItem(STORAGE_KEY); const today = new Date(); const start = new Date(today.getFullYear(), today.getMonth(), 1); const end = addDays(start, 70);
-    state = { title: '', desc: '', start: toISO(start), end: toISO(end), showWeekends: true, events: [] }; saveState(); render(); closeModal();
+    state = { title: '', desc: '', start: toISO(start), end: toISO(end), viewMode: 'vertical', currentWeekStart: toISO(startOfWeek(today)), showWeekends: true, events: [] }; saveState(); render(); closeModal();
   });
   modal.classList.add('open'); setTimeout(() => input.focus(), 50);
 }
 
 // WIRING
+document.getElementById('viewVerticalBtn').addEventListener('click', () => { state.viewMode = 'vertical'; saveState(false); render(); });
+document.getElementById('viewSingleBtn').addEventListener('click', () => { state.viewMode = 'single_week'; saveState(false); render(); });
+document.getElementById('prevWeekBtn').addEventListener('click', () => { state.currentWeekStart = toISO(addDays(fromISO(state.currentWeekStart), -7)); saveState(false); render(); });
+document.getElementById('nextWeekBtn').addEventListener('click', () => { state.currentWeekStart = toISO(addDays(fromISO(state.currentWeekStart), 7)); saveState(false); render(); });
+
 document.getElementById('projectTitle').addEventListener('input', (e) => { if (window.__isReadOnly) return; state.title = e.target.value; saveState(); });
 document.getElementById('projectDesc').addEventListener('input', (e) => { if (window.__isReadOnly) return; state.desc = e.target.value; saveState(); });
 document.getElementById('projectStart').addEventListener('change', (e) => { if (window.__isReadOnly) return; state.start = e.target.value; saveState(); render(); });
 document.getElementById('projectEnd').addEventListener('change', (e) => { if (window.__isReadOnly) return; state.end = e.target.value; saveState(); render(); });
 document.getElementById('todayBtn').addEventListener('click', () => {
-  const todayCell = document.querySelector('.day-cell.today');
-  if (todayCell) { const stickyH = document.getElementById('stickyZone').getBoundingClientRect().height; const weekdayH = document.querySelector('.weekday-row').getBoundingClientRect().height; window.scrollTo({ top: todayCell.getBoundingClientRect().top + window.scrollY - stickyH - weekdayH - 20, behavior: 'smooth' }); } 
-  else { const firstWeek = document.querySelector('.week-row'); if (firstWeek) firstWeek.scrollIntoView({ behavior: 'smooth', block: 'start' }); }
+  if (state.viewMode === 'single_week') {
+    state.currentWeekStart = toISO(startOfWeek(new Date())); saveState(false); render();
+  } else {
+    const todayCell = document.querySelector('.day-cell.today');
+    if (todayCell) { const stickyH = document.getElementById('stickyZone').getBoundingClientRect().height; const weekdayH = document.querySelector('.weekday-row').getBoundingClientRect().height; window.scrollTo({ top: todayCell.getBoundingClientRect().top + window.scrollY - stickyH - weekdayH - 20, behavior: 'smooth' }); } 
+    else { const firstWeek = document.querySelector('.week-row'); if (firstWeek) firstWeek.scrollIntoView({ behavior: 'smooth', block: 'start' }); }
+  }
 });
 
 document.getElementById('addEventBtn').addEventListener('click', () => { if(!window.__isReadOnly) openEventModal(); });
@@ -880,6 +945,7 @@ document.addEventListener('keydown', (e) => {
   if (e.key.toLowerCase() === 'z' && (e.ctrlKey || e.metaKey)) { if (e.shiftKey) redo(); else undo(); }
 });
 
+// ============ JSON EXPORT / IMPORT / SHARE / CSV ============
 document.getElementById('shareLinkBtn').addEventListener('click', (e) => {
   document.getElementById('settingsMenu').classList.remove('open');
   try {
