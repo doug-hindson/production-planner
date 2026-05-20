@@ -53,9 +53,11 @@
   .action-btn.ghost-danger:hover { border-color: var(--danger); background: var(--danger); color: var(--bg); }
   
   .view-toggle-wrapper { position: relative; }
-  .view-toggle-tooltip { position: absolute; bottom: calc(100% + 8px); left: 50%; transform: translateX(-50%); background: var(--ink); color: var(--bg); padding: 6px 10px; border-radius: 4px; font-family: 'JetBrains Mono', monospace; font-size: 9px; text-transform: uppercase; letter-spacing: 0.08em; white-space: nowrap; pointer-events: none; opacity: 0; z-index: 100; display: none; }
+  .view-toggle-tooltip { position: absolute; bottom: calc(100% + 8px); left: 50%; transform: translateX(-50%); background: var(--ink); color: var(--bg); padding: 6px 10px; border-radius: 4px; font-family: 'JetBrains Mono', monospace; font-size: 9px; text-transform: uppercase; letter-spacing: 0.08em; white-space: nowrap; opacity: 0; z-index: 100; display: none; align-items: center; gap: 8px; }
   .view-toggle-tooltip::after { content: ''; position: absolute; top: 100%; left: 50%; transform: translateX(-50%); border-width: 4px; border-style: solid; border-color: var(--ink) transparent transparent transparent; }
-  body.read-only .view-toggle-tooltip { display: block; animation: slideUpFade 0.4s ease forwards 1s; }
+  body.read-only .view-toggle-tooltip:not(.dismissed) { display: flex; animation: slideUpFade 0.4s ease forwards 1s; pointer-events: auto; }
+  .view-toggle-tooltip-close { background: transparent; border: none; color: var(--bg); font-size: 10px; cursor: pointer; padding: 0 4px; opacity: 0.7; }
+  .view-toggle-tooltip-close:hover { opacity: 1; }
   @keyframes slideUpFade { from { opacity: 0; transform: translate(-50%, 4px); } to { opacity: 1; transform: translate(-50%, 0); } }
 
   .view-toggle { display: flex; border: 1px solid var(--line); border-radius: 2px; overflow: hidden; }
@@ -126,7 +128,7 @@
   .hz-layout { display: flex; border: 1px solid var(--line); background: var(--bg-card); overflow-x: auto; align-items: stretch; }
   
   .hz-sidebar {
-      width: 420px; min-width: 420px; flex-shrink: 0;
+      width: 480px; min-width: 480px; flex-shrink: 0;
       position: sticky; left: 0; z-index: 30;
       background: var(--bg-card); border-right: 1px solid var(--line);
       box-shadow: 2px 0 8px rgba(0,0,0,0.03);
@@ -136,7 +138,6 @@
       height: 78px; 
       border-bottom: 1px solid var(--line);
       background: var(--bg-card); 
-      position: sticky; top: var(--sticky-h); z-index: 40;
   }
   .hz-sidebar-labels { position: relative; flex-grow: 1; }
   .hz-phase-label {
@@ -153,10 +154,7 @@
   }
 
   .hz-timeline { display: block; flex-grow: 1; min-width: max-content; }
-  .hz-sticky-headers { 
-      position: sticky; top: var(--sticky-h); z-index: 20; 
-      background: var(--bg-card); 
-  }
+  .hz-sticky-headers { background: var(--bg-card); }
   
   .hz-months { height: 32px; display: flex; border-bottom: 1px solid var(--line); box-sizing: border-box; }
   .hz-month { height: 100%; font-family: 'JetBrains Mono', monospace; font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--ink-faint); padding: 8px 12px; border-right: 1px solid var(--line); box-sizing: border-box; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -339,7 +337,10 @@
         </div>
         
         <div class="view-toggle-wrapper">
-          <div class="view-toggle-tooltip" data-i18n="view_tooltip">Switch views for more detail</div>
+          <div class="view-toggle-tooltip" id="viewTooltip">
+            <span data-i18n="view_tooltip">Switch views for more detail</span>
+            <button class="view-toggle-tooltip-close" id="closeTooltipBtn" aria-label="Close">✕</button>
+          </div>
           <div class="view-toggle">
             <button id="viewOverviewBtn">Overview</button>
             <button id="viewHorizontalBtn">Horizontal</button>
@@ -907,12 +908,12 @@ function renderHorizontalCalendar() {
   });
 
   const startPhaseTrack = maxSingleTrack + 1;
-  const trackHeight = 36;
+  const trackHeight = 40;
   let sidebarHtml = '';
   
   multiDayEvents.forEach((ev, idx) => { 
       ev._track = startPhaseTrack + idx; 
-      const yPos = 16 + ev._track * trackHeight;
+      const yPos = 8 + ev._track * trackHeight;
       sidebarHtml += `<div class="hz-phase-label" style="top: ${yPos}px" title="${escapeAttr(ev.name)}">${escapeHtml(ev.name)}</div>`;
   });
   
@@ -922,7 +923,7 @@ function renderHorizontalCalendar() {
   let gridLinesHtml = '';
   let sidebarLinesHtml = '';
   for (let i = 0; i <= maxTrack; i++) {
-      const yPos = 12 + i * trackHeight + 34; // Underneath the bar vertically
+      const yPos = (i + 1) * trackHeight; 
       gridLinesHtml += `<div class="hz-guideline" style="top: ${yPos}px; width: ${totalDays*dayWidth}px;"></div>`;
       sidebarLinesHtml += `<div class="hz-guideline" style="top: ${yPos}px;"></div>`;
   }
@@ -960,7 +961,7 @@ function renderHorizontalCalendar() {
     bar.draggable = !window.__isReadOnly && !(window.__resizeData && window.__resizeData.id === ev.id); bar.dataset.id = ev.id; bar.dataset.color = ev.color;
     if (window.__resizeData && window.__resizeData.id === ev.id) bar.classList.add('is-preview');
     
-    bar.style.top = `${12 + ev._track * trackHeight}px`; const colors = resolveColor(ev.color); bar.style.background = colors.bg; bar.style.borderColor = colors.edge;
+    bar.style.top = `${8 + ev._track * trackHeight}px`; const colors = resolveColor(ev.color); bar.style.background = colors.bg; bar.style.borderColor = colors.edge;
     
     if (isSingle) {
         bar.style.left = `${startIdx * dayWidth + 8}px`; bar.style.width = `32px`;
@@ -1217,10 +1218,13 @@ function openClearAllModal() {
 }
 
 // WIRING
-document.getElementById('viewVerticalBtn').addEventListener('click', () => { state.viewMode = 'vertical'; saveState(false); render(); });
-document.getElementById('viewHorizontalBtn').addEventListener('click', () => { state.viewMode = 'horizontal'; saveState(false); render(); });
-document.getElementById('viewSingleBtn').addEventListener('click', () => { state.viewMode = 'single_week'; saveState(false); render(); });
-document.getElementById('viewOverviewBtn').addEventListener('click', () => { state.viewMode = 'overview'; saveState(false); render(); });
+const hideViewTooltip = () => { const tt = document.getElementById('viewTooltip'); if(tt) tt.classList.add('dismissed'); };
+if (document.getElementById('closeTooltipBtn')) { document.getElementById('closeTooltipBtn').addEventListener('click', hideViewTooltip); }
+
+document.getElementById('viewVerticalBtn').addEventListener('click', () => { state.viewMode = 'vertical'; saveState(false); render(); hideViewTooltip(); });
+document.getElementById('viewHorizontalBtn').addEventListener('click', () => { state.viewMode = 'horizontal'; saveState(false); render(); hideViewTooltip(); });
+document.getElementById('viewSingleBtn').addEventListener('click', () => { state.viewMode = 'single_week'; saveState(false); render(); hideViewTooltip(); });
+document.getElementById('viewOverviewBtn').addEventListener('click', () => { state.viewMode = 'overview'; saveState(false); render(); hideViewTooltip(); });
 document.getElementById('prevWeekBtn').addEventListener('click', () => { state.currentWeekStart = toISO(addDays(fromISO(state.currentWeekStart), -7)); saveState(false); render(); });
 document.getElementById('nextWeekBtn').addEventListener('click', () => { state.currentWeekStart = toISO(addDays(fromISO(state.currentWeekStart), 7)); saveState(false); render(); });
 
