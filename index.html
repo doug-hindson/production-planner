@@ -117,19 +117,18 @@
 
   /* ===== HORIZONTAL GANTT VIEW (NEW SPREADSHEET LAYOUT) ===== */
   body[data-view="horizontal"] .calendar-wrap { border: none; background: transparent; }
-  .hz-layout { display: flex; border: 1px solid var(--line); background: var(--bg-card); overflow-x: auto; }
+  .hz-layout { display: flex; border: 1px solid var(--line); background: var(--bg-card); overflow-x: auto; align-items: flex-start; }
   
   .hz-sidebar {
-      width: 240px; min-width: 240px; flex-shrink: 0;
+      width: 360px; min-width: 360px; flex-shrink: 0;
       position: sticky; left: 0; z-index: 30;
-      background: var(--bg); border-right: 1px solid var(--line);
+      background: var(--bg-card); border-right: 1px solid var(--line);
       box-shadow: 2px 0 8px rgba(0,0,0,0.03);
   }
   .hz-sidebar-header {
       height: 78px; /* Matches months + days height */
       border-bottom: 1px solid var(--line);
-      position: sticky; top: var(--sticky-h); z-index: 40;
-      background: inherit;
+      background: var(--bg); /* Differentiates from the grid */
   }
   .hz-sidebar-labels { position: relative; }
   .hz-phase-label {
@@ -141,7 +140,7 @@
   }
 
   .hz-timeline { display: flex; flex-direction: column; flex-grow: 1; min-width: max-content; }
-  .hz-sticky-headers { position: sticky; top: var(--sticky-h); z-index: 20; background: var(--bg-card); }
+  .hz-sticky-headers { z-index: 20; background: var(--bg-card); }
   
   .hz-months { height: 32px; display: flex; border-bottom: 1px solid var(--line); box-sizing: border-box; }
   .hz-month { height: 100%; font-family: 'JetBrains Mono', monospace; font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--ink-faint); padding: 8px 12px; border-right: 1px solid var(--line); box-sizing: border-box; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -154,6 +153,7 @@
   .hz-grid { display: flex; position: relative; min-height: 50vh; }
   .hz-col { width: 48px; flex-shrink: 0; border-right: 1px solid var(--line-soft); position: relative; box-sizing: border-box; }
   
+  /* Horizontal Bar Logic overrides */
   body[data-view="horizontal"] .event-bar.hz-single-day {
       overflow: visible !important; justify-content: center; border-radius: 6px;
   }
@@ -172,7 +172,7 @@
   .ov-line { position: absolute; top: 0; bottom: 0; width: 1px; background: var(--line-soft); z-index: 1; pointer-events: none; }
   body[data-view="overview"] .phase-layer { left: 0; }
   
-  /* CRITICAL CSS: OVERRIDES FOR OVERVIEW EVENT BARS */
+  /* OVERRIDES FOR OVERVIEW EVENT BARS */
   body[data-view="overview"] .event-bar {
       min-height: 38px; height: auto; padding: 4px 6px; align-items: flex-start; overflow: visible;
   }
@@ -812,11 +812,12 @@ function renderHorizontalCalendar() {
   });
 
   const startPhaseTrack = maxSingleTrack + 1;
+  const trackHeight = 36;
   let sidebarHtml = '';
   
   multiDayEvents.forEach((ev, idx) => { 
       ev._track = startPhaseTrack + idx; 
-      sidebarHtml += `<div class="hz-phase-label" style="top: ${12 + ev._track * 28}px" title="${escapeAttr(ev.name)}">${escapeHtml(ev.name)}</div>`;
+      sidebarHtml += `<div class="hz-phase-label" style="top: ${12 + ev._track * trackHeight}px" title="${escapeAttr(ev.name)}">${escapeHtml(ev.name)}</div>`;
   });
   
   const maxTrack = startPhaseTrack + multiDayEvents.length - 1;
@@ -854,7 +855,7 @@ function renderHorizontalCalendar() {
     bar.draggable = !window.__isReadOnly && !(window.__resizeData && window.__resizeData.id === ev.id); bar.dataset.id = ev.id; bar.dataset.color = ev.color;
     if (window.__resizeData && window.__resizeData.id === ev.id) bar.classList.add('is-preview');
     
-    bar.style.top = `${12 + ev._track * 28}px`; const colors = resolveColor(ev.color); bar.style.background = colors.bg; bar.style.borderColor = colors.edge;
+    bar.style.top = `${12 + ev._track * trackHeight}px`; const colors = resolveColor(ev.color); bar.style.background = colors.bg; bar.style.borderColor = colors.edge;
     
     if (isSingle) {
         bar.style.left = `${startIdx * dayWidth + 8}px`; bar.style.width = `32px`;
@@ -876,7 +877,7 @@ function renderHorizontalCalendar() {
   });
   
   grid.appendChild(layer);
-  grid.style.minHeight = Math.max(300, (maxTrack + 1) * 28 + 40) + 'px';
+  grid.style.minHeight = Math.max(300, (maxTrack + 1) * trackHeight + 40) + 'px';
 }
 
 function renderOverviewCalendar() {
@@ -912,6 +913,7 @@ function renderOverviewCalendar() {
   const tracks = []; let maxTrack = -1;
   const calWidth = document.getElementById('calendar').clientWidth || 1000;
   const daysPerPixel = totalDays / calWidth;
+  const textPaddingDays = Math.ceil(120 * daysPerPixel);
 
   events.forEach(ev => {
     const eStart = fromISO(ev.start) < spanStart ? spanStart : fromISO(ev.start);
@@ -919,13 +921,7 @@ function renderOverviewCalendar() {
     if (eStart > spanEnd || eEnd < spanStart) return;
 
     const actualSpan = diffDays(toISO(eStart), toISO(eEnd)) + 1;
-    let effectiveSpan = actualSpan;
-    
-    if (ev.start === ev.end) {
-        const textWidthPx = ev.name.length * 7.5 + 40;
-        effectiveSpan = Math.max(actualSpan, Math.ceil(textWidthPx * daysPerPixel));
-    }
-    
+    const effectiveSpan = Math.max(actualSpan, textPaddingDays); // Reserve track space for spilled text
     const effectiveEnd = addDays(eStart, effectiveSpan - 1);
 
     const evS = eStart.getTime();
