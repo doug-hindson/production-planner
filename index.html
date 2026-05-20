@@ -52,6 +52,12 @@
   .action-btn.ghost-danger { border-color: transparent; color: var(--ink-faint); padding: 6px 10px; }
   .action-btn.ghost-danger:hover { border-color: var(--danger); background: var(--danger); color: var(--bg); }
   
+  .view-toggle-wrapper { position: relative; }
+  .view-toggle-tooltip { position: absolute; bottom: calc(100% + 8px); left: 50%; transform: translateX(-50%); background: var(--ink); color: var(--bg); padding: 6px 10px; border-radius: 4px; font-family: 'JetBrains Mono', monospace; font-size: 9px; text-transform: uppercase; letter-spacing: 0.08em; white-space: nowrap; pointer-events: none; opacity: 0; z-index: 100; display: none; }
+  .view-toggle-tooltip::after { content: ''; position: absolute; top: 100%; left: 50%; transform: translateX(-50%); border-width: 4px; border-style: solid; border-color: var(--ink) transparent transparent transparent; }
+  body.read-only .view-toggle-tooltip { display: block; animation: slideUpFade 0.4s ease forwards 1s; }
+  @keyframes slideUpFade { from { opacity: 0; transform: translate(-50%, 4px); } to { opacity: 1; transform: translate(-50%, 0); } }
+
   .view-toggle { display: flex; border: 1px solid var(--line); border-radius: 2px; overflow: hidden; }
   .view-toggle button { border: none; font-family: 'JetBrains Mono', monospace; font-size: 10px; text-transform: uppercase; letter-spacing: 0.08em; padding: 8px 12px; cursor: pointer; background: transparent; color: var(--ink-soft); transition: all 0.15s ease; }
   .view-toggle button.active { background: var(--line); color: var(--ink); font-weight: 500; }
@@ -117,14 +123,10 @@
 
   /* ===== HORIZONTAL GANTT VIEW (Spreadsheet Layout) ===== */
   body[data-view="horizontal"] .calendar-wrap { border: none; background: transparent; }
-  .hz-layout { 
-      display: flex; border: 1px solid var(--line); 
-      background: var(--bg-card); overflow-x: auto; 
-      align-items: stretch; /* Forces sidebar to full height */
-  }
+  .hz-layout { display: flex; border: 1px solid var(--line); background: var(--bg-card); overflow-x: auto; align-items: stretch; }
   
   .hz-sidebar {
-      width: 380px; min-width: 380px; flex-shrink: 0;
+      width: 420px; min-width: 420px; flex-shrink: 0;
       position: sticky; left: 0; z-index: 30;
       background: var(--bg-card); border-right: 1px solid var(--line);
       box-shadow: 2px 0 8px rgba(0,0,0,0.03);
@@ -134,7 +136,7 @@
       height: 78px; 
       border-bottom: 1px solid var(--line);
       background: var(--bg-card); 
-      z-index: 40;
+      position: sticky; top: var(--sticky-h); z-index: 40;
   }
   .hz-sidebar-labels { position: relative; flex-grow: 1; }
   .hz-phase-label {
@@ -151,7 +153,10 @@
   }
 
   .hz-timeline { display: block; flex-grow: 1; min-width: max-content; }
-  .hz-sticky-headers { z-index: 20; background: var(--bg-card); }
+  .hz-sticky-headers { 
+      position: sticky; top: var(--sticky-h); z-index: 20; 
+      background: var(--bg-card); 
+  }
   
   .hz-months { height: 32px; display: flex; border-bottom: 1px solid var(--line); box-sizing: border-box; }
   .hz-month { height: 100%; font-family: 'JetBrains Mono', monospace; font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--ink-faint); padding: 8px 12px; border-right: 1px solid var(--line); box-sizing: border-box; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -333,11 +338,14 @@
           <span class="week-range" id="weekRange"></span>
         </div>
         
-        <div class="view-toggle">
-          <button id="viewOverviewBtn">Overview</button>
-          <button id="viewVerticalBtn">Vertical</button>
-          <button id="viewHorizontalBtn">Horizontal</button>
-          <button id="viewSingleBtn">Single Week</button>
+        <div class="view-toggle-wrapper">
+          <div class="view-toggle-tooltip" data-i18n="view_tooltip">Switch views for more detail</div>
+          <div class="view-toggle">
+            <button id="viewOverviewBtn">Overview</button>
+            <button id="viewHorizontalBtn">Horizontal</button>
+            <button id="viewVerticalBtn">Vertical</button>
+            <button id="viewSingleBtn">Single Week</button>
+          </div>
         </div>
 
         <div style="display: flex; gap: 4px;">
@@ -545,8 +553,8 @@ function updateCloudStatus(msg) {
 
 // ============ I18N ============
 const i18n = {
-  en: { brand_mark: 'PRODUCTION PLANNER', title_placeholder: 'Title', desc_placeholder: 'Project description, scope notes, context…', start: 'START', end: 'END', today: 'Today', add_event: '+ Add Event', settings: 'Settings', language: 'Language', read_only_link: 'Read-Only Link', share_link: 'Copy Share Link', link_copied: 'Link copied to clipboard!', link_copied_fallback: 'Copy this link to share:', export_pdf: 'Export PDF', export_csv: 'Export to CSV', export_data: 'Save Backup (JSON)', import_data: 'Load Local File', show_weekends: 'Weekends', clear_all: 'Clear all', uke: 'WK', weekdays_full: ['MON','TUE','WED','THU','FRI','SAT','SUN'], weekdays_no_weekend: ['MON','TUE','WED','THU','FRI'], months: ['January','February','March','April','May','June','July','August','September','October','November','December'], new_event: 'New event', edit_event: 'Edit event', label_title: 'Title', label_start: 'Start date', label_end: 'End date', label_color: 'Color', label_notes: 'Notes', event_name_placeholder: 'e.g. Concept Phase or Workshop', save: 'Save', add_event_btn: 'Add event', delete: 'Delete', cancel: 'Cancel', clear_title: 'Clear everything?', clear_description: 'This will permanently remove all project details and events from this planner. The action cannot be undone.', clear_events: (n) => `→ ${n} event${n === 1 ? '' : 's'}`, clear_meta: '→ Title, description & dates', clear_confirm_prefix: 'Type', clear_confirm_word: 'CLEAR', clear_confirm_suffix: 'to confirm.', clear_button: 'Clear everything', label_time_off: 'Time Off (Holiday)' },
-  nb: { brand_mark: 'PRODUKSJONSPLANLEGGER', title_placeholder: 'Tittel', desc_placeholder: 'Prosjektbeskrivelse, omfang, kontekst…', start: 'START', end: 'SLUTT', today: 'I dag', add_event: '+ Nytt element', settings: 'Innstillinger', language: 'Språk', read_only_link: 'Skrivebeskyttet', share_link: 'Kopier delingslenke', link_copied: 'Lenken er kopiert til utklippstavlen!', link_copied_fallback: 'Kopier denne lenken for å dele:', export_pdf: 'Eksporter PDF', export_csv: 'Eksporter til CSV', export_data: 'Lagre Backup (JSON)', import_data: 'Åpne Lokal Fil', show_weekends: 'Helger', clear_all: 'Nullstill', uke: 'UKE', weekdays_full: ['MAN','TIR','ONS','TOR','FRE','LØR','SØN'], weekdays_no_weekend: ['MAN','TIR','ONS','TOR','FRE'], months: ['Januar','Februar','Mars','April','Mai','Juni','Juli','August','September','Oktober','November','Desember'], new_event: 'Nytt element', edit_event: 'Rediger element', label_title: 'Tittel', label_start: 'Startdato', label_end: 'Sluttdato', label_color: 'Farge', label_notes: 'Notater', event_name_placeholder: 'F.eks. Konseptfase eller Workshop', save: 'Lagre', add_event_btn: 'Legg til element', delete: 'Slett', cancel: 'Avbryt', clear_title: 'Nullstill alt?', clear_description: 'Dette fjerner permanent alle prosjektdetaljer og elementer fra denne planleggeren. Handlingen kan ikke angres.', clear_events: (n) => `→ ${n} element${n === 1 ? '' : 'er'}`, clear_meta: '→ Tittel, beskrivelse og datoer', clear_confirm_prefix: 'Skriv', clear_confirm_word: 'SLETT', clear_confirm_suffix: 'for å bekrefte.', clear_button: 'Nullstill alt', label_time_off: 'Ferie / Fridag' }
+  en: { brand_mark: 'PRODUCTION PLANNER', title_placeholder: 'Title', desc_placeholder: 'Project description, scope notes, context…', start: 'START', end: 'END', today: 'Today', add_event: '+ Add Event', settings: 'Settings', language: 'Language', read_only_link: 'Read-Only Link', share_link: 'Copy Share Link', link_copied: 'Link copied to clipboard!', link_copied_fallback: 'Copy this link to share:', export_pdf: 'Export PDF', export_csv: 'Export to CSV', export_data: 'Save Backup (JSON)', import_data: 'Load Local File', show_weekends: 'Weekends', clear_all: 'Clear all', uke: 'WK', weekdays_full: ['MON','TUE','WED','THU','FRI','SAT','SUN'], weekdays_no_weekend: ['MON','TUE','WED','THU','FRI'], months: ['January','February','March','April','May','June','July','August','September','October','November','December'], new_event: 'New event', edit_event: 'Edit event', label_title: 'Title', label_start: 'Start date', label_end: 'End date', label_color: 'Color', label_notes: 'Notes', event_name_placeholder: 'e.g. Concept Phase or Workshop', save: 'Save', add_event_btn: 'Add event', delete: 'Delete', cancel: 'Cancel', clear_title: 'Clear everything?', clear_description: 'This will permanently remove all project details and events from this planner. The action cannot be undone.', clear_events: (n) => `→ ${n} event${n === 1 ? '' : 's'}`, clear_meta: '→ Title, description & dates', clear_confirm_prefix: 'Type', clear_confirm_word: 'CLEAR', clear_confirm_suffix: 'to confirm.', clear_button: 'Clear everything', label_time_off: 'Time Off (Holiday)', view_tooltip: 'Switch views for more detail' },
+  nb: { brand_mark: 'PRODUKSJONSPLANLEGGER', title_placeholder: 'Tittel', desc_placeholder: 'Prosjektbeskrivelse, omfang, kontekst…', start: 'START', end: 'SLUTT', today: 'I dag', add_event: '+ Nytt element', settings: 'Innstillinger', language: 'Språk', read_only_link: 'Skrivebeskyttet', share_link: 'Kopier delingslenke', link_copied: 'Lenken er kopiert til utklippstavlen!', link_copied_fallback: 'Kopier denne lenken for å dele:', export_pdf: 'Eksporter PDF', export_csv: 'Eksporter til CSV', export_data: 'Lagre Backup (JSON)', import_data: 'Åpne Lokal Fil', show_weekends: 'Helger', clear_all: 'Nullstill', uke: 'UKE', weekdays_full: ['MAN','TIR','ONS','TOR','FRE','LØR','SØN'], weekdays_no_weekend: ['MAN','TIR','ONS','TOR','FRE'], months: ['Januar','Februar','Mars','April','Mai','Juni','Juli','August','September','Oktober','November','Desember'], new_event: 'Nytt element', edit_event: 'Rediger element', label_title: 'Tittel', label_start: 'Startdato', label_end: 'Sluttdato', label_color: 'Farge', label_notes: 'Notater', event_name_placeholder: 'F.eks. Konseptfase eller Workshop', save: 'Lagre', add_event_btn: 'Legg til element', delete: 'Slett', cancel: 'Avbryt', clear_title: 'Nullstill alt?', clear_description: 'Dette fjerner permanent alle prosjektdetaljer og elementer fra denne planleggeren. Handlingen kan ikke angres.', clear_events: (n) => `→ ${n} element${n === 1 ? '' : 'er'}`, clear_meta: '→ Tittel, beskrivelse og datoer', clear_confirm_prefix: 'Skriv', clear_confirm_word: 'SLETT', clear_confirm_suffix: 'for å bekrefte.', clear_button: 'Nullstill alt', label_time_off: 'Ferie / Fridag', view_tooltip: 'Bytt visning for flere detaljer' }
 };
 
 let currentLang = localStorage.getItem('newslab-planner-lang') || 'en';
@@ -674,10 +682,10 @@ function bindEventBarEvents(bar, ev, pxPerDay, segStart) {
 // ============ RENDERERS ============
 function render() {
   document.body.setAttribute('data-view', state.viewMode);
-  document.getElementById('viewVerticalBtn').classList.toggle('active', state.viewMode === 'vertical');
-  document.getElementById('viewHorizontalBtn').classList.toggle('active', state.viewMode === 'horizontal');
-  document.getElementById('viewSingleBtn').classList.toggle('active', state.viewMode === 'single_week');
   document.getElementById('viewOverviewBtn').classList.toggle('active', state.viewMode === 'overview');
+  document.getElementById('viewHorizontalBtn').classList.toggle('active', state.viewMode === 'horizontal');
+  document.getElementById('viewVerticalBtn').classList.toggle('active', state.viewMode === 'vertical');
+  document.getElementById('viewSingleBtn').classList.toggle('active', state.viewMode === 'single_week');
   
   document.getElementById('prevWeekBtn').style.display = state.viewMode === 'single_week' ? 'inline-flex' : 'none';
   document.getElementById('nextWeekBtn').style.display = state.viewMode === 'single_week' ? 'inline-flex' : 'none';
@@ -758,6 +766,7 @@ function renderVerticalCalendar() {
       bindDayCellEvents(cell, day); row.appendChild(cell);
     }
     
+    // Time Off Layer for Vertical View
     const weekVisibleEnd = addDays(weekStart, daysToShow - 1);
     const timeOffLayer = document.createElement('div'); timeOffLayer.className = 'time-off-layer';
     timeOffEvents.forEach(ev => {
@@ -898,7 +907,7 @@ function renderHorizontalCalendar() {
   });
 
   const startPhaseTrack = maxSingleTrack + 1;
-  const trackHeight = 40; 
+  const trackHeight = 36;
   let sidebarHtml = '';
   
   multiDayEvents.forEach((ev, idx) => { 
@@ -1045,7 +1054,7 @@ function renderOverviewCalendar() {
     if (fromISO(ev.start) < spanStart) bar.classList.add('continues-left'); if (fromISO(ev.end) > spanEnd) bar.classList.add('continues-right');
 
     const formatD = (iso) => { const d = fromISO(iso); return `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}`; };
-    const dateStr = `${formatD(ev.start)} - ${formatD(ev.end)}`;
+    const dateStr = ev.start === ev.end ? formatD(ev.start) : `${formatD(ev.start)} - ${formatD(ev.end)}`;
 
     const label = document.createElement('div'); label.className = 'event-label'; 
     label.innerHTML = `<div style="margin-bottom: 2px;">${escapeHtml(ev.name)}</div><div style="color: var(--ink-soft); font-weight: 400;">${dateStr}</div>`; 
