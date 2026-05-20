@@ -145,7 +145,6 @@
       height: 1px; background-color: var(--line-soft);
   }
 
-  /* CRITICAL STRUCTURAL FIX: Changed to block flow to fix native sticky mechanics inside the scroll canvas */
   .hz-timeline { display: block; flex-grow: 1; min-width: max-content; }
   .hz-sticky-headers { 
       position: sticky; top: var(--sticky-h); z-index: 20; 
@@ -198,6 +197,7 @@
   /* DRAGGING GLOBALS */
   body.is-resizing * { user-select: none !important; }
   body.is-resizing .phase-layer, body.is-resizing .event-bar { pointer-events: none !important; }
+  body[data-filter-color] .event-bar { opacity: 0.15; transition: opacity 0.2s ease; }
   
   /* ===== TIME OFF LAYER (GREYED OUT BLOCKS) ===== */
   .time-off-layer { position: absolute; left: 60px; right: 0; top: 0; bottom: 0; pointer-events: none; z-index: 1; }
@@ -327,6 +327,7 @@
           <span class="week-range" id="weekRange"></span>
         </div>
         
+        <!-- UI FIX 3: Placed Overview first in the list of toggles -->
         <div class="view-toggle">
           <button id="viewOverviewBtn">Overview</button>
           <button id="viewVerticalBtn">Vertical</button>
@@ -680,7 +681,7 @@ function render() {
   const now = new Date(); document.getElementById('metaDate').textContent = `${String(now.getDate()).padStart(2,'0')}.${String(now.getMonth()+1).padStart(2,'0')}.${now.getFullYear()}`;
   document.getElementById('weekendToggle').classList.toggle('on', !!state.showWeekends);
   
-  if (state.viewMode === 'horizontal') { renderHorizontalCalendar(); }  
+  if (state.viewMode === 'horizontal') { renderHorizontalCalendar(); } 
   else if (state.viewMode === 'overview') { renderOverviewCalendar(); }
   else { renderVerticalCalendar(); }
   
@@ -898,7 +899,7 @@ function renderHorizontalCalendar() {
   const trackHeight = 36;
   let sidebarHtml = '';
   
-  // UI FIX 2B: PPhase dividers for perfect row guidance stretching across left bar pane
+  // UI FIX 2B: Phase dividers for perfect row guidance stretching across left bar pane
   multiDayEvents.forEach((ev, idx) => { 
       ev._track = startPhaseTrack + idx; 
       const yPos = 16 + ev._track * trackHeight;
@@ -1113,7 +1114,7 @@ function colorPickerHTML(currentColor) {
 }
 function wireColorPicker(container) {
   let selected = container.dataset.current || '';
-  container.querySelectorAll('.color-swatch').forEach(sw => { sw.addEventListener('click', (e) => { const target = sw.dataset.color; if (target === '__custom__') { const input = sw.querySelector('input[type="color"]'); if  (input) input.click(); return; } selected = target; container.querySelectorAll('.color-swatch').forEach(s => s.classList.remove('selected')); sw.classList.add('selected'); }); });
+  container.querySelectorAll('.color-swatch').forEach(sw => { sw.addEventListener('click', (e) => { const target = sw.dataset.color; if (target === '__custom__') { const input = sw.querySelector('input[type="color"]'); if (input) input.click(); return; } selected = target; container.querySelectorAll('.color-swatch').forEach(s => s.classList.remove('selected')); sw.classList.add('selected'); }); });
   const customInput = container.querySelector('input[type="color"]');
   if (customInput) { customInput.addEventListener('input', (e) => { const hex = e.target.value; selected = hex; const swatch = customInput.parentElement; swatch.classList.remove('empty'); swatch.style.background = hex; swatch.style.borderColor = darken(hex, 0.22); const lbl = swatch.querySelector('.custom-label'); if (lbl) lbl.remove(); container.querySelectorAll('.color-swatch').forEach(s => s.classList.remove('selected')); swatch.classList.add('selected'); }); }
   return () => selected;
