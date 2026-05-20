@@ -68,8 +68,9 @@
   .cloud-status { font-family: 'JetBrains Mono', monospace; font-size: 12px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--ink-faint); display: flex; align-items: center; gap: 6px; }
   .cloud-status.saved { color: #539853; }
   .cloud-status.saving { color: #d99587; }
+  .footer-controls { display: flex; justify-content: flex-end; margin-top: 16px; margin-bottom: 24px; }
   .settings-dropdown-wrap { position: relative; }
-  .settings-menu { position: absolute; top: calc(100% + 8px); right: 0; background: var(--bg-card); border: 1px solid var(--ink); z-index: 100; min-width: 260px; display: none; flex-direction: column; box-shadow: 0 6px 16px rgba(0,0,0,0.08); }
+  .settings-menu { position: absolute; bottom: calc(100% + 8px); right: 0; background: var(--bg-card); border: 1px solid var(--ink); z-index: 100; min-width: 260px; display: none; flex-direction: column; box-shadow: 0 -6px 16px rgba(0,0,0,0.08); max-height: 80vh; overflow-y: auto; }
   .settings-menu.open { display: flex; }
   .settings-menu-item { display: flex; width: 100%; text-align: left; background: transparent; border: none; padding: 12px 16px; font-family: 'JetBrains Mono', monospace; font-size: 12px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--ink); cursor: pointer; }
   .settings-menu-item:hover { background: var(--ink); color: var(--bg); }
@@ -128,7 +129,7 @@
   .hz-layout { display: flex; border: 1px solid var(--line); background: var(--bg-card); overflow-x: auto; align-items: stretch; }
   
   .hz-sidebar {
-      width: 480px; min-width: 480px; flex-shrink: 0;
+      flex-shrink: 0;
       position: sticky; left: 0; z-index: 30;
       background: var(--bg-card); border-right: 1px solid var(--line);
       box-shadow: 2px 0 8px rgba(0,0,0,0.03);
@@ -281,6 +282,7 @@
   body.read-only .project-title, body.read-only .project-desc, body.read-only .controls-left input { pointer-events: none; border-color: transparent; }
   body.read-only .modal-actions-right { display: none !important; }
   body.read-only .event-bar { cursor: pointer; }
+  body.read-only .footer-controls { display: none !important; }
 
   @media (max-width: 1100px) {
     .app { padding: 0 24px 60px; }
@@ -369,16 +371,22 @@
         </div>
         <button class="action-btn primary" id="addEventBtn" data-i18n="add_event">+ Add Event</button>
       </div>
+    </div>
+  </div>
 
-      <div class="controls-right">
-        <div class="settings-dropdown-wrap">
-          <button class="action-btn" id="settingsBtn" data-i18n="settings">Settings</button>
-          
-          <div class="settings-menu" id="settingsMenu">
-            <div class="drive-panel">
-              <div id="driveLoginSection">
-                <button class="action-btn primary" style="width: 100%;" id="btnDriveLogin">Sign In with Google</button>
-              </div>
+  <div class="calendar-wrap">
+    <div class="calendar" id="calendar"></div>
+  </div>
+
+  <div class="footer-controls">
+    <div class="settings-dropdown-wrap">
+      <button class="action-btn" id="settingsBtn" data-i18n="settings">Settings</button>
+      
+      <div class="settings-menu" id="settingsMenu">
+        <div class="drive-panel">
+          <div id="driveLoginSection">
+            <button class="action-btn primary" style="width: 100%;" id="btnDriveLogin">Sign In with Google</button>
+          </div>
               <div id="driveWorkspaceSection" style="display: none; flex-direction: column; gap: 10px;">
                 <div>
                   <label>Drive Folder ID</label>
@@ -395,49 +403,10 @@
             </div>
 
             <div class="settings-menu-divider"></div>
-
-            <div class="settings-toggle-row" id="readOnlyToggleWrapper">
-              <span data-i18n="read_only_link">Read-Only Link</span>
-              <div class="toggle-switch ctl" id="shareReadOnly">
-                <div class="toggle-switch-track"></div>
-              </div>
-            </div>
-            <button class="settings-menu-item" id="shareLinkBtn" data-i18n="share_link">Copy Share Link</button>
-            <button class="settings-menu-item" id="exportJsonBtn" data-i18n="export_data">Download Backup (JSON)</button>
-            <label class="settings-menu-item" for="importJsonInput" style="margin: 0;" data-i18n="import_data">Load Local File</label>
-            <input type="file" id="importJsonInput" accept=".json" style="display: none;" />
-            <button class="settings-menu-item" id="exportCsvBtn" data-i18n="export_csv">Export to CSV</button>
-            <button class="settings-menu-item" id="exportBtn" data-i18n="export_pdf">Export PDF</button>
-            
-            <div class="settings-menu-divider"></div>
-            
-            <div class="settings-toggle-row" id="weekendToggleWrapper">
-              <span data-i18n="show_weekends">Weekends</span>
-              <div class="toggle-switch ctl" id="weekendToggle">
-                <div class="toggle-switch-track"></div>
-              </div>
-            </div>
-
-            <div class="settings-toggle-row" id="langToggleWrapper">
-              <span data-i18n="language">Language</span>
-              <div class="toggle-switch ctl lang-toggle-wrap" id="langToggleBtn">
-                <span class="lbl-en">EN</span>
-                <div class="toggle-switch-track"></div>
-                <span class="lbl-nb">NO</span>
-              </div>
-            </div>
-
-            <div class="settings-menu-divider"></div>
-            
-            <button class="settings-menu-item danger" id="clearAllBtn" data-i18n="clear_all">Clear all</button>
-          </div>
-        </div>
+        
+        <button class="settings-menu-item danger" id="clearAllBtn" data-i18n="clear_all">Clear all</button>
       </div>
     </div>
-  </div>
-
-  <div class="calendar-wrap">
-    <div class="calendar" id="calendar"></div>
   </div>
 
 </div>
@@ -699,9 +668,18 @@ function render() {
   const now = new Date(); document.getElementById('metaDate').textContent = `${String(now.getDate()).padStart(2,'0')}.${String(now.getMonth()+1).padStart(2,'0')}.${now.getFullYear()}`;
   document.getElementById('weekendToggle').classList.toggle('on', !!state.showWeekends);
   
+  let hzScrollLeft = 0;
+  const hzContainer = document.querySelector('.hz-layout');
+  if (hzContainer) hzScrollLeft = hzContainer.scrollLeft;
+  
   if (state.viewMode === 'horizontal') { renderHorizontalCalendar(); } 
   else if (state.viewMode === 'overview') { renderOverviewCalendar(); }
   else { renderVerticalCalendar(); }
+  
+  const newHzContainer = document.querySelector('.hz-layout');
+  if (newHzContainer && state.viewMode === 'horizontal') {
+    newHzContainer.scrollLeft = hzScrollLeft;
+  }
   
   setupScrollAnchor(); setupStickyHeader();
 }
@@ -915,11 +893,20 @@ function renderHorizontalCalendar() {
   const trackHeight = 46;
   let sidebarHtml = '';
   
+  // Dynamic calculation for sidebar width based on text length
+  let calculatedSidebarWidth = 240; 
+  
   multiDayEvents.forEach((ev, idx) => { 
       ev._track = startPhaseTrack + idx; 
       const yPos = 8 + ev._track * trackHeight;
       sidebarHtml += `<div class="hz-phase-label" style="top: ${yPos}px" title="${escapeAttr(ev.name)}">${escapeHtml(ev.name)}</div>`;
+      
+      const textW = (ev.name.length * 8) + 48;
+      if (textW > calculatedSidebarWidth) calculatedSidebarWidth = textW;
   });
+  
+  // Cap at reasonable width
+  calculatedSidebarWidth = Math.min(calculatedSidebarWidth, 480);
   
   const maxTrack = startPhaseTrack + multiDayEvents.length - 1;
 
@@ -933,7 +920,7 @@ function renderHorizontalCalendar() {
 
   cal.innerHTML = `
     <div class="hz-layout">
-      <div class="hz-sidebar">
+      <div class="hz-sidebar" style="width: ${calculatedSidebarWidth}px; min-width: ${calculatedSidebarWidth}px;">
         <div class="hz-sidebar-header"></div>
         <div class="hz-sidebar-labels">${sidebarLinesHtml}${sidebarHtml}</div>
       </div>
