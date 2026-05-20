@@ -159,7 +159,7 @@
   }
   body[data-view="horizontal"] .event-bar.hz-single-day .event-label {
       position: absolute; left: 100%; margin-left: 8px;
-      white-space: nowrap; color: var(--ink); font-weight: 500;
+      white-space: nowrap; width: max-content; color: var(--ink); font-weight: 500;
       text-transform: uppercase; font-family: 'JetBrains Mono', monospace;
       letter-spacing: 0.08em; pointer-events: none;
   }
@@ -178,7 +178,7 @@
   }
   body[data-view="overview"] .event-label { width: 100%; min-width: 120px; white-space: normal; line-height: 1.2; }
   body[data-view="overview"] .event-bar.ov-single-day .event-label {
-      position: absolute; left: 100%; margin-left: 6px; top: 2px; width: 140px;
+      position: absolute; left: 100%; margin-left: 6px; top: 2px; width: max-content; white-space: nowrap;
   }
 
   /* DRAGGING GLOBALS */
@@ -791,12 +791,16 @@ function renderHorizontalCalendar() {
   multiDayEvents.sort((a, b) => fromISO(a.start) - fromISO(b.start));
 
   const singleTracks = []; let maxSingleTrack = -1;
-  const textPaddingDays = 4; // reserve space for spilling text
 
   singleDayEvents.forEach(ev => {
     let startIdx = days.findIndex(d => d >= fromISO(ev.start)); 
     if (startIdx === -1) return;
-    const evS = startIdx; const evE = startIdx + textPaddingDays; 
+    
+    // Dynamic text width calculation for collision
+    const textWidthPx = ev.name.length * 7.5 + 40; 
+    const paddingDays = Math.ceil(textWidthPx / dayWidth);
+    
+    const evS = startIdx; const evE = startIdx + paddingDays; 
     let placed = false;
     for (let i = 0; i < singleTracks.length; i++) {
       let overlap = false;
@@ -908,7 +912,6 @@ function renderOverviewCalendar() {
   const tracks = []; let maxTrack = -1;
   const calWidth = document.getElementById('calendar').clientWidth || 1000;
   const daysPerPixel = totalDays / calWidth;
-  const textPaddingDays = Math.ceil(120 * daysPerPixel);
 
   events.forEach(ev => {
     const eStart = fromISO(ev.start) < spanStart ? spanStart : fromISO(ev.start);
@@ -916,7 +919,13 @@ function renderOverviewCalendar() {
     if (eStart > spanEnd || eEnd < spanStart) return;
 
     const actualSpan = diffDays(toISO(eStart), toISO(eEnd)) + 1;
-    const effectiveSpan = Math.max(actualSpan, textPaddingDays); // Reserve track space for spilled text
+    let effectiveSpan = actualSpan;
+    
+    if (ev.start === ev.end) {
+        const textWidthPx = ev.name.length * 7.5 + 40;
+        effectiveSpan = Math.max(actualSpan, Math.ceil(textWidthPx * daysPerPixel));
+    }
+    
     const effectiveEnd = addDays(eStart, effectiveSpan - 1);
 
     const evS = eStart.getTime();
