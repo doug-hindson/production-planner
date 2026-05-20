@@ -155,7 +155,6 @@
   }
 
   .hz-timeline { display: block; flex-grow: 1; min-width: max-content; }
-  /* REMOVED: sticky vertically, to prevent bug in overflow-x layout */
   .hz-sticky-headers { 
       position: relative; z-index: 20; 
       background: var(--bg-card); 
@@ -387,28 +386,74 @@
           <div id="driveLoginSection">
             <button class="action-btn primary" style="width: 100%;" id="btnDriveLogin">Sign In with Google</button>
           </div>
-              <div id="driveWorkspaceSection" style="display: none; flex-direction: column; gap: 10px;">
-                <div>
-                  <label>Drive Folder ID</label>
-                  <input type="text" class="drive-input" id="driveFolderId" />
-                </div>
-                <div>
-                  <label>Load Plan</label>
-                  <select class="drive-input" id="driveFileSelect" style="cursor: pointer;">
-                    <option value="">Select a file...</option>
-                  </select>
-                </div>
-                <button class="action-btn" style="width: 100%;" id="btnNewDriveFile">+ Save as New File in Drive</button>
-              </div>
+          <div id="driveWorkspaceSection" style="display: none; flex-direction: column; gap: 10px;">
+            <div>
+              <label>Drive Folder ID</label>
+              <input type="text" class="drive-input" id="driveFolderId" />
             </div>
+            <div>
+              <label>Load Plan</label>
+              <select class="drive-input" id="driveFileSelect" style="cursor: pointer;">
+                <option value="">Select a file...</option>
+              </select>
+            </div>
+            <button class="action-btn" style="width: 100%;" id="btnNewDriveFile">+ Save as New File in Drive</button>
+          </div>
+        </div>
 
-            <div class="settings-menu-divider"></div>
+        <div class="settings-menu-divider"></div>
+
+        <div class="settings-toggle-row" id="readOnlyToggleWrapper">
+          <span data-i18n="read_only_link">Read-Only Link</span>
+          <div class="toggle-switch ctl" id="shareReadOnly">
+            <div class="toggle-switch-track"></div>
+          </div>
+        </div>
+        <button class="settings-menu-item" id="shareLinkBtn" data-i18n="share_link">Copy Share Link</button>
+        <button class="settings-menu-item" id="exportJsonBtn" data-i18n="export_data">Download Backup (JSON)</button>
+        <label class="settings-menu-item" for="importJsonInput" style="margin: 0;" data-i18n="import_data">Load Local File</label>
+        <input type="file" id="importJsonInput" accept=".json" style="display: none;" />
+        <button class="settings-menu-item" id="exportCsvBtn" data-i18n="export_csv">Export to CSV</button>
+        <button class="settings-menu-item" id="exportBtn" data-i18n="export_pdf">Export PDF</button>
+        
+        <div class="settings-menu-divider"></div>
+        
+        <div class="settings-toggle-row" id="weekendToggleWrapper">
+          <span data-i18n="show_weekends">Weekends</span>
+          <div class="toggle-switch ctl" id="weekendToggle">
+            <div class="toggle-switch-track"></div>
+          </div>
+        </div>
+
+        <div class="settings-toggle-row" id="langToggleWrapper">
+          <span data-i18n="language">Language</span>
+          <div class="toggle-switch ctl lang-toggle-wrap" id="langToggleBtn">
+            <span class="lbl-en">EN</span>
+            <div class="toggle-switch-track"></div>
+            <span class="lbl-nb">NO</span>
+          </div>
+        </div>
+
+        <div class="settings-menu-divider"></div>
         
         <button class="settings-menu-item danger" id="clearAllBtn" data-i18n="clear_all">Clear all</button>
       </div>
     </div>
   </div>
 
+</div>
+
+<!-- DIALOG MODAL: Replaces native alert/prompt boxes -->
+<div class="modal-backdrop" id="dialogModal" style="z-index: 200;">
+  <div class="modal" style="max-width: 400px; padding: 24px;">
+    <h2 class="modal-title" id="dialogTitle" style="font-size: 16px; margin-bottom: 12px; font-weight: 600;"></h2>
+    <div id="dialogMessage" style="font-size: 14px; color: var(--ink-soft); margin-bottom: 20px; line-height: 1.5;"></div>
+    <input type="text" id="dialogInput" style="width: 100%; font-size: 14px; color: var(--ink); background: transparent; border: none; border-bottom: 1px solid var(--line); padding: 6px 0; outline: none; margin-bottom: 24px; display: none; font-family: 'JetBrains Mono', monospace;" />
+    <div class="modal-actions" style="justify-content: flex-end; margin-top: 0; padding-top: 0; border: none;">
+      <button class="action-btn" id="dialogCancel">Cancel</button>
+      <button class="action-btn primary" id="dialogOk">OK</button>
+    </div>
+  </div>
 </div>
 
 <div class="modal-backdrop" id="modal">
@@ -420,6 +465,43 @@
 </div>
 
 <script>
+// ============ CUSTOM DIALOG REPLACEMENTS ============
+let dialogCallback = null;
+function customAlert(message, title = 'NewsLab') {
+  document.getElementById('dialogTitle').textContent = title;
+  document.getElementById('dialogMessage').textContent = message;
+  document.getElementById('dialogInput').style.display = 'none';
+  document.getElementById('dialogCancel').style.display = 'none';
+  document.getElementById('dialogModal').classList.add('open');
+  dialogCallback = null;
+}
+function customPrompt(message, defaultValue, callback) {
+  document.getElementById('dialogTitle').textContent = 'NewsLab';
+  document.getElementById('dialogMessage').textContent = message;
+  const input = document.getElementById('dialogInput');
+  input.style.display = 'block';
+  input.value = defaultValue || '';
+  document.getElementById('dialogCancel').style.display = 'inline-flex';
+  document.getElementById('dialogModal').classList.add('open');
+  dialogCallback = callback;
+  setTimeout(() => input.focus(), 50);
+}
+document.getElementById('dialogCancel').addEventListener('click', () => {
+  document.getElementById('dialogModal').classList.remove('open');
+  if (dialogCallback) dialogCallback(null);
+});
+document.getElementById('dialogOk').addEventListener('click', () => {
+  document.getElementById('dialogModal').classList.remove('open');
+  if (document.getElementById('dialogInput').style.display === 'block') {
+    if (dialogCallback) dialogCallback(document.getElementById('dialogInput').value);
+  } else {
+    if (dialogCallback) dialogCallback(true);
+  }
+});
+document.getElementById('dialogInput').addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') { e.preventDefault(); document.getElementById('dialogOk').click(); }
+});
+
 // ============ GOOGLE DRIVE API INTEGRATION ============
 const GOOGLE_API_KEY = 'AIzaSyBrUd4L-IfFrfULoWYo8_d4cQEDIi6ir-I';
 const GOOGLE_CLIENT_ID = '832442581745-q05f99oh25br5aeqkrtaj7f2tthc2l3q.apps.googleusercontent.com';
@@ -436,7 +518,7 @@ window.onload = function() {
       client_id: GOOGLE_CLIENT_ID, scope: SCOPES,
       callback: (tokenResponse) => {
         if (tokenResponse && tokenResponse.access_token) {
-          if (!google.accounts.oauth2.hasGrantedAllScopes(tokenResponse, SCOPES)) { alert("Warning: You did not grant Google Drive permissions."); return; }
+          if (!google.accounts.oauth2.hasGrantedAllScopes(tokenResponse, SCOPES)) { customAlert("Warning: You did not grant Google Drive permissions."); return; }
           gapi.client.setToken({ access_token: tokenResponse.access_token });
           sessionStorage.setItem('newslab_drive_token', JSON.stringify({ token: tokenResponse.access_token, expiresAt: Date.now() + (tokenResponse.expires_in * 1000) }));
           document.getElementById('driveLoginSection').style.display = 'none'; document.getElementById('driveWorkspaceSection').style.display = 'flex';
@@ -490,21 +572,25 @@ document.getElementById('driveFileSelect').addEventListener('change', async (e) 
       state = migrateData(driveState); currentDriveFileId = fileId; localStorage.setItem('newslab-current-drive-file', currentDriveFileId);
       if (state.lang) setLanguage(state.lang); localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); initHistory(); render(); updateCloudStatus('Connected'); document.getElementById('settingsMenu').classList.remove('open');
     }
-  } catch(err) { updateCloudStatus('Error'); alert("Could not load file from Drive."); }
+  } catch(err) { updateCloudStatus('Error'); customAlert("Could not load file from Drive.", "Error"); }
 });
 
 document.getElementById('btnNewDriveFile').addEventListener('click', async () => {
-  const folderId = document.getElementById('driveFolderId').value.trim(); if (!folderId) return alert('Please enter a Folder ID');
-  const safeTitle = (state.title || 'Untitled Project').replace(/[^a-z0-9 _-]/gi, '').trim(); const fileName = prompt("Enter a name for the new file:", safeTitle); if (!fileName) return;
-  try {
-    updateCloudStatus('Creating...');
-    const metadata = { name: fileName + (fileName.endsWith('.json') ? '' : '.json'), mimeType: 'application/json', parents: [folderId] };
-    const createRes = await gapi.client.drive.files.create({ resource: metadata, fields: 'id', supportsAllDrives: true });
-    currentDriveFileId = createRes.result.id; localStorage.setItem('newslab-current-drive-file', currentDriveFileId);
-    state.lang = currentLang; const fileContent = JSON.stringify(state);
-    await fetch(`https://www.googleapis.com/upload/drive/v3/files/${currentDriveFileId}?uploadType=media&supportsAllDrives=true`, { method: 'PATCH', headers: new Headers({ 'Authorization': 'Bearer ' + gapi.client.getToken().access_token, 'Content-Type': 'application/json' }), body: fileContent });
-    await fetchDriveFiles(); updateCloudStatus('Saved');
-  } catch(err) { updateCloudStatus('Error'); alert("Failed to create file in Drive."); }
+  const folderId = document.getElementById('driveFolderId').value.trim(); if (!folderId) return customAlert('Please enter a Folder ID');
+  const safeTitle = (state.title || 'Untitled Project').replace(/[^a-z0-9 _-]/gi, '').trim(); 
+  
+  customPrompt("Enter a name for the new file:", safeTitle, async (fileName) => {
+    if (!fileName) return;
+    try {
+      updateCloudStatus('Creating...');
+      const metadata = { name: fileName + (fileName.endsWith('.json') ? '' : '.json'), mimeType: 'application/json', parents: [folderId] };
+      const createRes = await gapi.client.drive.files.create({ resource: metadata, fields: 'id', supportsAllDrives: true });
+      currentDriveFileId = createRes.result.id; localStorage.setItem('newslab-current-drive-file', currentDriveFileId);
+      state.lang = currentLang; const fileContent = JSON.stringify(state);
+      await fetch(`https://www.googleapis.com/upload/drive/v3/files/${currentDriveFileId}?uploadType=media&supportsAllDrives=true`, { method: 'PATCH', headers: new Headers({ 'Authorization': 'Bearer ' + gapi.client.getToken().access_token, 'Content-Type': 'application/json' }), body: fileContent });
+      await fetchDriveFiles(); updateCloudStatus('Saved');
+    } catch(err) { updateCloudStatus('Error'); customAlert("Failed to create file in Drive.", "Error"); }
+  });
 });
 
 let autoSaveTimeout = null;
@@ -1062,8 +1148,6 @@ function renderOverviewCalendar() {
   grid.style.minHeight = '300px';
 }
 
-function renderLegend() {} // Deprecated as per user request
-
 // ============ GLOBAL RESIZE LOGIC ============
 document.addEventListener('mousemove', (e) => {
   if (window.__resizeData && state.viewMode !== 'overview') {
@@ -1211,18 +1295,18 @@ function openClearAllModal() {
 const hideViewTooltip = () => { const tt = document.getElementById('viewTooltip'); if(tt) tt.classList.add('dismissed'); };
 if (document.getElementById('closeTooltipBtn')) { document.getElementById('closeTooltipBtn').addEventListener('click', hideViewTooltip); }
 
-document.getElementById('viewVerticalBtn').addEventListener('click', () => { state.viewMode = 'vertical'; saveState(false); render(); hideViewTooltip(); });
-document.getElementById('viewHorizontalBtn').addEventListener('click', () => { state.viewMode = 'horizontal'; saveState(false); render(); hideViewTooltip(); });
-document.getElementById('viewSingleBtn').addEventListener('click', () => { state.viewMode = 'single_week'; saveState(false); render(); hideViewTooltip(); });
-document.getElementById('viewOverviewBtn').addEventListener('click', () => { state.viewMode = 'overview'; saveState(false); render(); hideViewTooltip(); });
-document.getElementById('prevWeekBtn').addEventListener('click', () => { state.currentWeekStart = toISO(addDays(fromISO(state.currentWeekStart), -7)); saveState(false); render(); });
-document.getElementById('nextWeekBtn').addEventListener('click', () => { state.currentWeekStart = toISO(addDays(fromISO(state.currentWeekStart), 7)); saveState(false); render(); });
+document.getElementById('viewVerticalBtn')?.addEventListener('click', () => { state.viewMode = 'vertical'; saveState(false); render(); hideViewTooltip(); });
+document.getElementById('viewHorizontalBtn')?.addEventListener('click', () => { state.viewMode = 'horizontal'; saveState(false); render(); hideViewTooltip(); });
+document.getElementById('viewSingleBtn')?.addEventListener('click', () => { state.viewMode = 'single_week'; saveState(false); render(); hideViewTooltip(); });
+document.getElementById('viewOverviewBtn')?.addEventListener('click', () => { state.viewMode = 'overview'; saveState(false); render(); hideViewTooltip(); });
+document.getElementById('prevWeekBtn')?.addEventListener('click', () => { state.currentWeekStart = toISO(addDays(fromISO(state.currentWeekStart), -7)); saveState(false); render(); });
+document.getElementById('nextWeekBtn')?.addEventListener('click', () => { state.currentWeekStart = toISO(addDays(fromISO(state.currentWeekStart), 7)); saveState(false); render(); });
 
-document.getElementById('projectTitle').addEventListener('input', (e) => { if (window.__isReadOnly) return; state.title = e.target.value; saveState(); });
-document.getElementById('projectDesc').addEventListener('input', (e) => { if (window.__isReadOnly) return; state.desc = e.target.value; saveState(); });
-document.getElementById('projectStart').addEventListener('change', (e) => { if (window.__isReadOnly) return; state.start = e.target.value; saveState(); render(); });
-document.getElementById('projectEnd').addEventListener('change', (e) => { if (window.__isReadOnly) return; state.end = e.target.value; saveState(); render(); });
-document.getElementById('todayBtn').addEventListener('click', () => {
+document.getElementById('projectTitle')?.addEventListener('input', (e) => { if (window.__isReadOnly) return; state.title = e.target.value; saveState(); });
+document.getElementById('projectDesc')?.addEventListener('input', (e) => { if (window.__isReadOnly) return; state.desc = e.target.value; saveState(); });
+document.getElementById('projectStart')?.addEventListener('change', (e) => { if (window.__isReadOnly) return; state.start = e.target.value; saveState(); render(); });
+document.getElementById('projectEnd')?.addEventListener('change', (e) => { if (window.__isReadOnly) return; state.end = e.target.value; saveState(); render(); });
+document.getElementById('todayBtn')?.addEventListener('click', () => {
   if (state.viewMode === 'single_week') {
     state.currentWeekStart = toISO(startOfWeek(new Date())); saveState(false); render();
   } else {
@@ -1232,17 +1316,21 @@ document.getElementById('todayBtn').addEventListener('click', () => {
   }
 });
 
-document.getElementById('addEventBtn').addEventListener('click', () => { if(!window.__isReadOnly) openEventModal(); });
-document.getElementById('clearAllBtn').addEventListener('click', (e) => { e.stopPropagation(); document.getElementById('settingsMenu').classList.remove('open'); if(!window.__isReadOnly) openClearAllModal(); });
-document.getElementById('settingsBtn').addEventListener('click', (e) => { e.stopPropagation(); document.getElementById('settingsMenu').classList.toggle('open'); });
-document.getElementById('readOnlyToggleWrapper').addEventListener('click', (e) => { e.stopPropagation(); document.getElementById('shareReadOnly').classList.toggle('on'); });
-document.getElementById('weekendToggleWrapper').addEventListener('click', (e) => { e.stopPropagation(); state.showWeekends = !state.showWeekends; saveState(); render(); });
-document.getElementById('langToggleWrapper').addEventListener('click', (e) => { e.stopPropagation(); setLanguage(currentLang === 'en' ? 'nb' : 'en'); });
-document.getElementById('exportBtn').addEventListener('click', () => { document.getElementById('settingsMenu').classList.remove('open'); document.querySelectorAll('.day-add-menu.open').forEach(m => m.classList.remove('open')); setTimeout(() => window.print(), 80); });
+document.getElementById('addEventBtn')?.addEventListener('click', () => { if(!window.__isReadOnly) openEventModal(); });
+document.getElementById('clearAllBtn')?.addEventListener('click', (e) => { e.stopPropagation(); document.getElementById('settingsMenu').classList.remove('open'); if(!window.__isReadOnly) openClearAllModal(); });
+document.getElementById('settingsBtn')?.addEventListener('click', (e) => { e.stopPropagation(); document.getElementById('settingsMenu').classList.toggle('open'); });
+document.getElementById('readOnlyToggleWrapper')?.addEventListener('click', (e) => { e.stopPropagation(); document.getElementById('shareReadOnly').classList.toggle('on'); });
+document.getElementById('weekendToggleWrapper')?.addEventListener('click', (e) => { e.stopPropagation(); state.showWeekends = !state.showWeekends; saveState(); render(); });
+document.getElementById('langToggleWrapper')?.addEventListener('click', (e) => { e.stopPropagation(); setLanguage(currentLang === 'en' ? 'nb' : 'en'); });
+document.getElementById('exportBtn')?.addEventListener('click', () => { document.getElementById('settingsMenu').classList.remove('open'); document.querySelectorAll('.day-add-menu.open').forEach(m => m.classList.remove('open')); setTimeout(() => window.print(), 80); });
 document.addEventListener('click', (e) => { if (!e.target.closest('.settings-dropdown-wrap')) { const settingsMenu = document.getElementById('settingsMenu'); if (settingsMenu) settingsMenu.classList.remove('open'); } });
 
 document.addEventListener('keydown', (e) => {
   if (e.key === 'Escape') {
+    if (document.getElementById('dialogModal').classList.contains('open')) {
+        document.getElementById('dialogCancel').click();
+        return;
+    }
     if (window.__resizeData) {
       const ev = state.events.find(i => i.id === window.__resizeData.id); if (ev) { ev.start = window.__resizeData.origStart; ev.end = window.__resizeData.origEnd; }
       window.__resizeData = null; window.__resizeHoverDate = null; document.body.classList.remove('is-resizing'); window.__isDraggingOrResizing = false; render();
@@ -1252,20 +1340,20 @@ document.addEventListener('keydown', (e) => {
 });
 
 // ============ JSON EXPORT / IMPORT / SHARE / CSV ============
-document.getElementById('shareLinkBtn').addEventListener('click', (e) => {
+document.getElementById('shareLinkBtn')?.addEventListener('click', (e) => {
   document.getElementById('settingsMenu').classList.remove('open');
   try {
     state.lang = currentLang; const isReadOnly = document.getElementById('shareReadOnly').classList.contains('on');
     const encoded = btoa(unescape(encodeURIComponent(JSON.stringify(state)))); const baseUrl = window.location.href.split('#')[0]; const shareUrl = baseUrl + '#plan=' + encoded + (isReadOnly ? '&ro=1' : '');
-    if (navigator.clipboard && window.isSecureContext) { navigator.clipboard.writeText(shareUrl).then(() => { alert(t('link_copied')); }); } else { prompt(t('link_copied_fallback'), shareUrl); }
-  } catch (err) { alert("Failed to generate link."); }
+    if (navigator.clipboard && window.isSecureContext) { navigator.clipboard.writeText(shareUrl).then(() => { customAlert(t('link_copied'), 'Success'); }); } else { customPrompt(t('link_copied_fallback'), shareUrl, () => {}); }
+  } catch (err) { customAlert("Failed to generate link.", "Error"); }
 });
 
-document.getElementById('exportJsonBtn').addEventListener('click', (e) => {
+document.getElementById('exportJsonBtn')?.addEventListener('click', (e) => {
   document.getElementById('settingsMenu').classList.remove('open'); state.lang = currentLang; const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(state)); const downloadAnchorNode = document.createElement('a'); downloadAnchorNode.setAttribute("href", dataStr); const safeTitle = (state.title || 'Project').replace(/[^a-z0-9]/gi, '_').toLowerCase(); const dateStr = toISO(new Date()); downloadAnchorNode.setAttribute("download", `newslab_plan_${safeTitle}_${dateStr}.json`); document.body.appendChild(downloadAnchorNode); downloadAnchorNode.click(); downloadAnchorNode.remove();
 });
 
-document.getElementById('exportCsvBtn').addEventListener('click', (e) => {
+document.getElementById('exportCsvBtn')?.addEventListener('click', (e) => {
   document.getElementById('settingsMenu').classList.remove('open'); 
   const spanStart = state.start ? fromISO(state.start) : new Date(new Date().getFullYear(), new Date().getMonth(), 1); const spanEnd = state.end ? fromISO(state.end) : addDays(spanStart, 70); const gridStart = startOfWeek(spanStart); const gridEnd = addDays(startOfWeek(spanEnd), 6);
   let dates = []; let curr = gridStart;
@@ -1281,11 +1369,11 @@ document.getElementById('exportCsvBtn').addEventListener('click', (e) => {
   const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' }); const link = document.createElement('a'); link.href = URL.createObjectURL(blob); const safeTitle = (state.title || 'Project').replace(/[^a-z0-9]/gi, '_').toLowerCase(); link.setAttribute('download', `newslab_plan_${safeTitle}.csv`); document.body.appendChild(link); link.click(); document.body.removeChild(link);
 });
 
-document.getElementById('importJsonInput').addEventListener('change', (event) => {
+document.getElementById('importJsonInput')?.addEventListener('change', (event) => {
   document.getElementById('settingsMenu').classList.remove('open'); const file = event.target.files[0]; if (!file) return;
   const reader = new FileReader();
   reader.onload = (e) => {
-    try { const importedState = JSON.parse(e.target.result); if (importedState && importedState.events) { state = migrateData(importedState); if (state.lang) setLanguage(state.lang); saveState(); render(); alert('Plan loaded successfully!'); } else { alert('Invalid file format. Ensure it is a valid plan file.'); } } catch (err) { alert('Error parsing the file.'); }
+    try { const importedState = JSON.parse(e.target.result); if (importedState && importedState.events) { state = migrateData(importedState); if (state.lang) setLanguage(state.lang); saveState(); render(); customAlert('Plan loaded successfully!', 'Success'); } else { customAlert('Invalid file format. Ensure it is a valid plan file.', 'Error'); } } catch (err) { customAlert('Error parsing the file.', 'Error'); }
     event.target.value = '';
   };
   reader.readAsText(file);
