@@ -177,10 +177,40 @@
       min-height: 38px; height: auto; padding: 4px 6px; align-items: flex-start; overflow: visible;
   }
   body[data-view="overview"] .event-label { width: 100%; min-width: 120px; white-space: normal; line-height: 1.2; }
+  body[data-view="overview"] .event-bar.ov-single-day .event-label {
+      position: absolute; left: 100%; margin-left: 6px; top: 2px; width: max-content; white-space: nowrap;
+  }
 
   /* DRAGGING GLOBALS */
   body.is-resizing * { user-select: none !important; }
   body.is-resizing .phase-layer, body.is-resizing .event-bar { pointer-events: none !important; }
+  body[data-filter-color] .event-bar { opacity: 0.15; transition: opacity 0.2s ease; }
+  
+  /* ===== TIME OFF LAYER (GREYED OUT BLOCKS) ===== */
+  .time-off-layer { position: absolute; left: 60px; right: 0; top: 0; bottom: 0; pointer-events: none; z-index: 1; }
+  body[data-view="horizontal"] .time-off-layer, body[data-view="overview"] .time-off-layer { left: 0; }
+  .time-off-bar {
+      position: absolute; top: 0; bottom: 0;
+      background-color: rgba(0,0,0,0.035);
+      border-left: 1px dashed var(--line);
+      border-right: 1px dashed var(--line);
+      pointer-events: none; /* Let drops pass through to day grid */
+      display: flex; justify-content: flex-start;
+      z-index: 1;
+  }
+  .time-off-label {
+      position: sticky; left: 6px; top: 6px; margin: 6px 0 0 6px;
+      pointer-events: auto; cursor: pointer;
+      font-family: 'JetBrains Mono', monospace; font-size: 9px;
+      text-transform: uppercase; letter-spacing: 0.1em;
+      color: var(--ink-soft); background: var(--bg-card);
+      border: 1px solid var(--line); border-radius: 4px; padding: 2px 6px;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: calc(100% - 12px);
+      box-shadow: 0 1px 3px rgba(0,0,0,0.02); height: max-content;
+  }
+  .time-off-label:hover { border-color: var(--ink); color: var(--ink); }
+  /* Align labels differently based on view */
+  body[data-view="vertical"] .time-off-label, body[data-view="single_week"] .time-off-label { left: 24px; margin-left: 24px; }
   
   /* EVENT BARS */
   .phase-layer { position: absolute; left: 60px; right: 0; top: 0; bottom: 0; pointer-events: none; z-index: 2; }
@@ -500,8 +530,8 @@ function updateCloudStatus(msg) {
 
 // ============ I18N ============
 const i18n = {
-  en: { brand_mark: 'PRODUCTION PLANNER', title_placeholder: 'Title', desc_placeholder: 'Project description, scope notes, context…', start: 'START', end: 'END', today: 'Today', add_event: '+ Add Event', settings: 'Settings', language: 'Language', read_only_link: 'Read-Only Link', share_link: 'Copy Share Link', link_copied: 'Link copied to clipboard!', link_copied_fallback: 'Copy this link to share:', export_pdf: 'Export PDF', export_csv: 'Export to CSV', export_data: 'Save Backup (JSON)', import_data: 'Load Local File', show_weekends: 'Weekends', clear_all: 'Clear all', uke: 'WK', weekdays_full: ['MON','TUE','WED','THU','FRI','SAT','SUN'], weekdays_no_weekend: ['MON','TUE','WED','THU','FRI'], months: ['January','February','March','April','May','June','July','August','September','October','November','December'], new_event: 'New event', edit_event: 'Edit event', label_title: 'Title', label_start: 'Start date', label_end: 'End date', label_color: 'Color', label_notes: 'Notes', event_name_placeholder: 'e.g. Concept Phase or Workshop', save: 'Save', add_event_btn: 'Add event', delete: 'Delete', cancel: 'Cancel', clear_title: 'Clear everything?', clear_description: 'This will permanently remove all project details and events from this planner. The action cannot be undone.', clear_events: (n) => `→ ${n} event${n === 1 ? '' : 's'}`, clear_meta: '→ Title, description & dates', clear_confirm_prefix: 'Type', clear_confirm_word: 'CLEAR', clear_confirm_suffix: 'to confirm.', clear_button: 'Clear everything' },
-  nb: { brand_mark: 'PRODUKSJONSPLANLEGGER', title_placeholder: 'Tittel', desc_placeholder: 'Prosjektbeskrivelse, omfang, kontekst…', start: 'START', end: 'SLUTT', today: 'I dag', add_event: '+ Nytt element', settings: 'Innstillinger', language: 'Språk', read_only_link: 'Skrivebeskyttet', share_link: 'Kopier delingslenke', link_copied: 'Lenken er kopiert til utklippstavlen!', link_copied_fallback: 'Kopier denne lenken for å dele:', export_pdf: 'Eksporter PDF', export_csv: 'Eksporter til CSV', export_data: 'Lagre Backup (JSON)', import_data: 'Åpne Lokal Fil', show_weekends: 'Helger', clear_all: 'Nullstill', uke: 'UKE', weekdays_full: ['MAN','TIR','ONS','TOR','FRE','LØR','SØN'], weekdays_no_weekend: ['MAN','TIR','ONS','TOR','FRE'], months: ['Januar','Februar','Mars','April','Mai','Juni','Juli','August','September','Oktober','November','Desember'], new_event: 'Nytt element', edit_event: 'Rediger element', label_title: 'Tittel', label_start: 'Startdato', label_end: 'Sluttdato', label_color: 'Farge', label_notes: 'Notater', event_name_placeholder: 'F.eks. Konseptfase eller Workshop', save: 'Lagre', add_event_btn: 'Legg til element', delete: 'Slett', cancel: 'Avbryt', clear_title: 'Nullstill alt?', clear_description: 'Dette fjerner permanent alle prosjektdetaljer og elementer fra denne planleggeren. Handlingen kan ikke angres.', clear_events: (n) => `→ ${n} element${n === 1 ? '' : 'er'}`, clear_meta: '→ Tittel, beskrivelse og datoer', clear_confirm_prefix: 'Skriv', clear_confirm_word: 'SLETT', clear_confirm_suffix: 'for å bekrefte.', clear_button: 'Nullstill alt' }
+  en: { brand_mark: 'PRODUCTION PLANNER', title_placeholder: 'Title', desc_placeholder: 'Project description, scope notes, context…', start: 'START', end: 'END', today: 'Today', add_event: '+ Add Event', settings: 'Settings', language: 'Language', read_only_link: 'Read-Only Link', share_link: 'Copy Share Link', link_copied: 'Link copied to clipboard!', link_copied_fallback: 'Copy this link to share:', export_pdf: 'Export PDF', export_csv: 'Export to CSV', export_data: 'Save Backup (JSON)', import_data: 'Load Local File', show_weekends: 'Weekends', clear_all: 'Clear all', uke: 'WK', weekdays_full: ['MON','TUE','WED','THU','FRI','SAT','SUN'], weekdays_no_weekend: ['MON','TUE','WED','THU','FRI'], months: ['January','February','March','April','May','June','July','August','September','October','November','December'], new_event: 'New event', edit_event: 'Edit event', label_title: 'Title', label_start: 'Start date', label_end: 'End date', label_color: 'Color', label_notes: 'Notes', event_name_placeholder: 'e.g. Concept Phase or Workshop', save: 'Save', add_event_btn: 'Add event', delete: 'Delete', cancel: 'Cancel', clear_title: 'Clear everything?', clear_description: 'This will permanently remove all project details and events from this planner. The action cannot be undone.', clear_events: (n) => `→ ${n} event${n === 1 ? '' : 's'}`, clear_meta: '→ Title, description & dates', clear_confirm_prefix: 'Type', clear_confirm_word: 'CLEAR', clear_confirm_suffix: 'to confirm.', clear_button: 'Clear everything', label_time_off: 'Time Off (Holiday)' },
+  nb: { brand_mark: 'PRODUKSJONSPLANLEGGER', title_placeholder: 'Tittel', desc_placeholder: 'Prosjektbeskrivelse, omfang, kontekst…', start: 'START', end: 'SLUTT', today: 'I dag', add_event: '+ Nytt element', settings: 'Innstillinger', language: 'Språk', read_only_link: 'Skrivebeskyttet', share_link: 'Kopier delingslenke', link_copied: 'Lenken er kopiert til utklippstavlen!', link_copied_fallback: 'Kopier denne lenken for å dele:', export_pdf: 'Eksporter PDF', export_csv: 'Eksporter til CSV', export_data: 'Lagre Backup (JSON)', import_data: 'Åpne Lokal Fil', show_weekends: 'Helger', clear_all: 'Nullstill', uke: 'UKE', weekdays_full: ['MAN','TIR','ONS','TOR','FRE','LØR','SØN'], weekdays_no_weekend: ['MAN','TIR','ONS','TOR','FRE'], months: ['Januar','Februar','Mars','April','Mai','Juni','Juli','August','September','Oktober','November','Desember'], new_event: 'Nytt element', edit_event: 'Rediger element', label_title: 'Tittel', label_start: 'Startdato', label_end: 'Sluttdato', label_color: 'Farge', label_notes: 'Notater', event_name_placeholder: 'F.eks. Konseptfase eller Workshop', save: 'Lagre', add_event_btn: 'Legg til element', delete: 'Slett', cancel: 'Avbryt', clear_title: 'Nullstill alt?', clear_description: 'Dette fjerner permanent alle prosjektdetaljer og elementer fra denne planleggeren. Handlingen kan ikke angres.', clear_events: (n) => `→ ${n} element${n === 1 ? '' : 'er'}`, clear_meta: '→ Tittel, beskrivelse og datoer', clear_confirm_prefix: 'Skriv', clear_confirm_word: 'SLETT', clear_confirm_suffix: 'for å bekrefte.', clear_button: 'Nullstill alt', label_time_off: 'Ferie / Fridag' }
 };
 
 let currentLang = localStorage.getItem('newslab-planner-lang') || 'en';
@@ -526,13 +556,14 @@ function migrateData(data) {
   if (data.items && !data.events) { data.events = data.items; delete data.items; }
   if (data.phases) {
     const unifiedEvents = [];
-    data.phases.forEach(p => unifiedEvents.push({ id: p.id, name: p.name, start: p.start, end: p.end, color: p.color, notes: '' }));
+    data.phases.forEach(p => unifiedEvents.push({ id: p.id, name: p.name, start: p.start, end: p.end, color: p.color, notes: '', isTimeOff: false }));
     if (data.events && Array.isArray(data.events)) {
-      data.events.forEach(e => { const start = e.date || e.start; unifiedEvents.push({ id: e.id, name: e.name, start: start, end: start, color: e.color, notes: e.notes || '' }); });
+      data.events.forEach(e => { const start = e.date || e.start; unifiedEvents.push({ id: e.id, name: e.name, start: start, end: start, color: e.color, notes: e.notes || '', isTimeOff: e.isTimeOff || false }); });
     }
     data.events = unifiedEvents; delete data.phases;
   }
   if (!data.events) data.events = [];
+  data.events.forEach(e => { if(e.isTimeOff === undefined) e.isTimeOff = false; });
   if (data.showWeekends === undefined) data.showWeekends = true;
   return data;
 }
@@ -666,6 +697,8 @@ function renderVerticalCalendar() {
   
   const wkHeader = document.createElement('div'); wkHeader.className = 'weekday-row' + (state.showWeekends ? '' : ' hide-weekends'); wkHeader.innerHTML = `<div>${t('uke')}</div>` + getDayShort().map(d => `<div>${d}</div>`).join(''); cal.appendChild(wkHeader);
   let currentMonthKey = null; const daysToShow = state.showWeekends ? 7 : 5;
+  
+  const timeOffEvents = state.events.filter(e => e.isTimeOff);
 
   for (let w = 0; w < totalWeeks; w++) {
     const weekStart = addDays(gridStart, w * 7); const weekNum = getISOWeek(weekStart); const weekAnchor = addDays(weekStart, 3); const monthKey = `${weekAnchor.getFullYear()}-${weekAnchor.getMonth()}`;
@@ -683,10 +716,29 @@ function renderVerticalCalendar() {
       cell.innerHTML = `<div class="day-num"><span>${day.getDate()}</span></div><button class="day-add-btn">+</button>`;
       bindDayCellEvents(cell, day); row.appendChild(cell);
     }
+    
+    // Time Off Layer for Vertical View
+    const weekVisibleEnd = addDays(weekStart, daysToShow - 1);
+    const timeOffLayer = document.createElement('div'); timeOffLayer.className = 'time-off-layer';
+    timeOffEvents.forEach(ev => {
+      const pStart = fromISO(ev.start); const pEnd = fromISO(ev.end);
+      if (pEnd < weekStart || pStart > addDays(weekStart, 6)) return;
+      const segStart = pStart < weekStart ? weekStart : pStart; let segEnd = pEnd > weekVisibleEnd ? weekVisibleEnd : pEnd;
+      if (segStart > weekVisibleEnd || segEnd < weekStart || segEnd < segStart) return;
+      
+      const startCol = Math.floor((segStart - weekStart) / 86400000); const endCol = Math.floor((segEnd - weekStart) / 86400000); const span = endCol - startCol + 1;
+      const bar = document.createElement('div'); bar.className = 'time-off-bar';
+      bar.style.left = `calc(${startCol * 100 / daysToShow}%)`; bar.style.width = `calc(${span * 100 / daysToShow}%)`;
+      const label = document.createElement('div'); label.className = 'time-off-label'; label.textContent = ev.name || 'Time Off';
+      label.addEventListener('click', (e) => { e.stopPropagation(); openEventModal(ev); });
+      bar.appendChild(label); timeOffLayer.appendChild(bar);
+    });
+    row.appendChild(timeOffLayer);
+    
     cal.appendChild(row);
   }
   
-  const events = [...state.events].sort((a, b) => {
+  const events = [...state.events].filter(e => !e.isTimeOff).sort((a, b) => {
       const durA = fromISO(a.end).getTime() - fromISO(a.start).getTime();
       const durB = fromISO(b.end).getTime() - fromISO(b.start).getTime();
       return durB - durA || fromISO(a.start).getTime() - fromISO(b.start).getTime();
@@ -720,7 +772,7 @@ function renderVerticalCalendar() {
       const bar = document.createElement('div'); bar.className = 'event-bar';
       bar.draggable = !window.__isReadOnly && !(window.__resizeData && window.__resizeData.id === ev.id); bar.dataset.id = ev.id; bar.dataset.color = ev.color;
       if (window.__resizeData && window.__resizeData.id === ev.id) bar.classList.add('is-preview');
-      bar.style.top = `${28 + ev._track * trackSpacing}px`; const colors = resolveColor(ev.color); bar.style.background = colors.bg; bar.style.borderColor = colors.edge;
+      bar.style.top = `${32 + ev._track * trackSpacing}px`; const colors = resolveColor(ev.color); bar.style.background = colors.bg; bar.style.borderColor = colors.edge;
       bar.style.left = `calc(${startCol * 100 / daysToShow}% + 4px)`; bar.style.width = `calc(${span * 100 / daysToShow}% - 8px)`;
       if (pStart < weekStart) bar.classList.add('continues-left'); if (pEnd > weekFullEnd) bar.classList.add('continues-right');
       
@@ -733,7 +785,7 @@ function renderVerticalCalendar() {
       layer.appendChild(bar);
     });
     row.appendChild(layer);
-    row.querySelectorAll('.day-cell').forEach(c => { c.style.paddingTop = weekMaxTrack >= 0 ? `${36 + (weekMaxTrack + 1) * trackSpacing}px` : '36px'; });
+    row.querySelectorAll('.day-cell').forEach(c => { c.style.paddingTop = weekMaxTrack >= 0 ? `${40 + (weekMaxTrack + 1) * trackSpacing}px` : '40px'; });
   });
 }
 
@@ -762,9 +814,24 @@ function renderHorizontalCalendar() {
   let daysHtml = days.map(d => `<div class="hz-day ${sameDay(d, new Date()) ? 'today' : ''}"><div class="wk">${getDayShort()[d.getDay() === 0 ? 6 : d.getDay() - 1][0]}</div><div class="nm">${d.getDate()}</div></div>`).join('');
   let gridHtml = days.map(d => `<div class="hz-col day-cell ${isWeekend(d) ? 'weekend' : ''}" data-date="${toISO(d)}"><button class="day-add-btn">+</button></div>`).join('');
 
-  // Separate events
+  // Time off blocks
+  const timeOffEvents = state.events.filter(e => e.isTimeOff);
+  let timeOffHtml = '<div class="time-off-layer">';
+  timeOffEvents.forEach(ev => {
+    const eStart = fromISO(ev.start); const eEnd = fromISO(ev.end);
+    let startIdx = days.findIndex(d => toISO(d) === toISO(eStart) || d > eStart);
+    if (startIdx === -1 && days[days.length-1] < eStart) return;
+    let endIdx = -1; for (let j = days.length - 1; j >= 0; j--) { if (days[j] <= eEnd) { endIdx = j; break; } }
+    if (endIdx === -1 || startIdx > endIdx) return;
+    
+    const span = endIdx - startIdx + 1;
+    timeOffHtml += `<div class="time-off-bar" style="left: ${startIdx * dayWidth}px; width: ${span * dayWidth}px;"><div class="time-off-label" onclick="openEventModal(state.events.find(e => e.id === '${ev.id}'))">${escapeHtml(ev.name || 'Time Off')}</div></div>`;
+  });
+  timeOffHtml += '</div>';
+
+  const normalEvents = state.events.filter(e => !e.isTimeOff);
   const singleDayEvents = []; const multiDayEvents = [];
-  state.events.forEach(ev => { if (ev.start === ev.end) singleDayEvents.push(ev); else multiDayEvents.push(ev); });
+  normalEvents.forEach(ev => { if (ev.start === ev.end) singleDayEvents.push(ev); else multiDayEvents.push(ev); });
 
   singleDayEvents.sort((a, b) => fromISO(a.start) - fromISO(b.start));
   multiDayEvents.sort((a, b) => fromISO(a.start) - fromISO(b.start));
@@ -775,10 +842,8 @@ function renderHorizontalCalendar() {
     let startIdx = days.findIndex(d => d >= fromISO(ev.start)); 
     if (startIdx === -1) return;
     
-    // Dynamic text width calculation for collision
     const textWidthPx = ev.name.length * 7.5 + 40; 
     const paddingDays = Math.ceil(textWidthPx / dayWidth);
-    
     const evS = startIdx; const evE = startIdx + paddingDays; 
     let placed = false;
     for (let i = 0; i < singleTracks.length; i++) {
@@ -796,7 +861,7 @@ function renderHorizontalCalendar() {
   
   multiDayEvents.forEach((ev, idx) => { 
       ev._track = startPhaseTrack + idx; 
-      sidebarHtml += `<div class="hz-phase-label" style="top: ${12 + ev._track * trackHeight}px" title="${escapeAttr(ev.name)}">${escapeHtml(ev.name)}</div>`;
+      sidebarHtml += `<div class="hz-phase-label" style="top: ${16 + ev._track * trackHeight}px" title="${escapeAttr(ev.name)}">${escapeHtml(ev.name)}</div>`;
   });
   
   const maxTrack = startPhaseTrack + multiDayEvents.length - 1;
@@ -809,7 +874,7 @@ function renderHorizontalCalendar() {
       </div>
       <div class="hz-timeline">
         <div class="hz-sticky-headers"><div class="hz-months">${monthHtml}</div><div class="hz-days">${daysHtml}</div></div>
-        <div class="hz-grid" id="hzGrid" style="width:${totalDays*dayWidth}px">${gridHtml}</div>
+        <div class="hz-grid" id="hzGrid" style="width:${totalDays*dayWidth}px">${timeOffHtml}${gridHtml}</div>
       </div>
     </div>
   `;
@@ -834,7 +899,7 @@ function renderHorizontalCalendar() {
     bar.draggable = !window.__isReadOnly && !(window.__resizeData && window.__resizeData.id === ev.id); bar.dataset.id = ev.id; bar.dataset.color = ev.color;
     if (window.__resizeData && window.__resizeData.id === ev.id) bar.classList.add('is-preview');
     
-    bar.style.top = `${12 + ev._track * trackHeight}px`; const colors = resolveColor(ev.color); bar.style.background = colors.bg; bar.style.borderColor = colors.edge;
+    bar.style.top = `${16 + ev._track * trackHeight}px`; const colors = resolveColor(ev.color); bar.style.background = colors.bg; bar.style.borderColor = colors.edge;
     
     if (isSingle) {
         bar.style.left = `${startIdx * dayWidth + 8}px`; bar.style.width = `32px`;
@@ -879,13 +944,25 @@ function renderOverviewCalendar() {
     curr = addDays(endOfMonth, 1);
   }
 
-  cal.innerHTML = `<div class="ov-header">${monthHtml}</div><div class="ov-grid" id="ovGrid">${lineHtml}</div>`;
+  // Time off blocks
+  const timeOffEvents = state.events.filter(e => e.isTimeOff);
+  let timeOffHtml = '<div class="time-off-layer">';
+  timeOffEvents.forEach(ev => {
+    const eStart = fromISO(ev.start) < spanStart ? spanStart : fromISO(ev.start);
+    const eEnd = fromISO(ev.end) > spanEnd ? spanEnd : fromISO(ev.end);
+    if (eStart > spanEnd || eEnd < spanStart) return;
+    const actualSpan = diffDays(toISO(eStart), toISO(eEnd)) + 1;
+    const startOffset = diffDays(toISO(spanStart), toISO(eStart));
+    timeOffHtml += `<div class="time-off-bar" style="left: calc(${(startOffset / totalDays) * 100}%); width: calc(${(actualSpan / totalDays) * 100}%);"><div class="time-off-label" onclick="openEventModal(state.events.find(e => e.id === '${ev.id}'))">${escapeHtml(ev.name || 'Time Off')}</div></div>`;
+  });
+  timeOffHtml += '</div>';
+
+  cal.innerHTML = `<div class="ov-header">${monthHtml}</div><div class="ov-grid" id="ovGrid">${timeOffHtml}${lineHtml}</div>`;
   const grid = document.getElementById('ovGrid');
   const layer = document.createElement('div'); layer.className = 'phase-layer';
   
-  // Overview ONLY shows multi-day events
   const events = [...state.events]
-    .filter(ev => ev.start !== ev.end)
+    .filter(ev => ev.start !== ev.end && !ev.isTimeOff)
     .sort((a, b) => fromISO(a.start) - fromISO(b.start) || (fromISO(b.end) - fromISO(a.start)) - (fromISO(a.end) - fromISO(a.start)));
 
   events.forEach((ev, idx) => {
@@ -893,16 +970,14 @@ function renderOverviewCalendar() {
     const eEnd = fromISO(ev.end) > spanEnd ? spanEnd : fromISO(ev.end);
     if (eStart > spanEnd || eEnd < spanStart) return;
 
-    // Give each multi-day phase its very own dedicated track from top to bottom
     ev._track = idx;
-
     const actualSpan = diffDays(toISO(eStart), toISO(eEnd)) + 1;
     const startOffset = diffDays(toISO(spanStart), toISO(eStart));
 
     const bar = document.createElement('div'); 
     bar.className = 'event-bar ov-phase';
     bar.dataset.id = ev.id; bar.dataset.color = ev.color;
-    bar.style.top = `${16 + ev._track * 46}px`; const colors = resolveColor(ev.color); bar.style.background = colors.bg; bar.style.borderColor = colors.edge;
+    bar.style.top = `${20 + ev._track * 46}px`; const colors = resolveColor(ev.color); bar.style.background = colors.bg; bar.style.borderColor = colors.edge;
     bar.style.left = `calc(${(startOffset / totalDays) * 100}% + 4px)`; bar.style.width = `calc(${(actualSpan / totalDays) * 100}% - 8px)`;
     if (fromISO(ev.start) < spanStart) bar.classList.add('continues-left'); if (fromISO(ev.end) > spanEnd) bar.classList.add('continues-right');
 
@@ -987,12 +1062,20 @@ document.getElementById('modalClose').addEventListener('click', closeModal); mod
 function openEventModal(event = null, defaultStart = null, defaultEnd = null) {
   modalTitle.textContent = event ? t('edit_event') : t('new_event');
   const startD = defaultStart || (event ? event.start : getDefaultDate()); const endD = defaultEnd || (event ? event.end : startD);
-  const obj = event || { id: null, name: '', start: startD, end: endD, color: 'yellow', notes: '' };
+  const obj = event || { id: null, name: '', start: startD, end: endD, color: 'yellow', notes: '', isTimeOff: false };
 
   modalBody.innerHTML = `
     <div class="field"><label>${t('label_title')}</label><input type="text" id="evName" value="${escapeAttr(obj.name)}" placeholder="${escapeAttr(t('event_name_placeholder'))}" /></div>
     <div class="field-row"><div class="field"><label>${t('label_start')}</label><input type="date" id="evStart" value="${obj.start}" /></div><div class="field"><label>${t('label_end')}</label><input type="date" id="evEnd" value="${obj.end}" /></div></div>
-    <div class="field" id="colorPickerField" ${window.__isReadOnly ? 'style="display:none;"' : ''}><label>${t('label_color')}</label>${colorPickerHTML(obj.color)}</div>
+    <div class="field-row">
+        <div class="field" id="colorPickerField" ${window.__isReadOnly ? 'style="display:none;"' : ''}><label>${t('label_color')}</label>${colorPickerHTML(obj.color)}</div>
+        <div class="field" style="display:flex; flex-direction:column; justify-content:center; ${window.__isReadOnly ? 'display:none;' : ''}">
+            <label style="margin-bottom:8px;">${t('label_time_off')}</label>
+            <div class="toggle-switch ctl ${obj.isTimeOff ? 'on' : ''}" id="evTimeOffToggle">
+                <div class="toggle-switch-track"></div>
+            </div>
+        </div>
+    </div>
     <div class="field"><label>${t('label_notes')}</label><textarea id="evNotes" rows="3">${escapeText(obj.notes || '')}</textarea></div>
     <div class="modal-actions">
       <div class="modal-actions-left"><button class="action-btn" id="googleCalBtn" title="Add to Google Calendar">📅 Google</button><button class="action-btn" id="icsCalBtn" title="Add to Apple/Outlook">📅 .ICS</button></div>
@@ -1002,6 +1085,9 @@ function openEventModal(event = null, defaultStart = null, defaultEnd = null) {
   const picker = modalBody.querySelector('.color-picker'); const getColor = wireColorPicker(picker);
   const startInput = document.getElementById('evStart'); const endInput = document.getElementById('evEnd');
   startInput.addEventListener('change', () => { if (!startInput.value) return; const s = fromISO(startInput.value); const e = endInput.value ? fromISO(endInput.value) : null; if (!e || e < s) endInput.value = startInput.value; });
+
+  const timeOffToggle = document.getElementById('evTimeOffToggle');
+  if(timeOffToggle) timeOffToggle.addEventListener('click', () => timeOffToggle.classList.toggle('on'));
 
   document.getElementById('googleCalBtn').addEventListener('click', () => {
     const name = document.getElementById('evName').value.trim() || 'NewsLab Event'; const startStr = document.getElementById('evStart').value.replace(/-/g, ''); const endInputStr = document.getElementById('evEnd').value;
@@ -1021,8 +1107,9 @@ function openEventModal(event = null, defaultStart = null, defaultEnd = null) {
   document.getElementById('saveEv').addEventListener('click', () => {
     if (window.__isReadOnly) return;
     const name = document.getElementById('evName').value.trim() || '—'; const start = startInput.value; let end = endInput.value; const notes = document.getElementById('evNotes').value;
+    const isTimeOff = timeOffToggle ? timeOffToggle.classList.contains('on') : false;
     if (!start || !end) return; if (fromISO(end) < fromISO(start)) end = start; const color = getColor() || obj.color || 'yellow';
-    if (event) { const idx = state.events.findIndex(i => i.id === event.id); state.events[idx] = { ...event, name, start, end, color, notes }; } else { state.events.push({ id: uid(), name, start, end, color, notes }); }
+    if (event) { const idx = state.events.findIndex(i => i.id === event.id); state.events[idx] = { ...event, name, start, end, color, notes, isTimeOff }; } else { state.events.push({ id: uid(), name, start, end, color, notes, isTimeOff }); }
     saveState(); render(); closeModal();
   });
 
