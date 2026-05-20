@@ -172,19 +172,15 @@
   .ov-line { position: absolute; top: 0; bottom: 0; width: 1px; background: var(--line-soft); z-index: 1; pointer-events: none; }
   body[data-view="overview"] .phase-layer { left: 0; }
   
-  /* OVERRIDES FOR OVERVIEW EVENT BARS */
+  /* CRITICAL CSS: OVERRIDES FOR OVERVIEW EVENT BARS */
   body[data-view="overview"] .event-bar {
       min-height: 38px; height: auto; padding: 4px 6px; align-items: flex-start; overflow: visible;
   }
   body[data-view="overview"] .event-label { width: 100%; min-width: 120px; white-space: normal; line-height: 1.2; }
-  body[data-view="overview"] .event-bar.ov-single-day .event-label {
-      position: absolute; left: 100%; margin-left: 6px; top: 2px; width: max-content; white-space: nowrap;
-  }
 
   /* DRAGGING GLOBALS */
   body.is-resizing * { user-select: none !important; }
   body.is-resizing .phase-layer, body.is-resizing .event-bar { pointer-events: none !important; }
-  body[data-filter-color] .event-bar { opacity: 0.15; transition: opacity 0.2s ease; }
   
   /* EVENT BARS */
   .phase-layer { position: absolute; left: 60px; right: 0; top: 0; bottom: 0; pointer-events: none; z-index: 2; }
@@ -201,14 +197,6 @@
   .resize-handle { position: absolute; top: 0; bottom: 0; width: 10px; cursor: ew-resize; z-index: 5; }
   .resize-handle.left { left: 0; }
   .resize-handle.right { right: 0; }
-
-  /* ===== Legend ===== */
-  .legend { display: flex; justify-content: space-between; align-items: center; padding: 14px 0; border-top: 1px solid var(--line); gap: 16px; flex-wrap: wrap; }
-  .legend-items { display: flex; gap: 14px; flex-wrap: wrap; align-items: center; }
-  .legend-item { display: inline-flex; align-items: center; gap: 6px; font-family: 'JetBrains Mono', monospace; font-size: 10px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--ink-soft); background: transparent; border: none; cursor: pointer; padding: 4px 0; transition: opacity 0.12s ease; }
-  .legend-item.dimmed { opacity: 0.4; }
-  .legend-item:hover { opacity: 1; }
-  .legend-swatch { width: 16px; height: 11px; border: 1px solid; border-radius: 2px; flex-shrink: 0; }
 
   /* ===== Hover add control ===== */
   .day-add-btn { position: absolute; top: 3px; right: 3px; width: 18px; height: 18px; border-radius: 50%; background: var(--ink); color: var(--bg); font-family: 'JetBrains Mono', monospace; font-size: 13px; line-height: 1; display: none; align-items: center; justify-content: center; cursor: pointer; border: none; padding: 0; z-index: 3; }
@@ -238,7 +226,7 @@
 
   /* ===== READ-ONLY MODE STYLING ===== */
   body.read-only .day-add-btn, body.read-only .resize-handle, body.read-only #addEventBtn { display: none !important; }
-  body.read-only .project-title, body.read-only .project-desc, body.read-only .controls-left input, body.read-only .view-toggle { pointer-events: none; border-color: transparent; }
+  body.read-only .project-title, body.read-only .project-desc, body.read-only .controls-left input { pointer-events: none; border-color: transparent; }
   body.read-only .modal-actions-right { display: none !important; }
   body.read-only .event-bar { cursor: pointer; }
 
@@ -265,8 +253,6 @@
     .title-row { margin-bottom: 18px; }
     .project-title { font-size: 34px; }
     .project-desc { color: #555; }
-    .legend { page-break-before: avoid; }
-    .legend-item { color: #333 !important; }
   }
 </style>
 <script async defer src="https://apis.google.com/js/api.js"></script>
@@ -396,11 +382,6 @@
     <div class="calendar" id="calendar"></div>
   </div>
 
-  <div class="legend">
-    <div class="legend-items" id="phaseLegend"></div>
-    <div class="legend-items">
-    </div>
-  </div>
 </div>
 
 <div class="modal-backdrop" id="modal">
@@ -604,7 +585,7 @@ function startOfWeek(d) { const x = new Date(d); const day = x.getDay(); x.setDa
 
 let anchorDateISO = null;
 function getDefaultDate() { if (anchorDateISO) return anchorDateISO; if (state.start) return state.start; return toISO(new Date()); }
-const getMonthNames = () => t('months'); const getDayShort = () => state.showWeekends ? t('weekdays_full') : t('weekdays_no_weekend'); let currentLegendFilter = null;
+const getMonthNames = () => t('months'); const getDayShort = () => state.showWeekends ? t('weekdays_full') : t('weekdays_no_weekend');
 
 // ============ UNIVERSAL DOM BINDINGS ============
 function bindDayCellEvents(cell, day) {
@@ -658,13 +639,12 @@ function render() {
   document.getElementById('projectTitle').value = state.title; document.getElementById('projectDesc').value = state.desc; document.getElementById('projectStart').value = state.start || ''; document.getElementById('projectEnd').value = state.end || '';
   const now = new Date(); document.getElementById('metaDate').textContent = `${String(now.getDate()).padStart(2,'0')}.${String(now.getMonth()+1).padStart(2,'0')}.${now.getFullYear()}`;
   document.getElementById('weekendToggle').classList.toggle('on', !!state.showWeekends);
-  if (currentLegendFilter) document.body.setAttribute('data-filter-color', currentLegendFilter); else document.body.removeAttribute('data-filter-color');
   
   if (state.viewMode === 'horizontal') { renderHorizontalCalendar(); } 
   else if (state.viewMode === 'overview') { renderOverviewCalendar(); }
   else { renderVerticalCalendar(); }
   
-  renderLegend(); setupScrollAnchor(); setupStickyHeader();
+  setupScrollAnchor(); setupStickyHeader();
 }
 
 function renderVerticalCalendar() {
@@ -750,7 +730,6 @@ function renderVerticalCalendar() {
       
       const rectWidth = (cal.clientWidth - 60) * (span / daysToShow);
       bindEventBarEvents(bar, ev, rectWidth / span, segStart);
-      if (currentLegendFilter && ev.color !== currentLegendFilter) bar.style.opacity = '0.15';
       layer.appendChild(bar);
     });
     row.appendChild(layer);
@@ -872,7 +851,6 @@ function renderHorizontalCalendar() {
     const dateText = ev.start !== ev.end ? `${ev.start} → ${ev.end}` : ev.start; bar.title = `${ev.name} · ${dateText}${ev.notes ? '\n\n' + ev.notes : ''}`;
     
     bindEventBarEvents(bar, ev, dayWidth, days[startIdx]);
-    if (currentLegendFilter && ev.color !== currentLegendFilter) bar.style.opacity = '0.15';
     layer.appendChild(bar);
   });
   
@@ -904,43 +882,25 @@ function renderOverviewCalendar() {
   cal.innerHTML = `<div class="ov-header">${monthHtml}</div><div class="ov-grid" id="ovGrid">${lineHtml}</div>`;
   const grid = document.getElementById('ovGrid');
   const layer = document.createElement('div'); layer.className = 'phase-layer';
-  const events = [...state.events].sort((a, b) => {
-      const durA = fromISO(a.end).getTime() - fromISO(a.start).getTime();
-      const durB = fromISO(b.end).getTime() - fromISO(b.start).getTime();
-      return durB - durA || fromISO(a.start).getTime() - fromISO(b.start).getTime();
-  });
   
-  const tracks = []; let maxTrack = -1;
-  const calWidth = document.getElementById('calendar').clientWidth || 1000;
-  const daysPerPixel = totalDays / calWidth;
-  const textPaddingDays = Math.ceil(120 * daysPerPixel);
+  // Overview ONLY shows multi-day events
+  const events = [...state.events]
+    .filter(ev => ev.start !== ev.end)
+    .sort((a, b) => fromISO(a.start) - fromISO(b.start) || (fromISO(b.end) - fromISO(a.start)) - (fromISO(a.end) - fromISO(a.start)));
 
-  events.forEach(ev => {
+  events.forEach((ev, idx) => {
     const eStart = fromISO(ev.start) < spanStart ? spanStart : fromISO(ev.start);
     const eEnd = fromISO(ev.end) > spanEnd ? spanEnd : fromISO(ev.end);
     if (eStart > spanEnd || eEnd < spanStart) return;
 
+    // Give each multi-day phase its very own dedicated track from top to bottom
+    ev._track = idx;
+
     const actualSpan = diffDays(toISO(eStart), toISO(eEnd)) + 1;
-    const effectiveSpan = Math.max(actualSpan, textPaddingDays); // Reserve track space for spilled text
-    const effectiveEnd = addDays(eStart, effectiveSpan - 1);
-
-    const evS = eStart.getTime();
-    const evE = effectiveEnd.getTime();
-    
-    let placed = false;
-    for (let i = 0; i < tracks.length; i++) {
-      let overlap = false;
-      for (let j = 0; j < tracks[i].length; j++) { if (evS <= tracks[i][j].e && evE >= tracks[i][j].s) { overlap = true; break; } }
-      if (!overlap) { tracks[i].push({s: evS, e: evE}); ev._track = i; placed = true; break; }
-    }
-    if (!placed) { ev._track = tracks.length; tracks.push([{s: evS, e: evE}]); }
-    maxTrack = Math.max(maxTrack, ev._track);
-
     const startOffset = diffDays(toISO(spanStart), toISO(eStart));
-    const isSingle = ev.start === ev.end;
 
     const bar = document.createElement('div'); 
-    bar.className = 'event-bar' + (isSingle ? ' ov-single-day' : ' ov-phase');
+    bar.className = 'event-bar ov-phase';
     bar.dataset.id = ev.id; bar.dataset.color = ev.color;
     bar.style.top = `${16 + ev._track * 46}px`; const colors = resolveColor(ev.color); bar.style.background = colors.bg; bar.style.borderColor = colors.edge;
     bar.style.left = `calc(${(startOffset / totalDays) * 100}% + 4px)`; bar.style.width = `calc(${(actualSpan / totalDays) * 100}% - 8px)`;
@@ -952,24 +912,12 @@ function renderOverviewCalendar() {
     bar.draggable = false;
     bar.addEventListener('click', (e) => { e.stopPropagation(); openEventModal(ev); });
 
-    if (currentLegendFilter && ev.color !== currentLegendFilter) bar.style.opacity = '0.15';
     layer.appendChild(bar);
   });
   
   grid.appendChild(layer);
+  const maxTrack = events.length > 0 ? events.length - 1 : -1;
   grid.style.minHeight = Math.max(300, (maxTrack + 1) * 46 + 40) + 'px';
-}
-
-function renderLegend() {
-  const wrap = document.getElementById('phaseLegend'); wrap.innerHTML = ''; const seen = new Set();
-  state.events.forEach(ev => {
-    const key = ev.color; if (seen.has(key)) return; seen.add(key);
-    const colors = resolveColor(ev.color); const el = document.createElement('button'); el.className = 'legend-item';
-    if (currentLegendFilter && currentLegendFilter !== ev.color) el.classList.add('dimmed');
-    el.innerHTML = `<span class="legend-swatch" style="background:${colors.bg};border-color:${colors.edge}"></span> ${escapeHtml(ev.name)}`;
-    el.addEventListener('click', () => { currentLegendFilter = currentLegendFilter === ev.color ? null : ev.color; render(); });
-    wrap.appendChild(el);
-  });
 }
 
 // ============ GLOBAL RESIZE LOGIC ============
@@ -1044,7 +992,7 @@ function openEventModal(event = null, defaultStart = null, defaultEnd = null) {
   modalBody.innerHTML = `
     <div class="field"><label>${t('label_title')}</label><input type="text" id="evName" value="${escapeAttr(obj.name)}" placeholder="${escapeAttr(t('event_name_placeholder'))}" /></div>
     <div class="field-row"><div class="field"><label>${t('label_start')}</label><input type="date" id="evStart" value="${obj.start}" /></div><div class="field"><label>${t('label_end')}</label><input type="date" id="evEnd" value="${obj.end}" /></div></div>
-    <div class="field"><label>${t('label_color')}</label>${colorPickerHTML(obj.color)}</div>
+    <div class="field" id="colorPickerField" ${window.__isReadOnly ? 'style="display:none;"' : ''}><label>${t('label_color')}</label>${colorPickerHTML(obj.color)}</div>
     <div class="field"><label>${t('label_notes')}</label><textarea id="evNotes" rows="3">${escapeText(obj.notes || '')}</textarea></div>
     <div class="modal-actions">
       <div class="modal-actions-left"><button class="action-btn" id="googleCalBtn" title="Add to Google Calendar">📅 Google</button><button class="action-btn" id="icsCalBtn" title="Add to Apple/Outlook">📅 .ICS</button></div>
@@ -1079,7 +1027,7 @@ function openEventModal(event = null, defaultStart = null, defaultEnd = null) {
   });
 
   if (event) { document.getElementById('deleteEv').addEventListener('click', () => { if (window.__isReadOnly) return; state.events = state.events.filter(i => i.id !== event.id); saveState(); render(); closeModal(); }); }
-  if (window.__isReadOnly) { document.querySelectorAll('#evName, #evStart, #evEnd, #evNotes, input[type="color"]').forEach(el => el.disabled = true); }
+  if (window.__isReadOnly) { document.querySelectorAll('#evName, #evStart, #evEnd, #evNotes').forEach(el => el.disabled = true); }
   modal.classList.add('open'); if(!window.__isReadOnly) setTimeout(() => document.getElementById('evName').focus(), 50);
 }
 
