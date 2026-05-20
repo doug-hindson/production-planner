@@ -115,22 +115,24 @@
   body[data-view="single_week"] .event-label { white-space: normal; overflow: visible; font-weight: 600; margin-bottom: 4px; width: 100%; line-height: 1.2; }
   body[data-view="single_week"] .event-notes { display: block; font-family: 'ABC Diatype', Arial, sans-serif; font-size: 12px; text-transform: none; letter-spacing: 0; white-space: pre-wrap; opacity: 0.85; pointer-events: none; line-height: 1.4; width: 100%; }
 
-  /* ===== HORIZONTAL GANTT VIEW (NEW SPREADSHEET LAYOUT) ===== */
+  /* ===== HORIZONTAL GANTT VIEW (Spreadsheet Layout) ===== */
   body[data-view="horizontal"] .calendar-wrap { border: none; background: transparent; }
   .hz-layout { display: flex; border: 1px solid var(--line); background: var(--bg-card); overflow-x: auto; align-items: flex-start; }
   
   .hz-sidebar {
-      width: 360px; min-width: 360px; flex-shrink: 0;
+      width: 420px; min-width: 420px; flex-shrink: 0;
       position: sticky; left: 0; z-index: 30;
       background: var(--bg-card); border-right: 1px solid var(--line);
       box-shadow: 2px 0 8px rgba(0,0,0,0.03);
+      display: flex; flex-direction: column;
   }
   .hz-sidebar-header {
-      height: 78px; /* Matches months + days height */
+      height: 78px; 
       border-bottom: 1px solid var(--line);
-      background: var(--bg); /* Differentiates from the grid */
+      background: var(--bg-card); 
+      position: sticky; top: var(--sticky-h); z-index: 40;
   }
-  .hz-sidebar-labels { position: relative; }
+  .hz-sidebar-labels { position: relative; flex-grow: 1; }
   .hz-phase-label {
       position: absolute; left: 16px; right: 16px;
       height: 24px; line-height: 24px;
@@ -138,9 +140,17 @@
       text-transform: uppercase; letter-spacing: 0.08em; color: var(--ink);
       white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
   }
+  .hz-sidebar-divider {
+      position: absolute; left: 0; right: 0;
+      height: 1px; background-color: var(--line-soft);
+  }
 
-  .hz-timeline { display: flex; flex-direction: column; flex-grow: 1; min-width: max-content; }
-  .hz-sticky-headers { z-index: 20; background: var(--bg-card); }
+  /* CRITICAL STRUCTURAL FIX: Changed to block flow to fix native sticky mechanics inside the scroll canvas */
+  .hz-timeline { display: block; flex-grow: 1; min-width: max-content; }
+  .hz-sticky-headers { 
+      position: sticky; top: var(--sticky-h); z-index: 20; 
+      background: var(--bg-card); 
+  }
   
   .hz-months { height: 32px; display: flex; border-bottom: 1px solid var(--line); box-sizing: border-box; }
   .hz-month { height: 100%; font-family: 'JetBrains Mono', monospace; font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--ink-faint); padding: 8px 12px; border-right: 1px solid var(--line); box-sizing: border-box; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -153,7 +163,6 @@
   .hz-grid { display: flex; position: relative; min-height: 50vh; }
   .hz-col { width: 48px; flex-shrink: 0; border-right: 1px solid var(--line-soft); position: relative; box-sizing: border-box; }
   
-  /* Horizontal Bar Logic overrides */
   body[data-view="horizontal"] .event-bar.hz-single-day {
       overflow: visible !important; justify-content: center; border-radius: 6px;
   }
@@ -162,6 +171,11 @@
       white-space: nowrap; width: max-content; color: var(--ink); font-weight: 500;
       text-transform: uppercase; font-family: 'JetBrains Mono', monospace;
       letter-spacing: 0.08em; pointer-events: none;
+  }
+  .hz-phase-guideline {
+      position: absolute; left: 0;
+      height: 1px; background-color: var(--line-soft);
+      z-index: 1; pointer-events: none;
   }
 
   /* ===== OVERVIEW VIEW (A4 One-Pager) ===== */
@@ -184,7 +198,6 @@
   /* DRAGGING GLOBALS */
   body.is-resizing * { user-select: none !important; }
   body.is-resizing .phase-layer, body.is-resizing .event-bar { pointer-events: none !important; }
-  body[data-filter-color] .event-bar { opacity: 0.15; transition: opacity 0.2s ease; }
   
   /* ===== TIME OFF LAYER (GREYED OUT BLOCKS) ===== */
   .time-off-layer { position: absolute; left: 60px; right: 0; top: 0; bottom: 0; pointer-events: none; z-index: 1; }
@@ -194,7 +207,7 @@
       background-color: rgba(0,0,0,0.035);
       border-left: 1px dashed var(--line);
       border-right: 1px dashed var(--line);
-      pointer-events: none; /* Let drops pass through to day grid */
+      pointer-events: none; 
       display: flex; justify-content: flex-start;
       z-index: 1;
   }
@@ -209,7 +222,6 @@
       box-shadow: 0 1px 3px rgba(0,0,0,0.02); height: max-content;
   }
   .time-off-label:hover { border-color: var(--ink); color: var(--ink); }
-  /* Align labels differently based on view */
   body[data-view="vertical"] .time-off-label, body[data-view="single_week"] .time-off-label { left: 24px; margin-left: 24px; }
   
   /* EVENT BARS */
@@ -228,7 +240,6 @@
   .resize-handle.left { left: 0; }
   .resize-handle.right { right: 0; }
 
-  /* ===== Hover add control ===== */
   .day-add-btn { position: absolute; top: 3px; right: 3px; width: 18px; height: 18px; border-radius: 50%; background: var(--ink); color: var(--bg); font-family: 'JetBrains Mono', monospace; font-size: 13px; line-height: 1; display: none; align-items: center; justify-content: center; cursor: pointer; border: none; padding: 0; z-index: 3; }
   .day-cell:hover .day-add-btn { display: inline-flex; }
 
@@ -254,7 +265,6 @@
   .modal-actions { display: flex; align-items: center; justify-content: space-between; margin-top: 24px; padding-top: 18px; border-top: 1px solid var(--line); flex-wrap: wrap; gap: 12px; }
   .modal-actions-left, .modal-actions-right { display: flex; gap: 8px; }
 
-  /* ===== READ-ONLY MODE STYLING ===== */
   body.read-only .day-add-btn, body.read-only .resize-handle, body.read-only #addEventBtn { display: none !important; }
   body.read-only .project-title, body.read-only .project-desc, body.read-only .controls-left input { pointer-events: none; border-color: transparent; }
   body.read-only .modal-actions-right { display: none !important; }
@@ -268,7 +278,6 @@
     .controls { gap: 10px; }
   }
 
-  /* ===== Print ===== */
   @media print {
     @page { size: A3 landscape; margin: 12mm; }
     body { background: #fff; }
@@ -319,10 +328,10 @@
         </div>
         
         <div class="view-toggle">
+          <button id="viewOverviewBtn">Overview</button>
           <button id="viewVerticalBtn">Vertical</button>
           <button id="viewHorizontalBtn">Horizontal</button>
           <button id="viewSingleBtn">Single Week</button>
-          <button id="viewOverviewBtn">Overview</button>
         </div>
 
         <div style="display: flex; gap: 4px;">
@@ -671,7 +680,7 @@ function render() {
   const now = new Date(); document.getElementById('metaDate').textContent = `${String(now.getDate()).padStart(2,'0')}.${String(now.getMonth()+1).padStart(2,'0')}.${now.getFullYear()}`;
   document.getElementById('weekendToggle').classList.toggle('on', !!state.showWeekends);
   
-  if (state.viewMode === 'horizontal') { renderHorizontalCalendar(); } 
+  if (state.viewMode === 'horizontal') { renderHorizontalCalendar(); }  
   else if (state.viewMode === 'overview') { renderOverviewCalendar(); }
   else { renderVerticalCalendar(); }
   
@@ -681,6 +690,7 @@ function render() {
 function renderVerticalCalendar() {
   const cal = document.getElementById('calendar'); cal.innerHTML = '';
   
+  // UI FIX 1: Explicitly preserve full core span in vertical/single states
   const projectSpanStart = state.start ? fromISO(state.start) : new Date(new Date().getFullYear(), new Date().getMonth(), 1);
   const projectSpanEnd = state.end ? fromISO(state.end) : addDays(projectSpanStart, 70);
   const projStartLabel = `${getMonthNames()[projectSpanStart.getMonth()]} ${projectSpanStart.getFullYear()}`;
@@ -699,6 +709,7 @@ function renderVerticalCalendar() {
   const daysToShow = state.showWeekends ? 7 : 5;
   const wkHeader = document.createElement('div'); wkHeader.className = 'weekday-row' + (state.showWeekends ? '' : ' hide-weekends'); wkHeader.innerHTML = `<div>${t('uke')}</div>` + getDayShort().map(d => `<div>${d}</div>`).join('');
   
+  // UI FIX 2: Restructured single week grid headers into proper two-tier layouts matching Gantt specs
   if (state.viewMode === 'single_week') {
       const headerWrap = document.createElement('div');
       headerWrap.style.position = 'sticky'; headerWrap.style.top = 'var(--sticky-h)'; headerWrap.style.zIndex = '10'; headerWrap.style.background = 'var(--bg-card)';
@@ -743,6 +754,7 @@ function renderVerticalCalendar() {
       bindDayCellEvents(cell, day); row.appendChild(cell);
     }
     
+    // Time Off Layer for Vertical View
     const weekVisibleEnd = addDays(weekStart, daysToShow - 1);
     const timeOffLayer = document.createElement('div'); timeOffLayer.className = 'time-off-layer';
     timeOffEvents.forEach(ev => {
@@ -886,9 +898,14 @@ function renderHorizontalCalendar() {
   const trackHeight = 36;
   let sidebarHtml = '';
   
+  // UI FIX 2B: PPhase dividers for perfect row guidance stretching across left bar pane
   multiDayEvents.forEach((ev, idx) => { 
       ev._track = startPhaseTrack + idx; 
-      sidebarHtml += `<div class="hz-phase-label" style="top: ${16 + ev._track * trackHeight}px" title="${escapeAttr(ev.name)}">${escapeHtml(ev.name)}</div>`;
+      const yPos = 16 + ev._track * trackHeight;
+      sidebarHtml += `
+        <div class="hz-phase-label" style="top: ${yPos}px" title="${escapeAttr(ev.name)}">${escapeHtml(ev.name)}</div>
+        <div class="hz-sidebar-divider" style="top: ${yPos + 30}px;"></div>
+      `;
   });
   
   const maxTrack = startPhaseTrack + multiDayEvents.length - 1;
@@ -938,6 +955,13 @@ function renderHorizontalCalendar() {
     
     if (isSingle) {
         const label = document.createElement('span'); label.className = 'event-label'; label.textContent = ev.name; bar.appendChild(label);
+    } else {
+        // UI FIX 2C: Full-width guideline rendering dynamically behind phase rows inside timeline tracks
+        const lineGuideline = document.createElement('div');
+        lineGuideline.className = 'hz-phase-guideline';
+        lineGuideline.style.top = `${30}px`; // Sits exactly under track inside bar sandbox
+        lineGuideline.style.width = `${totalDays * dayWidth}px`;
+        bar.appendChild(lineGuideline);
     }
     
     const dateText = ev.start !== ev.end ? `${ev.start} → ${ev.end}` : ev.start; bar.title = `${ev.name} · ${dateText}${ev.notes ? '\n\n' + ev.notes : ''}`;
@@ -1089,7 +1113,7 @@ function colorPickerHTML(currentColor) {
 }
 function wireColorPicker(container) {
   let selected = container.dataset.current || '';
-  container.querySelectorAll('.color-swatch').forEach(sw => { sw.addEventListener('click', (e) => { const target = sw.dataset.color; if (target === '__custom__') { const input = sw.querySelector('input[type="color"]'); if (input) input.click(); return; } selected = target; container.querySelectorAll('.color-swatch').forEach(s => s.classList.remove('selected')); sw.classList.add('selected'); }); });
+  container.querySelectorAll('.color-swatch').forEach(sw => { sw.addEventListener('click', (e) => { const target = sw.dataset.color; if (target === '__custom__') { const input = sw.querySelector('input[type="color"]'); if  (input) input.click(); return; } selected = target; container.querySelectorAll('.color-swatch').forEach(s => s.classList.remove('selected')); sw.classList.add('selected'); }); });
   const customInput = container.querySelector('input[type="color"]');
   if (customInput) { customInput.addEventListener('input', (e) => { const hex = e.target.value; selected = hex; const swatch = customInput.parentElement; swatch.classList.remove('empty'); swatch.style.background = hex; swatch.style.borderColor = darken(hex, 0.22); const lbl = swatch.querySelector('.custom-label'); if (lbl) lbl.remove(); container.querySelectorAll('.color-swatch').forEach(s => s.classList.remove('selected')); swatch.classList.add('selected'); }); }
   return () => selected;
