@@ -115,43 +115,53 @@
   body[data-view="single_week"] .event-label { white-space: normal; overflow: visible; font-weight: 600; margin-bottom: 4px; width: 100%; line-height: 1.2; }
   body[data-view="single_week"] .event-notes { display: block; font-family: 'ABC Diatype', Arial, sans-serif; font-size: 12px; text-transform: none; letter-spacing: 0; white-space: pre-wrap; opacity: 0.85; pointer-events: none; line-height: 1.4; width: 100%; }
 
-  /* ===== HORIZONTAL GANTT VIEW ===== */
-  body[data-view="horizontal"] .calendar-wrap { overflow-x: auto; }
-  body[data-view="horizontal"] .calendar { min-width: max-content; padding-bottom: 24px; }
-  .hz-sticky-headers { position: sticky; top: var(--sticky-h); z-index: 10; background: var(--bg-card); }
-  .hz-months { display: flex; border-bottom: 1px solid var(--line); }
-  .hz-month { font-family: 'JetBrains Mono', monospace; font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--ink-faint); padding: 8px 12px; border-right: 1px solid var(--line); box-sizing: border-box; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .hz-days { display: flex; border-bottom: 1px solid var(--line); }
-  .hz-day { width: 48px; flex-shrink: 0; padding: 6px; border-right: 1px solid var(--line-soft); text-align: center; display: flex; flex-direction: column; align-items: center; gap: 4px; box-sizing: border-box; }
+  /* ===== HORIZONTAL GANTT VIEW (NEW SPREADSHEET LAYOUT) ===== */
+  body[data-view="horizontal"] .calendar-wrap { border: none; background: transparent; }
+  .hz-layout { display: flex; border: 1px solid var(--line); background: var(--bg-card); overflow-x: auto; }
+  
+  .hz-sidebar {
+      width: 240px; min-width: 240px; flex-shrink: 0;
+      position: sticky; left: 0; z-index: 30;
+      background: var(--bg); border-right: 1px solid var(--line);
+      box-shadow: 2px 0 8px rgba(0,0,0,0.03);
+  }
+  .hz-sidebar-header {
+      height: 78px; /* Matches months + days height */
+      border-bottom: 1px solid var(--line);
+      position: sticky; top: var(--sticky-h); z-index: 40;
+      background: inherit;
+  }
+  .hz-sidebar-labels { position: relative; }
+  .hz-phase-label {
+      position: absolute; left: 16px; right: 16px;
+      height: 24px; line-height: 24px;
+      font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 500;
+      text-transform: uppercase; letter-spacing: 0.08em; color: var(--ink);
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+
+  .hz-timeline { display: flex; flex-direction: column; flex-grow: 1; min-width: max-content; }
+  .hz-sticky-headers { position: sticky; top: var(--sticky-h); z-index: 20; background: var(--bg-card); }
+  
+  .hz-months { height: 32px; display: flex; border-bottom: 1px solid var(--line); box-sizing: border-box; }
+  .hz-month { height: 100%; font-family: 'JetBrains Mono', monospace; font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--ink-faint); padding: 8px 12px; border-right: 1px solid var(--line); box-sizing: border-box; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .hz-days { height: 46px; display: flex; border-bottom: 1px solid var(--line); box-sizing: border-box; }
+  .hz-day { height: 100%; width: 48px; flex-shrink: 0; padding: 6px; border-right: 1px solid var(--line-soft); text-align: center; display: flex; flex-direction: column; align-items: center; gap: 4px; box-sizing: border-box; }
   .hz-day .wk { font-family: 'JetBrains Mono', monospace; font-size: 9px; color: var(--ink-faint); }
   .hz-day .nm { font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 500; color: var(--ink); }
   .hz-day.today .nm { background: var(--ink); color: var(--bg); border-radius: 50%; width: 20px; height: 20px; display: inline-flex; justify-content: center; align-items: center; }
+  
   .hz-grid { display: flex; position: relative; min-height: 50vh; }
   .hz-col { width: 48px; flex-shrink: 0; border-right: 1px solid var(--line-soft); position: relative; box-sizing: border-box; }
   
-  /* Horizontal Bar Logic overrides */
   body[data-view="horizontal"] .event-bar.hz-single-day {
-      overflow: visible !important;
-      justify-content: center;
-      border-radius: 6px;
+      overflow: visible !important; justify-content: center; border-radius: 6px;
   }
   body[data-view="horizontal"] .event-bar.hz-single-day .event-label {
-      position: absolute;
-      left: 100%;
-      margin-left: 8px;
-      white-space: nowrap;
-      color: var(--ink);
-      font-weight: 500;
-      text-transform: uppercase;
-      font-family: 'JetBrains Mono', monospace;
-      letter-spacing: 0.08em;
-      pointer-events: none;
-  }
-  body[data-view="horizontal"] .event-bar.hz-phase .event-label {
-      position: sticky;
-      left: 10px; /* Sticks title to left edge when scrolling right */
-      display: inline-block;
-      max-width: calc(100% - 20px);
+      position: absolute; left: 100%; margin-left: 8px;
+      white-space: nowrap; color: var(--ink); font-weight: 500;
+      text-transform: uppercase; font-family: 'JetBrains Mono', monospace;
+      letter-spacing: 0.08em; pointer-events: none;
   }
 
   /* ===== OVERVIEW VIEW (A4 One-Pager) ===== */
@@ -164,25 +174,11 @@
   
   /* CRITICAL CSS: OVERRIDES FOR OVERVIEW EVENT BARS */
   body[data-view="overview"] .event-bar {
-      min-height: 38px; /* Taller boxes to allow multiple lines */
-      height: auto; /* Allow box to grow with text */
-      padding: 4px 6px;
-      align-items: flex-start;
-      overflow: visible; /* Allows text to spill horizontally */
+      min-height: 38px; height: auto; padding: 4px 6px; align-items: flex-start; overflow: visible;
   }
-  body[data-view="overview"] .event-label {
-      width: 100%;
-      min-width: 120px; /* Forces spill on tiny boxes */
-      white-space: normal; /* Enables wrapping */
-      line-height: 1.2;
-  }
-  /* Single day event styling for Overview to prevent text overlapping the box */
+  body[data-view="overview"] .event-label { width: 100%; min-width: 120px; white-space: normal; line-height: 1.2; }
   body[data-view="overview"] .event-bar.ov-single-day .event-label {
-      position: absolute;
-      left: 100%; /* Pushes the text perfectly to the right of the colored box */
-      margin-left: 6px;
-      top: 2px;
-      width: 140px; /* Gives it enough space to wrap cleanly */
+      position: absolute; left: 100%; margin-left: 6px; top: 2px; width: 140px;
   }
 
   /* DRAGGING GLOBALS */
@@ -787,13 +783,7 @@ function renderHorizontalCalendar() {
   let daysHtml = days.map(d => `<div class="hz-day ${sameDay(d, new Date()) ? 'today' : ''}"><div class="wk">${getDayShort()[d.getDay() === 0 ? 6 : d.getDay() - 1][0]}</div><div class="nm">${d.getDate()}</div></div>`).join('');
   let gridHtml = days.map(d => `<div class="hz-col day-cell ${isWeekend(d) ? 'weekend' : ''}" data-date="${toISO(d)}"><button class="day-add-btn">+</button></div>`).join('');
 
-  cal.innerHTML = `<div class="hz-sticky-headers"><div class="hz-months">${monthHtml}</div><div class="hz-days">${daysHtml}</div></div><div class="hz-grid" id="hzGrid" style="width:${totalDays*dayWidth}px">${gridHtml}</div>`;
-  
-  cal.querySelectorAll('.day-cell').forEach((cell, i) => bindDayCellEvents(cell, days[i]));
-
-  const grid = document.getElementById('hzGrid');
-  const layer = document.createElement('div'); layer.className = 'phase-layer';
-  
+  // Separate events
   const singleDayEvents = []; const multiDayEvents = [];
   state.events.forEach(ev => { if (ev.start === ev.end) singleDayEvents.push(ev); else multiDayEvents.push(ev); });
 
@@ -801,12 +791,11 @@ function renderHorizontalCalendar() {
   multiDayEvents.sort((a, b) => fromISO(a.start) - fromISO(b.start));
 
   const singleTracks = []; let maxSingleTrack = -1;
-  const textPaddingDays = 4; 
+  const textPaddingDays = 4; // reserve space for spilling text
 
   singleDayEvents.forEach(ev => {
     let startIdx = days.findIndex(d => d >= fromISO(ev.start)); 
     if (startIdx === -1) return;
-    
     const evS = startIdx; const evE = startIdx + textPaddingDays; 
     let placed = false;
     for (let i = 0; i < singleTracks.length; i++) {
@@ -819,9 +808,32 @@ function renderHorizontalCalendar() {
   });
 
   const startPhaseTrack = maxSingleTrack + 1;
-  multiDayEvents.forEach((ev, idx) => { ev._track = startPhaseTrack + idx; });
-
+  let sidebarHtml = '';
+  
+  multiDayEvents.forEach((ev, idx) => { 
+      ev._track = startPhaseTrack + idx; 
+      sidebarHtml += `<div class="hz-phase-label" style="top: ${12 + ev._track * 28}px" title="${escapeAttr(ev.name)}">${escapeHtml(ev.name)}</div>`;
+  });
+  
   const maxTrack = startPhaseTrack + multiDayEvents.length - 1;
+
+  cal.innerHTML = `
+    <div class="hz-layout">
+      <div class="hz-sidebar">
+        <div class="hz-sidebar-header"></div>
+        <div class="hz-sidebar-labels">${sidebarHtml}</div>
+      </div>
+      <div class="hz-timeline">
+        <div class="hz-sticky-headers"><div class="hz-months">${monthHtml}</div><div class="hz-days">${daysHtml}</div></div>
+        <div class="hz-grid" id="hzGrid" style="width:${totalDays*dayWidth}px">${gridHtml}</div>
+      </div>
+    </div>
+  `;
+  
+  cal.querySelectorAll('.day-cell').forEach((cell, i) => bindDayCellEvents(cell, days[i]));
+
+  const grid = document.getElementById('hzGrid');
+  const layer = document.createElement('div'); layer.className = 'phase-layer';
   const eventsToRender = [...singleDayEvents, ...multiDayEvents];
 
   eventsToRender.forEach(ev => {
@@ -848,7 +860,10 @@ function renderHorizontalCalendar() {
     
     if (fromISO(ev.start) < days[0]) bar.classList.add('continues-left'); if (fromISO(ev.end) > days[days.length-1]) bar.classList.add('continues-right');
     
-    const label = document.createElement('span'); label.className = 'event-label'; label.textContent = ev.name; bar.appendChild(label);
+    if (isSingle) {
+        const label = document.createElement('span'); label.className = 'event-label'; label.textContent = ev.name; bar.appendChild(label);
+    }
+    
     const dateText = ev.start !== ev.end ? `${ev.start} → ${ev.end}` : ev.start; bar.title = `${ev.name} · ${dateText}${ev.notes ? '\n\n' + ev.notes : ''}`;
     
     bindEventBarEvents(bar, ev, dayWidth, days[startIdx]);
