@@ -183,8 +183,15 @@
   .ov-line { position: absolute; top: 0; bottom: 0; width: 1px; background: var(--line-soft); z-index: 1; pointer-events: none; }
   body[data-view="overview"] .phase-layer { left: 0; }
   
+  /* Flexbox logic for dynamic row heights */
+  .ov-events-container {
+      position: relative; width: 100%; padding: 20px 0;
+      display: flex; flex-direction: column; gap: 12px; z-index: 2;
+  }
+  
   /* CRITICAL CSS: OVERRIDES FOR OVERVIEW EVENT BARS */
   body[data-view="overview"] .event-bar {
+      position: relative; top: 0; /* Overrides absolute positioning to allow natural flow */
       min-height: 38px; height: auto; padding: 4px 6px; align-items: flex-start; overflow: visible;
   }
   body[data-view="overview"] .event-label { width: 100%; min-width: 120px; white-space: normal; line-height: 1.2; }
@@ -1009,30 +1016,36 @@ function renderOverviewCalendar() {
 
   cal.innerHTML = `<div class="ov-header">${monthHtml}</div><div class="ov-grid" id="ovGrid">${timeOffHtml}${lineHtml}</div>`;
   const grid = document.getElementById('ovGrid');
-  const layer = document.createElement('div'); layer.className = 'phase-layer';
+  
+  const ovEventsContainer = document.createElement('div');
+  ovEventsContainer.className = 'ov-events-container';
   
   const events = [...state.events]
     .filter(ev => ev.start !== ev.end && !ev.isTimeOff)
     .sort((a, b) => fromISO(a.start) - fromISO(b.start) || (fromISO(b.end) - fromISO(a.start)) - (fromISO(a.end) - fromISO(a.start)));
 
-  events.forEach((ev, idx) => {
+  events.forEach((ev) => {
     const eStart = fromISO(ev.start) < spanStart ? spanStart : fromISO(ev.start);
     const eEnd = fromISO(ev.end) > spanEnd ? spanEnd : fromISO(ev.end);
     if (eStart > spanEnd || eEnd < spanStart) return;
 
-    ev._track = idx;
     const actualSpan = diffDays(toISO(eStart), toISO(eEnd)) + 1;
     const startOffset = diffDays(toISO(spanStart), toISO(eStart));
+
+    const row = document.createElement('div');
+    row.style.position = 'relative';
+    row.style.width = '100%';
 
     const bar = document.createElement('div'); 
     bar.className = 'event-bar ov-phase';
     bar.dataset.id = ev.id; bar.dataset.color = ev.color;
-    bar.style.top = `${20 + ev._track * 46}px`; const colors = resolveColor(ev.color); bar.style.background = colors.bg; bar.style.borderColor = colors.edge;
+    
+    const colors = resolveColor(ev.color); bar.style.background = colors.bg; bar.style.borderColor = colors.edge;
     bar.style.left = `calc(${(startOffset / totalDays) * 100}% + 4px)`; bar.style.width = `calc(${(actualSpan / totalDays) * 100}% - 8px)`;
     if (fromISO(ev.start) < spanStart) bar.classList.add('continues-left'); if (fromISO(ev.end) > spanEnd) bar.classList.add('continues-right');
 
     const formatD = (iso) => { const d = fromISO(iso); return `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}`; };
-    const dateStr = ev.start === ev.end ? formatD(ev.start) : `${formatD(ev.start)} - ${formatD(ev.end)}`;
+    const dateStr = `${formatD(ev.start)} - ${formatD(ev.end)}`;
 
     const label = document.createElement('div'); label.className = 'event-label'; 
     label.innerHTML = `<div style="margin-bottom: 2px;">${escapeHtml(ev.name)}</div><div style="color: var(--ink-soft); font-weight: 400;">${dateStr}</div>`; 
@@ -1041,12 +1054,12 @@ function renderOverviewCalendar() {
     bar.draggable = false;
     bar.addEventListener('click', (e) => { e.stopPropagation(); openEventModal(ev); });
 
-    layer.appendChild(bar);
+    row.appendChild(bar);
+    ovEventsContainer.appendChild(row);
   });
   
-  grid.appendChild(layer);
-  const maxTrack = events.length > 0 ? events.length - 1 : -1;
-  grid.style.minHeight = Math.max(300, (maxTrack + 1) * 46 + 40) + 'px';
+  grid.appendChild(ovEventsContainer);
+  grid.style.minHeight = '300px';
 }
 
 function renderLegend() {} // Deprecated as per user request
