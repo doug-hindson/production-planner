@@ -155,6 +155,7 @@
   }
 
   .hz-timeline { display: block; flex-grow: 1; min-width: max-content; }
+  /* REMOVED: sticky vertically, to prevent bug in overflow-x layout */
   .hz-sticky-headers { 
       position: relative; z-index: 20; 
       background: var(--bg-card); 
@@ -163,13 +164,15 @@
   .hz-months { height: 38px; display: flex; border-bottom: 1px solid var(--line); box-sizing: border-box; }
   .hz-month { height: 100%; font-family: 'JetBrains Mono', monospace; font-size: 12px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--ink-faint); padding: 10px 14px; border-right: 1px solid var(--line); box-sizing: border-box; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .hz-days { height: 52px; display: flex; border-bottom: 1px solid var(--line); box-sizing: border-box; }
-  .hz-day { height: 100%; width: 56px; flex-shrink: 0; padding: 6px; border-right: 1px solid var(--line-soft); text-align: center; display: flex; flex-direction: column; align-items: center; gap: 6px; box-sizing: border-box; }
+  .hz-day { height: 100%; width: 56px; flex-shrink: 0; padding: 6px; border-right: 1px dashed var(--line-soft); text-align: center; display: flex; flex-direction: column; align-items: center; gap: 6px; box-sizing: border-box; }
+  .hz-day.end-of-week { border-right: 1px solid var(--line); }
   .hz-day .wk { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--ink-faint); }
   .hz-day .nm { font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 500; color: var(--ink); }
   .hz-day.today .nm { background: var(--ink); color: var(--bg); border-radius: 50%; width: 24px; height: 24px; display: inline-flex; justify-content: center; align-items: center; }
   
   .hz-grid { display: flex; position: relative; min-height: 50vh; }
-  .hz-col { width: 56px; flex-shrink: 0; border-right: 1px solid var(--line-soft); position: relative; box-sizing: border-box; }
+  .hz-col { width: 56px; flex-shrink: 0; border-right: 1px dashed var(--line-soft); position: relative; box-sizing: border-box; }
+  .hz-col.end-of-week { border-right: 1px solid var(--line); }
   
   /* Horizontal Bar Logic overrides */
   body[data-view="horizontal"] .event-bar.hz-single-day {
@@ -931,8 +934,14 @@ function renderHorizontalCalendar() {
   });
   if (daysInMonth > 0) monthHtml += `<div class="hz-month" style="width: ${daysInMonth * dayWidth}px">${getMonthNames()[currentMonth]}</div>`;
 
-  let daysHtml = days.map(d => `<div class="hz-day ${sameDay(d, new Date()) ? 'today' : ''}"><div class="wk">${getDayShort()[d.getDay() === 0 ? 6 : d.getDay() - 1][0]}</div><div class="nm">${d.getDate()}</div></div>`).join('');
-  let gridHtml = days.map(d => `<div class="hz-col day-cell ${isWeekend(d) ? 'weekend' : ''}" data-date="${toISO(d)}"><button class="day-add-btn">+</button></div>`).join('');
+  let daysHtml = days.map(d => {
+    const isEndOfWeek = d.getDay() === 0 || (!state.showWeekends && d.getDay() === 5);
+    return `<div class="hz-day ${sameDay(d, new Date()) ? 'today' : ''} ${isEndOfWeek ? 'end-of-week' : ''}"><div class="wk">${getDayShort()[d.getDay() === 0 ? 6 : d.getDay() - 1][0]}</div><div class="nm">${d.getDate()}</div></div>`;
+  }).join('');
+  let gridHtml = days.map(d => {
+    const isEndOfWeek = d.getDay() === 0 || (!state.showWeekends && d.getDay() === 5);
+    return `<div class="hz-col day-cell ${isWeekend(d) ? 'weekend' : ''} ${isEndOfWeek ? 'end-of-week' : ''}" data-date="${toISO(d)}"><button class="day-add-btn">+</button></div>`;
+  }).join('');
 
   // Time off blocks
   const timeOffEvents = state.events.filter(e => e.isTimeOff);
