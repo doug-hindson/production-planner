@@ -117,10 +117,14 @@
 
   /* ===== HORIZONTAL GANTT VIEW (Spreadsheet Layout) ===== */
   body[data-view="horizontal"] .calendar-wrap { border: none; background: transparent; }
-  .hz-layout { display: flex; border: 1px solid var(--line); background: var(--bg-card); overflow-x: auto; align-items: flex-start; }
+  .hz-layout { 
+      display: flex; border: 1px solid var(--line); 
+      background: var(--bg-card); overflow-x: auto; 
+      align-items: stretch; /* Forces sidebar to full height */
+  }
   
   .hz-sidebar {
-      width: 420px; min-width: 420px; flex-shrink: 0;
+      width: 380px; min-width: 380px; flex-shrink: 0;
       position: sticky; left: 0; z-index: 30;
       background: var(--bg-card); border-right: 1px solid var(--line);
       box-shadow: 2px 0 8px rgba(0,0,0,0.03);
@@ -130,7 +134,7 @@
       height: 78px; 
       border-bottom: 1px solid var(--line);
       background: var(--bg-card); 
-      position: sticky; top: var(--sticky-h); z-index: 40;
+      z-index: 40;
   }
   .hz-sidebar-labels { position: relative; flex-grow: 1; }
   .hz-phase-label {
@@ -140,16 +144,14 @@
       text-transform: uppercase; letter-spacing: 0.08em; color: var(--ink);
       white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
   }
-  .hz-sidebar-divider {
+  .hz-guideline {
       position: absolute; left: 0; right: 0;
       height: 1px; background-color: var(--line-soft);
+      pointer-events: none; z-index: 1;
   }
 
   .hz-timeline { display: block; flex-grow: 1; min-width: max-content; }
-  .hz-sticky-headers { 
-      position: sticky; top: var(--sticky-h); z-index: 20; 
-      background: var(--bg-card); 
-  }
+  .hz-sticky-headers { z-index: 20; background: var(--bg-card); }
   
   .hz-months { height: 32px; display: flex; border-bottom: 1px solid var(--line); box-sizing: border-box; }
   .hz-month { height: 100%; font-family: 'JetBrains Mono', monospace; font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--ink-faint); padding: 8px 12px; border-right: 1px solid var(--line); box-sizing: border-box; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -162,6 +164,7 @@
   .hz-grid { display: flex; position: relative; min-height: 50vh; }
   .hz-col { width: 48px; flex-shrink: 0; border-right: 1px solid var(--line-soft); position: relative; box-sizing: border-box; }
   
+  /* Horizontal Bar Logic overrides */
   body[data-view="horizontal"] .event-bar.hz-single-day {
       overflow: visible !important; justify-content: center; border-radius: 6px;
   }
@@ -170,11 +173,6 @@
       white-space: nowrap; width: max-content; color: var(--ink); font-weight: 500;
       text-transform: uppercase; font-family: 'JetBrains Mono', monospace;
       letter-spacing: 0.08em; pointer-events: none;
-  }
-  .hz-phase-guideline {
-      position: absolute; left: 0;
-      height: 1px; background-color: var(--line-soft);
-      z-index: 1; pointer-events: none;
   }
 
   /* ===== OVERVIEW VIEW (A4 One-Pager) ===== */
@@ -197,7 +195,6 @@
   /* DRAGGING GLOBALS */
   body.is-resizing * { user-select: none !important; }
   body.is-resizing .phase-layer, body.is-resizing .event-bar { pointer-events: none !important; }
-  body[data-filter-color] .event-bar { opacity: 0.15; transition: opacity 0.2s ease; }
   
   /* ===== TIME OFF LAYER (GREYED OUT BLOCKS) ===== */
   .time-off-layer { position: absolute; left: 60px; right: 0; top: 0; bottom: 0; pointer-events: none; z-index: 1; }
@@ -265,6 +262,7 @@
   .modal-actions { display: flex; align-items: center; justify-content: space-between; margin-top: 24px; padding-top: 18px; border-top: 1px solid var(--line); flex-wrap: wrap; gap: 12px; }
   .modal-actions-left, .modal-actions-right { display: flex; gap: 8px; }
 
+  /* ===== READ-ONLY MODE STYLING ===== */
   body.read-only .day-add-btn, body.read-only .resize-handle, body.read-only #addEventBtn { display: none !important; }
   body.read-only .project-title, body.read-only .project-desc, body.read-only .controls-left input { pointer-events: none; border-color: transparent; }
   body.read-only .modal-actions-right { display: none !important; }
@@ -278,6 +276,7 @@
     .controls { gap: 10px; }
   }
 
+  /* ===== Print ===== */
   @media print {
     @page { size: A3 landscape; margin: 12mm; }
     body { background: #fff; }
@@ -327,7 +326,6 @@
           <span class="week-range" id="weekRange"></span>
         </div>
         
-        <!-- UI FIX 3: Placed Overview first in the list of toggles -->
         <div class="view-toggle">
           <button id="viewOverviewBtn">Overview</button>
           <button id="viewVerticalBtn">Vertical</button>
@@ -691,7 +689,6 @@ function render() {
 function renderVerticalCalendar() {
   const cal = document.getElementById('calendar'); cal.innerHTML = '';
   
-  // UI FIX 1: Explicitly preserve full core span in vertical/single states
   const projectSpanStart = state.start ? fromISO(state.start) : new Date(new Date().getFullYear(), new Date().getMonth(), 1);
   const projectSpanEnd = state.end ? fromISO(state.end) : addDays(projectSpanStart, 70);
   const projStartLabel = `${getMonthNames()[projectSpanStart.getMonth()]} ${projectSpanStart.getFullYear()}`;
@@ -710,7 +707,6 @@ function renderVerticalCalendar() {
   const daysToShow = state.showWeekends ? 7 : 5;
   const wkHeader = document.createElement('div'); wkHeader.className = 'weekday-row' + (state.showWeekends ? '' : ' hide-weekends'); wkHeader.innerHTML = `<div>${t('uke')}</div>` + getDayShort().map(d => `<div>${d}</div>`).join('');
   
-  // UI FIX 2: Restructured single week grid headers into proper two-tier layouts matching Gantt specs
   if (state.viewMode === 'single_week') {
       const headerWrap = document.createElement('div');
       headerWrap.style.position = 'sticky'; headerWrap.style.top = 'var(--sticky-h)'; headerWrap.style.zIndex = '10'; headerWrap.style.background = 'var(--bg-card)';
@@ -755,7 +751,6 @@ function renderVerticalCalendar() {
       bindDayCellEvents(cell, day); row.appendChild(cell);
     }
     
-    // Time Off Layer for Vertical View
     const weekVisibleEnd = addDays(weekStart, daysToShow - 1);
     const timeOffLayer = document.createElement('div'); timeOffLayer.className = 'time-off-layer';
     timeOffEvents.forEach(ev => {
@@ -896,30 +891,35 @@ function renderHorizontalCalendar() {
   });
 
   const startPhaseTrack = maxSingleTrack + 1;
-  const trackHeight = 36;
+  const trackHeight = 40; 
   let sidebarHtml = '';
   
-  // UI FIX 2B: Phase dividers for perfect row guidance stretching across left bar pane
   multiDayEvents.forEach((ev, idx) => { 
       ev._track = startPhaseTrack + idx; 
       const yPos = 16 + ev._track * trackHeight;
-      sidebarHtml += `
-        <div class="hz-phase-label" style="top: ${yPos}px" title="${escapeAttr(ev.name)}">${escapeHtml(ev.name)}</div>
-        <div class="hz-sidebar-divider" style="top: ${yPos + 30}px;"></div>
-      `;
+      sidebarHtml += `<div class="hz-phase-label" style="top: ${yPos}px" title="${escapeAttr(ev.name)}">${escapeHtml(ev.name)}</div>`;
   });
   
   const maxTrack = startPhaseTrack + multiDayEvents.length - 1;
+
+  // Render Horizontal Grid Lines dynamically for EVERY track
+  let gridLinesHtml = '';
+  let sidebarLinesHtml = '';
+  for (let i = 0; i <= maxTrack; i++) {
+      const yPos = 12 + i * trackHeight + 34; // Underneath the bar vertically
+      gridLinesHtml += `<div class="hz-guideline" style="top: ${yPos}px; width: ${totalDays*dayWidth}px;"></div>`;
+      sidebarLinesHtml += `<div class="hz-guideline" style="top: ${yPos}px;"></div>`;
+  }
 
   cal.innerHTML = `
     <div class="hz-layout">
       <div class="hz-sidebar">
         <div class="hz-sidebar-header"></div>
-        <div class="hz-sidebar-labels">${sidebarHtml}</div>
+        <div class="hz-sidebar-labels">${sidebarLinesHtml}${sidebarHtml}</div>
       </div>
       <div class="hz-timeline">
         <div class="hz-sticky-headers"><div class="hz-months">${monthHtml}</div><div class="hz-days">${daysHtml}</div></div>
-        <div class="hz-grid" id="hzGrid" style="width:${totalDays*dayWidth}px">${timeOffHtml}${gridHtml}</div>
+        <div class="hz-grid" id="hzGrid" style="width:${totalDays*dayWidth}px">${gridLinesHtml}${timeOffHtml}${gridHtml}</div>
       </div>
     </div>
   `;
@@ -944,7 +944,7 @@ function renderHorizontalCalendar() {
     bar.draggable = !window.__isReadOnly && !(window.__resizeData && window.__resizeData.id === ev.id); bar.dataset.id = ev.id; bar.dataset.color = ev.color;
     if (window.__resizeData && window.__resizeData.id === ev.id) bar.classList.add('is-preview');
     
-    bar.style.top = `${16 + ev._track * trackHeight}px`; const colors = resolveColor(ev.color); bar.style.background = colors.bg; bar.style.borderColor = colors.edge;
+    bar.style.top = `${12 + ev._track * trackHeight}px`; const colors = resolveColor(ev.color); bar.style.background = colors.bg; bar.style.borderColor = colors.edge;
     
     if (isSingle) {
         bar.style.left = `${startIdx * dayWidth + 8}px`; bar.style.width = `32px`;
@@ -956,13 +956,6 @@ function renderHorizontalCalendar() {
     
     if (isSingle) {
         const label = document.createElement('span'); label.className = 'event-label'; label.textContent = ev.name; bar.appendChild(label);
-    } else {
-        // UI FIX 2C: Full-width guideline rendering dynamically behind phase rows inside timeline tracks
-        const lineGuideline = document.createElement('div');
-        lineGuideline.className = 'hz-phase-guideline';
-        lineGuideline.style.top = `${30}px`; // Sits exactly under track inside bar sandbox
-        lineGuideline.style.width = `${totalDays * dayWidth}px`;
-        bar.appendChild(lineGuideline);
     }
     
     const dateText = ev.start !== ev.end ? `${ev.start} → ${ev.end}` : ev.start; bar.title = `${ev.name} · ${dateText}${ev.notes ? '\n\n' + ev.notes : ''}`;
@@ -1056,9 +1049,7 @@ function renderOverviewCalendar() {
   grid.style.minHeight = Math.max(300, (maxTrack + 1) * 46 + 40) + 'px';
 }
 
-function renderLegend() {
-  document.getElementById('phaseLegend').innerHTML = '';
-}
+function renderLegend() {} // Deprecated as per user request
 
 // ============ GLOBAL RESIZE LOGIC ============
 document.addEventListener('mousemove', (e) => {
