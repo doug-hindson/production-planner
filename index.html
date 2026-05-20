@@ -128,6 +128,31 @@
   .hz-day.today .nm { background: var(--ink); color: var(--bg); border-radius: 50%; width: 20px; height: 20px; display: inline-flex; justify-content: center; align-items: center; }
   .hz-grid { display: flex; position: relative; min-height: 50vh; }
   .hz-col { width: 48px; flex-shrink: 0; border-right: 1px solid var(--line-soft); position: relative; box-sizing: border-box; }
+  
+  /* Horizontal Bar Logic overrides */
+  body[data-view="horizontal"] .event-bar.hz-single-day {
+      overflow: visible !important;
+      justify-content: center;
+      border-radius: 6px;
+  }
+  body[data-view="horizontal"] .event-bar.hz-single-day .event-label {
+      position: absolute;
+      left: 100%;
+      margin-left: 8px;
+      white-space: nowrap;
+      color: var(--ink);
+      font-weight: 500;
+      text-transform: uppercase;
+      font-family: 'JetBrains Mono', monospace;
+      letter-spacing: 0.08em;
+      pointer-events: none;
+  }
+  body[data-view="horizontal"] .event-bar.hz-phase .event-label {
+      position: sticky;
+      left: 10px; /* Sticks title to left edge when scrolling right */
+      display: inline-block;
+      max-width: calc(100% - 20px);
+  }
 
   /* ===== OVERVIEW VIEW (A4 One-Pager) ===== */
   .ov-header { display: flex; border-bottom: 1px solid var(--line); background: var(--bg-card); position: sticky; top: var(--sticky-h); z-index: 10;}
@@ -137,18 +162,18 @@
   .ov-line { position: absolute; top: 0; bottom: 0; width: 1px; background: var(--line-soft); z-index: 1; pointer-events: none; }
   body[data-view="overview"] .phase-layer { left: 0; }
   
-  /* CRITICAL CSS: OVERRIDES FOR OVERVIEW EVENT BARS (Text Spill Logic) */
+  /* OVERRIDES FOR OVERVIEW EVENT BARS (Text Spill Logic) */
   body[data-view="overview"] .event-bar {
-      min-height: 38px; /* Taller boxes to allow multiple lines */
-      height: auto; /* Allow box to grow with text */
+      min-height: 38px;
+      height: auto;
       padding: 4px 6px;
       align-items: flex-start;
-      overflow: visible; /* Allows text to spill horizontally */
+      overflow: visible;
   }
   body[data-view="overview"] .event-label {
       width: 100%;
-      min-width: 120px; /* Forces spill on tiny 1-day boxes */
-      white-space: normal; /* Enables wrapping */
+      min-width: 120px;
+      white-space: normal;
       line-height: 1.2;
   }
 
@@ -760,35 +785,63 @@ function renderHorizontalCalendar() {
 
   const grid = document.getElementById('hzGrid');
   const layer = document.createElement('div'); layer.className = 'phase-layer';
-  const events = [...state.events].sort((a, b) => {
-      const durA = fromISO(a.end).getTime() - fromISO(a.start).getTime();
-      const durB = fromISO(b.end).getTime() - fromISO(b.start).getTime();
-      return durB - durA || fromISO(a.start).getTime() - fromISO(b.start).getTime();
-  });
   
-  const tracks = []; let maxTrack = -1;
-  events.forEach(ev => {
-    let placed = false;
-    const evS = fromISO(ev.start).getTime(); const evE = fromISO(ev.end).getTime();
-    for (let i = 0; i < tracks.length; i++) {
-        let overlap = false;
-        for (let j = 0; j < tracks[i].length; j++) { if (evS <= tracks[i][j].e && evE >= tracks[i][j].s) { overlap = true; break; } }
-        if (!overlap) { tracks[i].push({s: evS, e: evE}); ev._track = i; placed = true; break; }
-    }
-    if (!placed) { ev._track = tracks.length; tracks.push([{s: evS, e: evE}]); }
-    maxTrack = Math.max(maxTrack, ev._track);
+  // Separate into Single Day and Multi Day events
+  const singleDayEvents = []; const multiDayEvents = [];
+  state.events.forEach(ev => { if (ev.start === ev.end) singleDayEvents.push(ev); else multiDayEvents.push(ev); });
+
+  // Sort both by start date
+  singleDayEvents.sort((a, b) => fromISO(a.start) - fromISO(b.start));
+  multiDayEvents.sort((a, b) => fromISO(a.start) - fromISO(b.start));
+
+  const singleTracks = []; let maxSingleTrack = -1;
+  const textPaddingDays = 4; // Reserve ~190px of space for spilled text
+
+  // 1. Plot Single Day Events (with collision detection for text spill)
+  singleDayEvents.forEach(ev => {
+    let startIdx = days.findIndex(d => d >= fromISO(ev.start)); 
+    if (startIdx === -1) return;
     
-    let startIdx = days.findIndex(d => d >= fromISO(ev.start)); if (startIdx === -1 && days[days.length-1] < fromISO(ev.start)) return;
-    let endIdx = -1; for (let j = days.length - 1; j >= 0; j--) { if (days[j] <= fromISO(ev.end)) { endIdx = j; break; } }
+    const evS = startIdx; const evE = startIdx + textPaddingDays; 
+    let placed = false;
+    for (let i = 0; i < singleTracks.length; i++) {
+      let overlap = false;
+      for (let j = 0; j < singleTracks[i].length; j++) { if (evS <= singleTracks[i][j].e && evE >= singleTracks[i][j].s) { overlap = true; break; } }
+      if (!overlap) { singleTracks[i].push({s: evS, e: evE}); ev._track = i; placed = true; break; }
+    }
+    if (!placed) { ev._track = singleTracks.length; singleTracks.push([{s: evS, e: evE}]); }
+    maxSingleTrack = Math.max(maxSingleTrack, ev._track);
+  });
+
+  // 2. Plot Multi Day Phases (Each gets its own dedicated row - waterfall style)
+  const startPhaseTrack = maxSingleTrack + 1;
+  multiDayEvents.forEach((ev, idx) => { ev._track = startPhaseTrack + idx; });
+
+  const maxTrack = startPhaseTrack + multiDayEvents.length - 1;
+  const eventsToRender = [...singleDayEvents, ...multiDayEvents];
+
+  eventsToRender.forEach(ev => {
+    const eStart = fromISO(ev.start); const eEnd = fromISO(ev.end);
+    let startIdx = days.findIndex(d => toISO(d) === toISO(eStart) || d > eStart);
+    if (startIdx === -1 && days[days.length-1] < eStart) return;
+    let endIdx = -1; for (let j = days.length - 1; j >= 0; j--) { if (days[j] <= eEnd) { endIdx = j; break; } }
     if (endIdx === -1 || startIdx > endIdx) return;
     
     const span = endIdx - startIdx + 1;
-    const bar = document.createElement('div'); bar.className = 'event-bar';
+    const isSingle = ev.start === ev.end;
+    
+    const bar = document.createElement('div'); bar.className = 'event-bar' + (isSingle ? ' hz-single-day' : ' hz-phase');
     bar.draggable = !window.__isReadOnly && !(window.__resizeData && window.__resizeData.id === ev.id); bar.dataset.id = ev.id; bar.dataset.color = ev.color;
     if (window.__resizeData && window.__resizeData.id === ev.id) bar.classList.add('is-preview');
     
     bar.style.top = `${12 + ev._track * 28}px`; const colors = resolveColor(ev.color); bar.style.background = colors.bg; bar.style.borderColor = colors.edge;
-    bar.style.left = `${startIdx * dayWidth + 4}px`; bar.style.width = `${span * dayWidth - 8}px`;
+    
+    if (isSingle) {
+        bar.style.left = `${startIdx * dayWidth + 8}px`; bar.style.width = `32px`;
+    } else {
+        bar.style.left = `${startIdx * dayWidth + 4}px`; bar.style.width = `${span * dayWidth - 8}px`;
+    }
+    
     if (fromISO(ev.start) < days[0]) bar.classList.add('continues-left'); if (fromISO(ev.end) > days[days.length-1]) bar.classList.add('continues-right');
     
     const label = document.createElement('span'); label.className = 'event-label'; label.textContent = ev.name; bar.appendChild(label);
@@ -844,7 +897,7 @@ function renderOverviewCalendar() {
     if (eStart > spanEnd || eEnd < spanStart) return;
 
     const actualSpan = diffDays(toISO(eStart), toISO(eEnd)) + 1;
-    const effectiveSpan = Math.max(actualSpan, textPaddingDays);
+    const effectiveSpan = Math.max(actualSpan, textPaddingDays); // Reserve track space for spilled text
     const effectiveEnd = addDays(eStart, effectiveSpan - 1);
 
     const evS = eStart.getTime();
