@@ -1032,10 +1032,10 @@ function renderOverviewCalendar() {
     if (fromISO(ev.start) < spanStart) bar.classList.add('continues-left'); if (fromISO(ev.end) > spanEnd) bar.classList.add('continues-right');
 
     const formatD = (iso) => { const d = fromISO(iso); return `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}`; };
-    const dateStr = `${formatD(ev.start)} - ${formatD(ev.end)}`;
+    const dateStr = ev.start === ev.end ? formatD(ev.start) : `${formatD(ev.start)} - ${formatD(ev.end)}`;
 
-    const label = document.createElement('span'); label.className = 'event-label'; 
-    label.innerHTML = `${escapeHtml(ev.name)} <span style="color: var(--ink-soft); font-weight: 400;">&mdash; ${dateStr}</span>`; 
+    const label = document.createElement('div'); label.className = 'event-label'; 
+    label.innerHTML = `<div style="margin-bottom: 2px;">${escapeHtml(ev.name)}</div><div style="color: var(--ink-soft); font-weight: 400;">${dateStr}</div>`; 
     bar.appendChild(label);
     
     bar.draggable = false;
