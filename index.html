@@ -16,22 +16,22 @@
   .sticky-zone.compact { padding-top: 14px; }
   header.top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 36px; padding-bottom: 20px; border-bottom: 1px solid var(--line); transition: margin 0.25s ease, padding 0.25s ease; }
   .sticky-zone.compact header.top { margin-bottom: 14px; padding-bottom: 10px; }
-  .brand { font-size: 15px; font-weight: 500; letter-spacing: 0.02em; color: var(--ink-soft); }
-  .brand-mark { font-family: 'JetBrains Mono', monospace; font-size: 15px; color: var(--ink-soft); letter-spacing: 0.04em; }
-  .header-meta { text-align: right; font-family: 'JetBrains Mono', monospace; font-size: 13px; color: var(--ink-faint); letter-spacing: 0.06em; text-transform: uppercase; }
+  .brand { font-size: 13px; font-weight: 500; letter-spacing: 0.02em; color: var(--ink-soft); }
+  .brand-mark { font-family: 'JetBrains Mono', monospace; font-size: 13px; color: var(--ink-soft); letter-spacing: 0.04em; }
+  .header-meta { text-align: right; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--ink-faint); letter-spacing: 0.06em; text-transform: uppercase; }
   .title-row { display: grid; grid-template-columns: auto 1fr; gap: 64px; margin-bottom: 32px; align-items: start; transition: gap 0.25s ease, margin 0.25s ease; }
   .sticky-zone.compact .title-row { grid-template-columns: 1fr; gap: 0; margin-bottom: 16px; }
   .project-title { font-weight: 400; font-size: 64px; line-height: 1; letter-spacing: -0.035em; color: var(--ink); background: transparent; border: none; outline: none; width: 100%; padding: 0; transition: font-size 0.25s ease; }
   .sticky-zone.compact .project-title { font-size: 24px; letter-spacing: -0.025em; }
   .project-title::placeholder { color: var(--ink-faint); }
-  .project-desc { font-size: 17px; line-height: 1.55; color: var(--ink-soft); background: transparent; border: none; outline: none; width: 100%; resize: none; min-height: 100px; transition: opacity 0.2s ease, max-height 0.25s ease, min-height 0.25s ease; }
+  .project-desc { font-size: 15px; line-height: 1.55; color: var(--ink-soft); background: transparent; border: none; outline: none; width: 100%; resize: none; min-height: 100px; transition: opacity 0.2s ease, max-height 0.25s ease, min-height 0.25s ease; }
   .project-desc::placeholder { color: var(--ink-faint); }
   .sticky-zone.compact .project-desc { opacity: 0; max-height: 0; min-height: 0; overflow: hidden; pointer-events: none; margin: 0; }
   .controls { display: flex; align-items: center; justify-content: space-between; padding: 12px 0; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); gap: 14px; flex-wrap: wrap; }
   .controls-left, .controls-right { display: flex; align-items: center; gap: 18px; flex-wrap: wrap; }
-  .ctl { display: flex; align-items: center; gap: 8px; font-family: 'JetBrains Mono', monospace; font-size: 13px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--ink-soft); }
+  .ctl { display: flex; align-items: center; gap: 8px; font-family: 'JetBrains Mono', monospace; font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--ink-soft); }
   .ctl label { color: var(--ink-faint); }
-  .ctl input[type="date"] { font-family: 'JetBrains Mono', monospace; font-size: 13px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--ink); background: transparent; border: none; border-bottom: 1px solid var(--line); padding: 4px 0; outline: none; cursor: pointer; }
+  .ctl input[type="date"] { font-family: 'JetBrains Mono', monospace; font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--ink); background: transparent; border: none; border-bottom: 1px solid var(--line); padding: 4px 0; outline: none; cursor: pointer; }
   .ctl input:focus { border-bottom-color: var(--ink); }
   .toggle-switch { cursor: pointer; user-select: none; }
   .toggle-switch-track { width: 28px; height: 14px; background: var(--line); border-radius: 999px; position: relative; transition: background 0.15s ease; }
@@ -39,13 +39,13 @@
   .toggle-switch.on .toggle-switch-track { background: var(--ink); }
   .toggle-switch.on .toggle-switch-track::after { transform: translateX(14px); }
   .lang-toggle-wrap { display: flex; align-items: center; gap: 6px; margin: 0; }
-  .lang-toggle-wrap span { font-weight: 500; transition: color 0.15s ease; color: var(--ink-faint); font-family: 'JetBrains Mono', monospace; font-size: 12px; }
+  .lang-toggle-wrap span { font-weight: 500; transition: color 0.15s ease; color: var(--ink-faint); font-family: 'JetBrains Mono', monospace; font-size: 10px; }
   .lang-toggle-wrap.is-nb .lbl-nb { color: var(--ink); }
   .lang-toggle-wrap:not(.is-nb) .lbl-en { color: var(--ink); }
   input[type="checkbox"] { accent-color: var(--ink); width: 16px; height: 16px; cursor: pointer; }
   
   /* Buttons & Toggles */
-  .nav-btn, .action-btn { font-family: 'JetBrains Mono', monospace; font-size: 13px; text-transform: uppercase; letter-spacing: 0.08em; background: transparent; border: 1px solid var(--line); color: var(--ink); padding: 10px 16px; cursor: pointer; transition: all 0.15s ease; display: inline-flex; align-items: center; justify-content: center; }
+  .nav-btn, .action-btn { font-family: 'JetBrains Mono', monospace; font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; background: transparent; border: 1px solid var(--line); color: var(--ink); padding: 8px 14px; cursor: pointer; transition: all 0.15s ease; display: inline-flex; align-items: center; justify-content: center; }
   .nav-btn:hover, .action-btn:hover { border-color: var(--ink); background: var(--ink); color: var(--bg); }
   .action-btn.primary { background: var(--ink); color: var(--bg); border-color: var(--ink); }
   .action-btn.primary:hover { background: transparent; color: var(--ink); }
@@ -53,7 +53,7 @@
   .action-btn.ghost-danger:hover { border-color: var(--danger); background: var(--danger); color: var(--bg); }
   
   .view-toggle-wrapper { position: relative; }
-  .view-toggle-tooltip { position: absolute; bottom: calc(100% + 8px); left: 50%; transform: translateX(-50%); background: var(--ink); color: var(--bg); padding: 6px 10px; border-radius: 4px; font-family: 'JetBrains Mono', monospace; font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; white-space: nowrap; opacity: 0; z-index: 100; display: none; align-items: center; gap: 8px; }
+  .view-toggle-tooltip { position: absolute; bottom: calc(100% + 8px); left: 50%; transform: translateX(-50%); background: var(--ink); color: var(--bg); padding: 6px 10px; border-radius: 4px; font-family: 'JetBrains Mono', monospace; font-size: 9px; text-transform: uppercase; letter-spacing: 0.08em; white-space: nowrap; opacity: 0; z-index: 100; display: none; align-items: center; gap: 8px; }
   .view-toggle-tooltip::after { content: ''; position: absolute; top: 100%; left: 50%; transform: translateX(-50%); border-width: 4px; border-style: solid; border-color: var(--ink) transparent transparent transparent; }
   body.read-only .view-toggle-tooltip:not(.dismissed) { display: flex; animation: slideUpFade 0.4s ease forwards 1s; pointer-events: auto; }
   .view-toggle-tooltip-close { background: transparent; border: none; color: var(--bg); font-size: 12px; cursor: pointer; padding: 0 4px; opacity: 0.7; }
@@ -79,7 +79,7 @@
   .settings-toggle-row { display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; font-family: 'JetBrains Mono', monospace; font-size: 12px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--ink); cursor: pointer; }
   .settings-toggle-row:hover { background: rgba(0,0,0,0.03); }
   .drive-panel { padding: 12px 16px; background: rgba(0,0,0,0.02); display: flex; flex-direction: column; gap: 10px; }
-  .drive-panel label { font-family: 'JetBrains Mono', monospace; font-size: 11px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--ink-soft); }
+  .drive-panel label { font-family: 'JetBrains Mono', monospace; font-size: 9px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--ink-soft); }
   .drive-input { width: 100%; padding: 6px; font-family: 'JetBrains Mono', monospace; font-size: 12px; border: 1px solid var(--line); background: var(--bg-card); color: var(--ink); outline: none; }
   .drive-input:focus { border-color: var(--ink); }
   
@@ -128,7 +128,7 @@
   .hz-layout { display: flex; border: 1px solid var(--line); background: var(--bg-card); overflow-x: auto; align-items: stretch; }
   
   .hz-sidebar {
-      width: 420px; min-width: 420px; flex-shrink: 0;
+      width: 480px; min-width: 480px; flex-shrink: 0;
       position: sticky; left: 0; z-index: 30;
       background: var(--bg-card); border-right: 1px solid var(--line);
       box-shadow: 2px 0 8px rgba(0,0,0,0.03);
@@ -154,8 +154,9 @@
   }
 
   .hz-timeline { display: block; flex-grow: 1; min-width: max-content; }
+  /* REMOVED: sticky vertically, to prevent bug in overflow-x layout */
   .hz-sticky-headers { 
-      position: sticky; top: var(--sticky-h); z-index: 20; 
+      position: relative; z-index: 20; 
       background: var(--bg-card); 
   }
   
@@ -825,7 +826,7 @@ function renderVerticalCalendar() {
       const bar = document.createElement('div'); bar.className = 'event-bar';
       bar.draggable = !window.__isReadOnly && !(window.__resizeData && window.__resizeData.id === ev.id); bar.dataset.id = ev.id; bar.dataset.color = ev.color;
       if (window.__resizeData && window.__resizeData.id === ev.id) bar.classList.add('is-preview');
-      bar.style.top = `${36 + ev._track * trackSpacing}px`; const colors = resolveColor(ev.color); bar.style.background = colors.bg; bar.style.borderColor = colors.edge;
+      bar.style.top = `${32 + ev._track * trackSpacing}px`; const colors = resolveColor(ev.color); bar.style.background = colors.bg; bar.style.borderColor = colors.edge;
       bar.style.left = `calc(${startCol * 100 / daysToShow}% + 4px)`; bar.style.width = `calc(${span * 100 / daysToShow}% - 8px)`;
       if (pStart < weekStart) bar.classList.add('continues-left'); if (pEnd > weekFullEnd) bar.classList.add('continues-right');
       
@@ -833,12 +834,12 @@ function renderVerticalCalendar() {
       if (ev.notes) { const notesEl = document.createElement('span'); notesEl.className = 'event-notes'; notesEl.textContent = ev.notes; bar.appendChild(notesEl); }
       const dateText = ev.start !== ev.end ? `${ev.start} → ${ev.end}` : ev.start; bar.title = `${ev.name} · ${dateText}${ev.notes ? '\n\n' + ev.notes : ''}`;
       
-      const rectWidth = (cal.clientWidth - 70) * (span / daysToShow);
+      const rectWidth = (cal.clientWidth - 60) * (span / daysToShow);
       bindEventBarEvents(bar, ev, rectWidth / span, segStart);
       layer.appendChild(bar);
     });
     row.appendChild(layer);
-    row.querySelectorAll('.day-cell').forEach(c => { c.style.paddingTop = weekMaxTrack >= 0 ? `${44 + (weekMaxTrack + 1) * trackSpacing}px` : '44px'; });
+    row.querySelectorAll('.day-cell').forEach(c => { c.style.paddingTop = weekMaxTrack >= 0 ? `${40 + (weekMaxTrack + 1) * trackSpacing}px` : '40px'; });
   });
 }
 
