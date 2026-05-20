@@ -115,27 +115,22 @@
   body[data-view="single_week"] .event-label { white-space: normal; overflow: visible; font-weight: 600; margin-bottom: 4px; width: 100%; line-height: 1.2; }
   body[data-view="single_week"] .event-notes { display: block; font-family: 'ABC Diatype', Arial, sans-serif; font-size: 12px; text-transform: none; letter-spacing: 0; white-space: pre-wrap; opacity: 0.85; pointer-events: none; line-height: 1.4; width: 100%; }
 
-  /* ===== HORIZONTAL GANTT VIEW (Spreadsheet Layout) ===== */
+  /* ===== HORIZONTAL GANTT VIEW (NEW SPREADSHEET LAYOUT) ===== */
   body[data-view="horizontal"] .calendar-wrap { border: none; background: transparent; }
-  .hz-layout { 
-      display: flex; border: 1px solid var(--line); 
-      background: var(--bg-card); overflow-x: auto; 
-  }
+  .hz-layout { display: flex; border: 1px solid var(--line); background: var(--bg-card); overflow-x: auto; align-items: flex-start; }
   
   .hz-sidebar {
-      width: 420px; min-width: 420px; flex-shrink: 0;
+      width: 360px; min-width: 360px; flex-shrink: 0;
       position: sticky; left: 0; z-index: 30;
       background: var(--bg-card); border-right: 1px solid var(--line);
       box-shadow: 2px 0 8px rgba(0,0,0,0.03);
-      display: flex; flex-direction: column;
   }
   .hz-sidebar-header {
-      height: 78px; 
+      height: 78px; /* Matches months + days height */
       border-bottom: 1px solid var(--line);
-      background: var(--bg-card); 
-      position: sticky; top: var(--sticky-h); z-index: 40;
+      background: var(--bg); /* Differentiates from the grid */
   }
-  .hz-sidebar-labels { position: relative; flex-grow: 1; }
+  .hz-sidebar-labels { position: relative; }
   .hz-phase-label {
       position: absolute; left: 16px; right: 16px;
       height: 24px; line-height: 24px;
@@ -145,10 +140,7 @@
   }
 
   .hz-timeline { display: flex; flex-direction: column; flex-grow: 1; min-width: max-content; }
-  .hz-sticky-headers { 
-      position: sticky; top: var(--sticky-h); z-index: 20; 
-      background: var(--bg-card); 
-  }
+  .hz-sticky-headers { z-index: 20; background: var(--bg-card); }
   
   .hz-months { height: 32px; display: flex; border-bottom: 1px solid var(--line); box-sizing: border-box; }
   .hz-month { height: 100%; font-family: 'JetBrains Mono', monospace; font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--ink-faint); padding: 8px 12px; border-right: 1px solid var(--line); box-sizing: border-box; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -192,6 +184,7 @@
   /* DRAGGING GLOBALS */
   body.is-resizing * { user-select: none !important; }
   body.is-resizing .phase-layer, body.is-resizing .event-bar { pointer-events: none !important; }
+  body[data-filter-color] .event-bar { opacity: 0.15; transition: opacity 0.2s ease; }
   
   /* ===== TIME OFF LAYER (GREYED OUT BLOCKS) ===== */
   .time-off-layer { position: absolute; left: 60px; right: 0; top: 0; bottom: 0; pointer-events: none; z-index: 1; }
@@ -687,29 +680,55 @@ function render() {
 
 function renderVerticalCalendar() {
   const cal = document.getElementById('calendar'); cal.innerHTML = '';
-  let gridStart, gridEnd, totalWeeks, startLabel, endLabel;
+  
+  const projectSpanStart = state.start ? fromISO(state.start) : new Date(new Date().getFullYear(), new Date().getMonth(), 1);
+  const projectSpanEnd = state.end ? fromISO(state.end) : addDays(projectSpanStart, 70);
+  const projStartLabel = `${getMonthNames()[projectSpanStart.getMonth()]} ${projectSpanStart.getFullYear()}`;
+  const projEndLabel = `${getMonthNames()[projectSpanEnd.getMonth()]} ${projectSpanEnd.getFullYear()}`;
+  document.getElementById('monthLabel').textContent = projStartLabel === projEndLabel ? projStartLabel : `${projStartLabel} — ${projEndLabel}`;
+
+  let gridStart, gridEnd, totalWeeks;
   if (state.viewMode === 'single_week') {
       gridStart = fromISO(state.currentWeekStart); gridEnd = addDays(gridStart, 6); totalWeeks = 1;
-      startLabel = `${getMonthNames()[gridStart.getMonth()]} ${gridStart.getFullYear()}`; endLabel = `${getMonthNames()[gridEnd.getMonth()]} ${gridEnd.getFullYear()}`;
+      document.getElementById('weekRange').textContent = `${t('uke')} ${getISOWeek(gridStart)}`;
   } else {
-      let spanStart, spanEnd;
-      if (state.start && state.end) { spanStart = fromISO(state.start); spanEnd = fromISO(state.end); } else { const today = new Date(); spanStart = new Date(today.getFullYear(), today.getMonth(), 1); spanEnd = addDays(spanStart, 70); }
-      gridStart = startOfWeek(spanStart); gridEnd = addDays(startOfWeek(spanEnd), 6); totalWeeks = Math.round((gridEnd - gridStart) / 86400000 / 7) + 1;
-      startLabel = `${getMonthNames()[spanStart.getMonth()]} ${spanStart.getFullYear()}`; endLabel = `${getMonthNames()[spanEnd.getMonth()]} ${spanEnd.getFullYear()}`;
+      gridStart = startOfWeek(projectSpanStart); gridEnd = addDays(startOfWeek(projectSpanEnd), 6); totalWeeks = Math.round((gridEnd - gridStart) / 86400000 / 7) + 1;
+      document.getElementById('weekRange').textContent = `${t('uke')} ${getISOWeek(gridStart)}–${getISOWeek(addDays(gridEnd, -6))}`;
   }
 
-  document.getElementById('monthLabel').textContent = startLabel === endLabel ? startLabel : `${startLabel} — ${endLabel}`;
-  const firstWeekNum = getISOWeek(gridStart); const lastWeekNum = getISOWeek(addDays(gridEnd, -6));
-  document.getElementById('weekRange').textContent = firstWeekNum === lastWeekNum ? `${t('uke')} ${firstWeekNum}` : `${t('uke')} ${firstWeekNum}–${lastWeekNum}`;
+  const daysToShow = state.showWeekends ? 7 : 5;
+  const wkHeader = document.createElement('div'); wkHeader.className = 'weekday-row' + (state.showWeekends ? '' : ' hide-weekends'); wkHeader.innerHTML = `<div>${t('uke')}</div>` + getDayShort().map(d => `<div>${d}</div>`).join('');
   
-  const wkHeader = document.createElement('div'); wkHeader.className = 'weekday-row' + (state.showWeekends ? '' : ' hide-weekends'); wkHeader.innerHTML = `<div>${t('uke')}</div>` + getDayShort().map(d => `<div>${d}</div>`).join(''); cal.appendChild(wkHeader);
-  let currentMonthKey = null; const daysToShow = state.showWeekends ? 7 : 5;
-  
+  if (state.viewMode === 'single_week') {
+      const headerWrap = document.createElement('div');
+      headerWrap.style.position = 'sticky'; headerWrap.style.top = 'var(--sticky-h)'; headerWrap.style.zIndex = '10'; headerWrap.style.background = 'var(--bg-card)';
+      
+      const monthRow = document.createElement('div'); monthRow.style.display = 'flex'; monthRow.style.borderBottom = '1px solid var(--line)';
+      monthRow.innerHTML = `<div style="width: 60px; flex-shrink: 0; border-right: 1px solid var(--line-soft);"></div>`;
+      
+      let currentMonth = -1; let daysInMonth = 0; const days = [];
+      for(let i=0; i<daysToShow; i++) days.push(addDays(gridStart, i));
+      
+      days.forEach((d, i) => {
+          if (d.getMonth() !== currentMonth) {
+              if (currentMonth !== -1) monthRow.innerHTML += `<div class="hz-month" style="flex: ${daysInMonth}; border-right: 1px solid var(--line-soft);">${getMonthNames()[currentMonth]} '${days[i-1].getFullYear().toString().substring(2)}</div>`;
+              currentMonth = d.getMonth(); daysInMonth = 1;
+          } else { daysInMonth++; }
+      });
+      if (daysInMonth > 0) monthRow.innerHTML += `<div class="hz-month" style="flex: ${daysInMonth}; border-right: none;">${getMonthNames()[currentMonth]} '${days[days.length-1].getFullYear().toString().substring(2)}</div>`;
+      
+      wkHeader.style.position = 'static';
+      headerWrap.appendChild(monthRow); headerWrap.appendChild(wkHeader); cal.appendChild(headerWrap);
+  } else {
+      cal.appendChild(wkHeader);
+  }
+
+  let currentMonthKey = null; 
   const timeOffEvents = state.events.filter(e => e.isTimeOff);
 
   for (let w = 0; w < totalWeeks; w++) {
     const weekStart = addDays(gridStart, w * 7); const weekNum = getISOWeek(weekStart); const weekAnchor = addDays(weekStart, 3); const monthKey = `${weekAnchor.getFullYear()}-${weekAnchor.getMonth()}`;
-    if (monthKey !== currentMonthKey) {
+    if (monthKey !== currentMonthKey && state.viewMode !== 'single_week') {
       currentMonthKey = monthKey; const divider = document.createElement('div'); divider.className = 'month-divider';
       divider.innerHTML = `<div class="uke-spacer"></div><div class="month-label-cell"><span class="month-name">${getMonthNames()[weekAnchor.getMonth()]}</span><span class="month-year">${weekAnchor.getFullYear()}</span></div>`; cal.appendChild(divider);
     }
@@ -724,7 +743,6 @@ function renderVerticalCalendar() {
       bindDayCellEvents(cell, day); row.appendChild(cell);
     }
     
-    // Time Off Layer for Vertical View
     const weekVisibleEnd = addDays(weekStart, daysToShow - 1);
     const timeOffLayer = document.createElement('div'); timeOffLayer.className = 'time-off-layer';
     timeOffEvents.forEach(ev => {
@@ -798,11 +816,13 @@ function renderVerticalCalendar() {
 
 function renderHorizontalCalendar() {
   const cal = document.getElementById('calendar'); cal.innerHTML = '';
-  const spanStart = state.start ? fromISO(state.start) : new Date(new Date().getFullYear(), new Date().getMonth(), 1);
-  const spanEnd = state.end ? fromISO(state.end) : addDays(spanStart, 70);
-  const gridStart = startOfWeek(spanStart); const gridEnd = addDays(startOfWeek(spanEnd), 6);
-  
-  document.getElementById('monthLabel').textContent = `${getMonthNames()[spanStart.getMonth()]} ${spanStart.getFullYear()} — ${getMonthNames()[spanEnd.getMonth()]} ${spanEnd.getFullYear()}`;
+  const projectSpanStart = state.start ? fromISO(state.start) : new Date(new Date().getFullYear(), new Date().getMonth(), 1);
+  const projectSpanEnd = state.end ? fromISO(state.end) : addDays(projectSpanStart, 70);
+  const startLabel = `${getMonthNames()[projectSpanStart.getMonth()]} ${projectSpanStart.getFullYear()}`;
+  const endLabel = `${getMonthNames()[projectSpanEnd.getMonth()]} ${projectSpanEnd.getFullYear()}`;
+  document.getElementById('monthLabel').textContent = startLabel === endLabel ? startLabel : `${startLabel} — ${endLabel}`;
+
+  const gridStart = startOfWeek(projectSpanStart); const gridEnd = addDays(startOfWeek(projectSpanEnd), 6);
   document.getElementById('weekRange').textContent = `${t('uke')} ${getISOWeek(gridStart)}–${getISOWeek(addDays(gridEnd, -6))}`;
 
   let days = []; let curr = gridStart;
@@ -932,11 +952,16 @@ function renderHorizontalCalendar() {
 
 function renderOverviewCalendar() {
   const cal = document.getElementById('calendar'); cal.innerHTML = '';
-  const spanStart = state.start ? fromISO(state.start) : new Date(new Date().getFullYear(), new Date().getMonth(), 1);
-  const spanEnd = state.end ? fromISO(state.end) : addDays(spanStart, 70);
-  const totalDays = diffDays(toISO(spanStart), toISO(spanEnd)) + 1;
+  
+  const projectSpanStart = state.start ? fromISO(state.start) : new Date(new Date().getFullYear(), new Date().getMonth(), 1);
+  const projectSpanEnd = state.end ? fromISO(state.end) : addDays(projectSpanStart, 70);
+  const startLabel = `${getMonthNames()[projectSpanStart.getMonth()]} ${projectSpanStart.getFullYear()}`;
+  const endLabel = `${getMonthNames()[projectSpanEnd.getMonth()]} ${projectSpanEnd.getFullYear()}`;
+  document.getElementById('monthLabel').textContent = startLabel === endLabel ? startLabel : `${startLabel} — ${endLabel}`;
 
-  document.getElementById('monthLabel').textContent = `${getMonthNames()[spanStart.getMonth()]} ${spanStart.getFullYear()} — ${getMonthNames()[spanEnd.getMonth()]} ${spanEnd.getFullYear()}`;
+  const spanStart = projectSpanStart;
+  const spanEnd = projectSpanEnd;
+  const totalDays = diffDays(toISO(spanStart), toISO(spanEnd)) + 1;
   document.getElementById('weekRange').textContent = `${t('uke')} ${getISOWeek(spanStart)}–${getISOWeek(spanEnd)}`;
 
   let monthHtml = ''; let lineHtml = ''; let curr = new Date(spanStart);
@@ -988,8 +1013,12 @@ function renderOverviewCalendar() {
     bar.style.left = `calc(${(startOffset / totalDays) * 100}% + 4px)`; bar.style.width = `calc(${(actualSpan / totalDays) * 100}% - 8px)`;
     if (fromISO(ev.start) < spanStart) bar.classList.add('continues-left'); if (fromISO(ev.end) > spanEnd) bar.classList.add('continues-right');
 
-    const label = document.createElement('span'); label.className = 'event-label'; label.textContent = ev.name; bar.appendChild(label);
-    const dateText = ev.start !== ev.end ? `${ev.start} → ${ev.end}` : ev.start; bar.title = `${ev.name} · ${dateText}${ev.notes ? '\n\n' + ev.notes : ''}`;
+    const formatD = (iso) => { const d = fromISO(iso); return `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}`; };
+    const dateStr = `${formatD(ev.start)} - ${formatD(ev.end)}`;
+
+    const label = document.createElement('span'); label.className = 'event-label'; 
+    label.innerHTML = `${escapeHtml(ev.name)} <span style="color: var(--ink-soft); font-weight: 400;">&mdash; ${dateStr}</span>`; 
+    bar.appendChild(label);
     
     bar.draggable = false;
     bar.addEventListener('click', (e) => { e.stopPropagation(); openEventModal(ev); });
@@ -1000,6 +1029,10 @@ function renderOverviewCalendar() {
   grid.appendChild(layer);
   const maxTrack = events.length > 0 ? events.length - 1 : -1;
   grid.style.minHeight = Math.max(300, (maxTrack + 1) * 46 + 40) + 'px';
+}
+
+function renderLegend() {
+  document.getElementById('phaseLegend').innerHTML = '';
 }
 
 // ============ GLOBAL RESIZE LOGIC ============
