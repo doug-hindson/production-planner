@@ -68,8 +68,9 @@
   .cloud-status { font-family: 'JetBrains Mono', monospace; font-size: 12px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--ink-faint); display: flex; align-items: center; gap: 6px; }
   .cloud-status.saved { color: #539853; }
   .cloud-status.saving { color: #d99587; }
+  .footer-controls { display: flex; justify-content: flex-end; margin-top: 16px; margin-bottom: 24px; }
   .settings-dropdown-wrap { position: relative; }
-  .settings-menu { position: absolute; top: calc(100% + 8px); right: 0; background: var(--bg-card); border: 1px solid var(--ink); border-radius: 0; z-index: 100; min-width: 260px; display: none; flex-direction: column; box-shadow: 0 6px 16px rgba(0,0,0,0.08); max-height: 80vh; overflow-y: auto; }
+  .settings-menu { position: absolute; bottom: calc(100% + 8px); right: 0; background: var(--bg-card); border: 1px solid var(--ink); border-radius: 0; z-index: 100; min-width: 260px; display: none; flex-direction: column; box-shadow: 0 -6px 16px rgba(0,0,0,0.08); max-height: 80vh; overflow-y: auto; }
   .settings-menu.open { display: flex; }
   .settings-menu-item { display: flex; width: 100%; text-align: left; background: transparent; border: none; border-radius: 0; padding: 12px 16px; font-family: 'JetBrains Mono', monospace; font-size: 12px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--ink); cursor: pointer; }
   .settings-menu-item:hover { background: var(--ink); color: var(--bg); }
@@ -123,9 +124,6 @@
   /* OVERRIDES FOR SINGLE WEEK */
   body[data-view="single_week"] .vertical-cell { min-height: 40vh; }
   body[data-view="single_week"] .month-divider { display: none; }
-  body[data-view="single_week"] .event-bar { height: 112px; flex-direction: column; align-items: flex-start; padding: 8px 10px; overflow-y: auto; }
-  body[data-view="single_week"] .event-label { white-space: normal; overflow: visible; font-weight: 600; margin-bottom: 4px; width: 100%; line-height: 1.2; overflow-wrap: break-word; word-wrap: break-word; }
-  body[data-view="single_week"] .event-notes { display: block; font-family: 'ABC Diatype', Arial, sans-serif; font-size: 14px; text-transform: none; letter-spacing: 0; white-space: pre-wrap; opacity: 0.85; pointer-events: none; line-height: 1.4; width: 100%; overflow-wrap: break-word; word-wrap: break-word; }
 
   /* ===== HORIZONTAL GANTT VIEW (Spreadsheet Layout) ===== */
   body[data-view="horizontal"] .calendar-wrap { border: none; background: transparent; }
@@ -228,6 +226,10 @@
   body.is-resizing-sidebar, body.is-resizing-sidebar * { cursor: col-resize !important; user-select: none; }
   
   body.is-resizing .phase-layer, body.is-resizing .event-bar, body.is-dragging .phase-layer, body.is-dragging .event-bar { pointer-events: none !important; }
+  
+  /* CONTINUATION FADE FOR MULTI-WEEK EVENTS */
+  .event-bar.is-continuation .event-label-container { opacity: 0; transition: opacity 0.2s ease; }
+  .event-bar.is-continuation:hover .event-label-container { opacity: 1; }
   
   /* ===== TIME OFF LAYER (GREYED OUT BLOCKS) ===== */
   .time-off-layer { position: absolute; left: 70px; right: 0; top: 0; bottom: 0; pointer-events: none; z-index: 1; }
@@ -1046,6 +1048,15 @@ function renderVerticalCalendar() {
 
   let currentMonthKey = null; 
   const timeOffEvents = state.events.filter(e => e.isTimeOff);
+  const events = [...state.events].filter(e => !e.isTimeOff).sort((a, b) => {
+      const durA = fromISO(a.end).getTime() - fromISO(a.start).getTime();
+      const durB = fromISO(b.end).getTime() - fromISO(b.start).getTime();
+      return durB - durA || fromISO(a.start).getTime() - fromISO(b.start).getTime();
+  });
+
+  const isSingleWeek = state.viewMode === 'single_week'; 
+  const trackSpacing = 60; 
+  const trackHeight = 52; 
 
   for (let w = 0; w < totalWeeks; w++) {
     const weekStart = addDays(gridStart, w * 7); const weekNum = getISOWeek(weekStart); const weekAnchor = addDays(weekStart, 3); const monthKey = `${weekAnchor.getFullYear()}-${weekAnchor.getMonth()}`;
@@ -1065,11 +1076,12 @@ function renderVerticalCalendar() {
     }
     
     // Time Off Layer for Vertical View
+    const weekFullEnd = addDays(weekStart, 6);
     const weekVisibleEnd = addDays(weekStart, daysToShow - 1);
     const timeOffLayer = document.createElement('div'); timeOffLayer.className = 'time-off-layer';
     timeOffEvents.forEach(ev => {
       const pStart = fromISO(ev.start); const pEnd = fromISO(ev.end);
-      if (pEnd < weekStart || pStart > addDays(weekStart, 6)) return;
+      if (pEnd < weekStart || pStart > weekFullEnd) return;
       const segStart = pStart < weekStart ? weekStart : pStart; let segEnd = pEnd > weekVisibleEnd ? weekVisibleEnd : pEnd;
       if (segStart > weekVisibleEnd || segEnd < weekStart || segEnd < segStart) return;
       
@@ -1082,50 +1094,45 @@ function renderVerticalCalendar() {
     });
     row.appendChild(timeOffLayer);
     
-    cal.appendChild(row);
-  }
-  
-  const events = [...state.events].filter(e => !e.isTimeOff).sort((a, b) => {
-      const durA = fromISO(a.end).getTime() - fromISO(a.start).getTime();
-      const durB = fromISO(b.end).getTime() - fromISO(b.start).getTime();
-      return durB - durA || fromISO(a.start).getTime() - fromISO(b.start).getTime();
-  });
-  
-  const groupedEventsMap = new Map();
-  events.forEach(ev => {
-      if (!groupedEventsMap.has(ev.name)) groupedEventsMap.set(ev.name, []);
-      groupedEventsMap.get(ev.name).push(ev);
-  });
+    // Process regular events local to this week
+    const layer = document.createElement('div'); layer.className = 'phase-layer'; 
+    
+    const weekEvents = events.filter(ev => {
+        const pStart = fromISO(ev.start); const pEnd = fromISO(ev.end);
+        return !(pEnd < weekStart || pStart > weekFullEnd);
+    });
 
-  let currentGlobalTrack = 0;
-  const groupBoundariesVertical = new Set();
-  
-  groupedEventsMap.forEach((group, name) => {
-      const localTracks = [];
-      group.forEach(ev => {
-          const evS = fromISO(ev.start).getTime(); const evE = fromISO(ev.end).getTime();
-          let placed = false;
-          for (let i = 0; i < localTracks.length; i++) {
-              let overlap = false;
-              for (let j = 0; j < localTracks[i].length; j++) { if (evS <= localTracks[i][j].e && evE >= localTracks[i][j].s) { overlap = true; break; } }
-              if (!overlap) { localTracks[i].push({s: evS, e: evE}); ev._track = currentGlobalTrack + i; placed = true; break; }
-          }
-          if (!placed) { ev._track = currentGlobalTrack + localTracks.length; localTracks.push([{s: evS, e: evE}]); }
-      });
-      currentGlobalTrack += localTracks.length;
-      groupBoundariesVertical.add(currentGlobalTrack - 1);
-  });
-  
-  const isSingleWeek = state.viewMode === 'single_week'; const trackSpacing = isSingleWeek ? 140 : 36;
-  
-  cal.querySelectorAll('.week-row').forEach(row => {
-    const weekStart = fromISO(row.dataset.weekStart); const weekFullEnd = addDays(weekStart, 6); const weekVisibleEnd = addDays(weekStart, daysToShow - 1);
-    const layer = document.createElement('div'); layer.className = 'phase-layer'; let weekMaxTrack = -1;
+    const weekGroupedEvents = new Map();
+    weekEvents.forEach(ev => {
+        if (!weekGroupedEvents.has(ev.name)) weekGroupedEvents.set(ev.name, []);
+        weekGroupedEvents.get(ev.name).push(ev);
+    });
 
-    events.forEach(ev => {
+    const evToLocalTrack = new Map();
+    let localTrackIdx = 0;
+    const localGroupBoundaries = new Set();
+
+    weekGroupedEvents.forEach((group, name) => {
+        const tracks = [];
+        group.forEach(ev => {
+            const evS = fromISO(ev.start).getTime(); const evE = fromISO(ev.end).getTime();
+            let placed = false;
+            for (let i = 0; i < tracks.length; i++) {
+                let overlap = false;
+                for (let j = 0; j < tracks[i].length; j++) { if (evS <= tracks[i][j].e && evE >= tracks[i][j].s) { overlap = true; break; } }
+                if (!overlap) { tracks[i].push({s: evS, e: evE}); evToLocalTrack.set(ev.id, localTrackIdx + i); placed = true; break; }
+            }
+            if (!placed) { evToLocalTrack.set(ev.id, localTrackIdx + tracks.length); tracks.push([{s: evS, e: evE}]); }
+        });
+        localTrackIdx += tracks.length;
+        localGroupBoundaries.add(localTrackIdx - 1);
+    });
+
+    const weekMaxTrack = localTrackIdx - 1;
+
+    weekEvents.forEach(ev => {
       const pStart = fromISO(ev.start); const pEnd = fromISO(ev.end);
-      if (pEnd < weekStart || pStart > weekFullEnd) return;
-      weekMaxTrack = Math.max(weekMaxTrack, ev._track);
+      const evLocalTrack = evToLocalTrack.get(ev.id);
       const segStart = pStart < weekStart ? weekStart : pStart; let segEnd = pEnd > weekVisibleEnd ? weekVisibleEnd : pEnd;
       if (segStart > weekVisibleEnd || segEnd < weekStart || segEnd < segStart) return;
       
@@ -1133,20 +1140,66 @@ function renderVerticalCalendar() {
       const bar = document.createElement('div'); bar.className = 'event-bar';
       bar.draggable = !window.__isReadOnly && !(window.__resizeData && window.__resizeData.id === ev.id); bar.dataset.id = ev.id; bar.dataset.color = ev.color;
       if (window.__resizeData && window.__resizeData.id === ev.id) bar.classList.add('is-preview');
-      bar.style.top = `${32 + ev._track * trackSpacing}px`; const colors = resolveColor(ev.color); bar.style.background = colors.bg; bar.style.borderColor = colors.edge;
-      bar.style.left = `calc(${startCol * 100 / daysToShow}% + 4px)`; bar.style.width = `calc(${span * 100 / daysToShow}% - 8px)`;
-      if (pStart < weekStart) bar.classList.add('continues-left'); if (pEnd > weekFullEnd) bar.classList.add('continues-right');
       
-      const label = document.createElement('span'); label.className = 'event-label'; label.textContent = ev.name; bar.appendChild(label);
-      if (ev.notes) { const notesEl = document.createElement('span'); notesEl.className = 'event-notes'; notesEl.textContent = ev.notes; bar.appendChild(notesEl); }
+      bar.style.top = `${32 + evLocalTrack * trackSpacing}px`; 
+      bar.style.height = `${trackHeight}px`;
+      
+      const colors = resolveColor(ev.color); bar.style.background = colors.bg; bar.style.borderColor = colors.edge;
+      bar.style.left = `calc(${startCol * 100 / daysToShow}% + 4px)`; bar.style.width = `calc(${span * 100 / daysToShow}% - 8px)`;
+      
+      if (pStart < weekStart) {
+          bar.classList.add('continues-left'); 
+          bar.classList.add('is-continuation');
+      }
+      if (pEnd > weekFullEnd) {
+          bar.classList.add('continues-right');
+      }
+      
+      const labelContainer = document.createElement('div');
+      labelContainer.className = 'event-label-container';
+      labelContainer.style.display = 'flex';
+      labelContainer.style.flexDirection = 'column';
+      labelContainer.style.justifyContent = 'center';
+      labelContainer.style.height = '100%';
+      labelContainer.style.width = '100%';
+      labelContainer.style.overflow = 'hidden';
+
+      const titleDiv = document.createElement('div');
+      titleDiv.className = 'event-label';
+      titleDiv.style.fontWeight = '600';
+      titleDiv.style.lineHeight = '1.2';
+      titleDiv.style.whiteSpace = 'nowrap';
+      titleDiv.style.overflow = 'hidden';
+      titleDiv.style.textOverflow = 'ellipsis';
+      titleDiv.style.width = '100%';
+      titleDiv.style.maxWidth = '100%';
+      titleDiv.textContent = ev.name;
+      labelContainer.appendChild(titleDiv);
+
+      if (ev.notes) { 
+          const notesDiv = document.createElement('div');
+          notesDiv.style.fontSize = '11px';
+          notesDiv.style.opacity = '0.85';
+          notesDiv.style.fontWeight = '400';
+          notesDiv.style.lineHeight = '1.3';
+          notesDiv.style.whiteSpace = 'nowrap';
+          notesDiv.style.overflow = 'hidden';
+          notesDiv.style.textOverflow = 'ellipsis';
+          notesDiv.style.textTransform = 'none';
+          notesDiv.style.letterSpacing = '0';
+          notesDiv.style.width = '100%';
+          notesDiv.textContent = ev.notes;
+          labelContainer.appendChild(notesDiv);
+      }
+      bar.appendChild(labelContainer);
+
       const dateText = ev.start !== ev.end ? `${ev.start} → ${ev.end}` : ev.start; bar.title = `${ev.name} · ${dateText}${ev.notes ? '\n\n' + ev.notes : ''}`;
       
-      const rectWidth = (cal.clientWidth - 60) * (span / daysToShow);
+      const rectWidth = (cal.clientWidth - 70) * (span / daysToShow);
       bindEventBarEvents(bar, ev, rectWidth / span, segStart);
       layer.appendChild(bar);
     });
     
-    // Horizontal tracking guidelines for single week / vertical view
     if (weekMaxTrack >= 0) {
         const guideLayer = document.createElement('div');
         guideLayer.className = 'hz-guidelines-layer';
@@ -1158,9 +1211,9 @@ function renderVerticalCalendar() {
         guideLayer.style.pointerEvents = 'none';
         guideLayer.style.zIndex = '1';
 
-        const lineOffset = isSingleWeek ? 14 : 3;
+        const lineOffset = 4;
         for (let i = 0; i <= weekMaxTrack; i++) {
-            if (groupBoundariesVertical.has(i)) {
+            if (localGroupBoundaries.has(i)) {
                 const line = document.createElement('div');
                 line.style.position = 'absolute';
                 line.style.left = '0';
@@ -1176,7 +1229,9 @@ function renderVerticalCalendar() {
     
     row.appendChild(layer);
     row.querySelectorAll('.day-cell').forEach(c => { c.style.paddingTop = weekMaxTrack >= 0 ? `${40 + (weekMaxTrack + 1) * trackSpacing}px` : '40px'; });
-  });
+    
+    cal.appendChild(row);
+  }
 }
 
 function renderHorizontalCalendar() {
