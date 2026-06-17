@@ -118,12 +118,12 @@
   .vertical-cell:last-child { border-right: none; }
   
   /* Strict "Today" styling */
-  .vertical-cell.today { background: rgba(20, 19, 15, 0.02); box-shadow: inset 0 0 0 1px var(--ink); border-radius: 4px; position: relative; z-index: 4; border-right-color: transparent; }
+  .vertical-cell.today { box-shadow: inset 0 0 0 1px var(--ink); z-index: 4; background: rgba(20, 19, 15, 0.02); border-radius: 4px; position: relative; }
   .vertical-cell.today::before { content: 'TODAY'; position: absolute; top: 0; right: 0; background: var(--ink); color: var(--bg); font-family: 'JetBrains Mono', monospace; font-size: 11px; padding: 4px 6px; letter-spacing: 0.1em; text-transform: uppercase; line-height: 1; z-index: 10; border-bottom-left-radius: 4px; border-top-right-radius: 3px; }
   
-  .hz-day.today { background: rgba(20, 19, 15, 0.02); box-shadow: inset 1px 1px 0 0 var(--ink), inset -1px 0 0 0 var(--ink); border-radius: 4px 4px 0 0; position: relative; z-index: 4; margin-bottom: -1px; padding-bottom: 7px; border-right-color: transparent; }
+  .hz-day.today { box-shadow: inset 1px 1px 0 0 var(--ink), inset -1px 0 0 0 var(--ink); z-index: 4; background: rgba(20, 19, 15, 0.02); border-radius: 4px 4px 0 0; position: relative; margin-bottom: -1px; padding-bottom: 7px; border-right-color: transparent; }
   .hz-day.today::before { content: 'TODAY'; position: absolute; top: 0; right: 0; background: var(--ink); color: var(--bg); font-family: 'JetBrains Mono', monospace; font-size: 11px; padding: 4px 6px; letter-spacing: 0.1em; text-transform: uppercase; line-height: 1; z-index: 10; border-bottom-left-radius: 4px; border-top-right-radius: 3px; }
-  .hz-col.today { background: rgba(20, 19, 15, 0.02); box-shadow: inset 1px 0 0 0 var(--ink), inset -1px -1px 0 0 var(--ink); border-radius: 0 0 4px 4px; position: relative; z-index: 2; margin-top: -1px; border-right-color: transparent; }
+  .hz-col.today { box-shadow: inset 1px 0 0 0 var(--ink), inset -1px -1px 0 0 var(--ink); z-index: 2; background: rgba(20, 19, 15, 0.02); border-radius: 0 0 4px 4px; position: relative; border-right-color: transparent; margin-top: -1px; }
 
   /* OVERRIDES FOR SINGLE WEEK */
   body[data-view="single_week"] .vertical-cell { min-height: 40vh; }
@@ -201,6 +201,7 @@
   .ov-month:first-child { border-left: none; }
   .ov-grid { position: relative; width: 100%; background: var(--bg-card); }
   .ov-line { position: absolute; top: 0; bottom: 0; width: 1px; background: var(--line-soft); z-index: 1; pointer-events: none; }
+  .ov-week-line { position: absolute; top: 0; bottom: 0; width: 1px; background: var(--line); z-index: 1; pointer-events: none; }
   
   .today-line { position: absolute; top: 0; bottom: 0; width: 1px; background: var(--ink); z-index: 5; pointer-events: none; }
   .today-tag { position: absolute; top: 4px; left: 0; transform: translateX(-50%); background: var(--ink); color: var(--bg); font-family: 'JetBrains Mono', monospace; font-size: 11px; padding: 4px 6px; letter-spacing: 0.1em; text-transform: uppercase; white-space: nowrap; border-radius: 0; line-height: 1; z-index: 10; }
@@ -1297,35 +1298,30 @@ function renderHorizontalCalendar() {
   singleDayEvents.sort((a, b) => fromISO(a.start) - fromISO(b.start));
   multiDayEvents.sort((a, b) => fromISO(a.start) - fromISO(b.start));
 
-  let currentSingleTrack = 0;
-  const singleGroups = new Map();
+  const singleTracks = []; let maxSingleTrack = -1;
+
   singleDayEvents.forEach(ev => {
-      if (!singleGroups.has(ev.name)) singleGroups.set(ev.name, []);
-      singleGroups.get(ev.name).push(ev);
-  });
-
-  singleGroups.forEach((group, name) => {
-      const localTracks = [];
-      group.forEach(ev => {
-          let startIdx = days.findIndex(d => d >= fromISO(ev.start)); 
-          if (startIdx === -1) return;
-          
-          const textWidthPx = ev.name.length * 8.5 + 45; 
-          const paddingDays = Math.ceil(textWidthPx / dayWidth);
-          const evS = startIdx; const evE = startIdx + paddingDays; 
-          
-          let placed = false;
-          for (let i = 0; i < localTracks.length; i++) {
-              let overlap = false;
-              for (let j = 0; j < localTracks[i].length; j++) { if (evS <= localTracks[i][j].e && evE >= localTracks[i][j].s) { overlap = true; break; } }
-              if (!overlap) { localTracks[i].push({s: evS, e: evE}); ev._track = currentSingleTrack + i; placed = true; break; }
+      let startIdx = days.findIndex(d => d >= fromISO(ev.start)); 
+      if (startIdx === -1) return;
+      
+      const textWidthPx = ev.name.length * 8.5 + 45; 
+      const paddingDays = Math.ceil(textWidthPx / dayWidth);
+      const evS = startIdx; 
+      const evE = startIdx + paddingDays; 
+      
+      let placed = false;
+      for (let i = 0; i < singleTracks.length; i++) {
+          let overlap = false;
+          for (let j = 0; j < singleTracks[i].length; j++) { 
+              if (evS <= singleTracks[i][j].e && evE >= singleTracks[i][j].s) { overlap = true; break; } 
           }
-          if (!placed) { ev._track = currentSingleTrack + localTracks.length; localTracks.push([{s: evS, e: evE}]); }
-      });
-      currentSingleTrack += localTracks.length;
+          if (!overlap) { singleTracks[i].push({s: evS, e: evE}); ev._track = i; placed = true; break; }
+      }
+      if (!placed) { ev._track = singleTracks.length; singleTracks.push([{s: evS, e: evE}]); }
+      maxSingleTrack = Math.max(maxSingleTrack, ev._track);
   });
 
-  const startPhaseTrack = currentSingleTrack;
+  const startPhaseTrack = maxSingleTrack + 1;
   const trackHeight = 56;
   let sidebarHtml = '';
   
@@ -1505,6 +1501,16 @@ function renderOverviewCalendar() {
     const daysToStart = diffDays(toISO(spanStart), toISO(curr)); const leftPct = (daysToStart / totalDays) * 100;
     if (leftPct > 0) lineHtml += `<div class="ov-line" style="left: ${leftPct}%"></div>`;
     curr = addDays(endOfMonth, 1);
+  }
+
+  let weekCurr = startOfWeek(spanStart);
+  while (weekCurr <= spanEnd) {
+      if (weekCurr >= spanStart) {
+          const daysToStart = diffDays(toISO(spanStart), toISO(weekCurr));
+          const leftPct = (daysToStart / totalDays) * 100;
+          if (leftPct > 0) lineHtml += `<div class="ov-week-line" style="left: ${leftPct}%"></div>`;
+      }
+      weekCurr = addDays(weekCurr, 7);
   }
 
   // Today Line
