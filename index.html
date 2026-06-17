@@ -29,9 +29,9 @@
   .sticky-zone.compact .project-desc { opacity: 0; max-height: 0; min-height: 0; overflow: hidden; pointer-events: none; margin: 0; }
   .controls { display: flex; align-items: center; justify-content: space-between; padding: 12px 0; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); gap: 14px; flex-wrap: wrap; }
   .controls-left, .controls-right { display: flex; align-items: center; gap: 18px; flex-wrap: wrap; }
-  .ctl { display: flex; align-items: center; gap: 8px; font-family: 'JetBrains Mono', monospace; font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--ink-soft); }
+  .ctl { display: flex; align-items: center; gap: 8px; font-family: 'JetBrains Mono', monospace; font-size: 13px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--ink-soft); }
   .ctl label { color: var(--ink-faint); }
-  .ctl input[type="date"] { font-family: 'JetBrains Mono', monospace; font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--ink); background: transparent; border: none; border-bottom: 1px solid var(--line); padding: 4px 0; outline: none; cursor: pointer; border-radius: 0; }
+  .ctl input[type="date"] { font-family: 'JetBrains Mono', monospace; font-size: 13px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--ink); background: transparent; border: none; border-bottom: 1px solid var(--line); padding: 4px 0; outline: none; cursor: pointer; border-radius: 0; }
   .ctl input:focus { border-bottom-color: var(--ink); }
   .toggle-switch { cursor: pointer; user-select: none; }
   .toggle-switch-track { width: 28px; height: 14px; background: var(--line); border-radius: 0; position: relative; transition: background 0.15s ease; }
@@ -39,13 +39,13 @@
   .toggle-switch.on .toggle-switch-track { background: var(--ink); }
   .toggle-switch.on .toggle-switch-track::after { transform: translateX(14px); }
   .lang-toggle-wrap { display: flex; align-items: center; gap: 6px; margin: 0; }
-  .lang-toggle-wrap span { font-weight: 500; transition: color 0.15s ease; color: var(--ink-faint); font-family: 'JetBrains Mono', monospace; font-size: 10px; }
+  .lang-toggle-wrap span { font-weight: 500; transition: color 0.15s ease; color: var(--ink-faint); font-family: 'JetBrains Mono', monospace; font-size: 12px; }
   .lang-toggle-wrap.is-nb .lbl-nb { color: var(--ink); }
   .lang-toggle-wrap:not(.is-nb) .lbl-en { color: var(--ink); }
   input[type="checkbox"] { accent-color: var(--ink); width: 16px; height: 16px; cursor: pointer; border-radius: 0; }
   
   /* Buttons & Toggles */
-  .nav-btn, .action-btn { font-family: 'JetBrains Mono', monospace; font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; background: transparent; border: 1px solid var(--line); border-radius: 0; color: var(--ink); padding: 8px 14px; cursor: pointer; transition: all 0.15s ease; display: inline-flex; align-items: center; justify-content: center; }
+  .nav-btn, .action-btn { font-family: 'JetBrains Mono', monospace; font-size: 13px; text-transform: uppercase; letter-spacing: 0.08em; background: transparent; border: 1px solid var(--line); border-radius: 0; color: var(--ink); padding: 10px 16px; cursor: pointer; transition: all 0.15s ease; display: inline-flex; align-items: center; justify-content: center; }
   .nav-btn:hover, .action-btn:hover { border-color: var(--ink); background: var(--ink); color: var(--bg); }
   .action-btn.primary { background: var(--ink); color: var(--bg); border-color: var(--ink); }
   .action-btn.primary:hover { background: transparent; color: var(--ink); }
@@ -68,9 +68,8 @@
   .cloud-status { font-family: 'JetBrains Mono', monospace; font-size: 12px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--ink-faint); display: flex; align-items: center; gap: 6px; }
   .cloud-status.saved { color: #539853; }
   .cloud-status.saving { color: #d99587; }
-  .footer-controls { display: flex; justify-content: flex-end; margin-top: 16px; margin-bottom: 24px; }
   .settings-dropdown-wrap { position: relative; }
-  .settings-menu { position: absolute; bottom: calc(100% + 8px); right: 0; background: var(--bg-card); border: 1px solid var(--ink); border-radius: 0; z-index: 100; min-width: 260px; display: none; flex-direction: column; box-shadow: 0 -6px 16px rgba(0,0,0,0.08); max-height: 80vh; overflow-y: auto; }
+  .settings-menu { position: absolute; top: calc(100% + 8px); right: 0; background: var(--bg-card); border: 1px solid var(--ink); border-radius: 0; z-index: 100; min-width: 260px; display: none; flex-direction: column; box-shadow: 0 6px 16px rgba(0,0,0,0.08); max-height: 80vh; overflow-y: auto; }
   .settings-menu.open { display: flex; }
   .settings-menu-item { display: flex; width: 100%; text-align: left; background: transparent; border: none; border-radius: 0; padding: 12px 16px; font-family: 'JetBrains Mono', monospace; font-size: 12px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--ink); cursor: pointer; }
   .settings-menu-item:hover { background: var(--ink); color: var(--bg); }
@@ -165,6 +164,7 @@
   }
 
   .hz-timeline { display: block; flex-grow: 1; min-width: max-content; }
+  /* REMOVED: sticky vertically, to prevent bug in overflow-x layout */
   .hz-sticky-headers { 
       position: relative; z-index: 20; 
       background: var(--bg-card); 
@@ -184,13 +184,13 @@
   
   /* Horizontal Bar Logic overrides */
   body[data-view="horizontal"] .event-bar.hz-single-day {
-      overflow: visible !important; justify-content: center;
+      overflow: visible !important; justify-content: center; border-radius: 4px;
   }
   body[data-view="horizontal"] .event-bar.hz-single-day .event-label {
       position: absolute; left: 100%; margin-left: 8px;
-      white-space: nowrap; width: max-content; color: var(--ink); font-weight: 500;
+      white-space: nowrap; color: var(--ink); font-weight: 500; display: inline-block;
       text-transform: uppercase; font-family: 'JetBrains Mono', monospace;
-      letter-spacing: 0.08em; pointer-events: none;
+      letter-spacing: 0.08em; pointer-events: none; overflow: hidden; text-overflow: ellipsis;
   }
 
   /* ===== OVERVIEW VIEW (A4 One-Pager) ===== */
@@ -214,12 +214,12 @@
   /* CRITICAL CSS: OVERRIDES FOR OVERVIEW EVENT BARS */
   body[data-view="overview"] .event-bar {
       position: relative; top: 0; /* Overrides absolute positioning to allow natural flow */
-      min-height: 44px; height: auto; padding: 8px 10px; align-items: flex-start; overflow: hidden;
+      min-height: 44px; height: auto; padding: 8px 10px; align-items: flex-start; overflow: hidden; border-radius: 4px;
   }
   body[data-view="overview"] .event-label { width: 100%; white-space: normal; line-height: 1.2; max-width: 100%; overflow: hidden; }
   body[data-view="overview"] .event-bar.ov-single-day { overflow: visible; }
   body[data-view="overview"] .event-bar.ov-single-day .event-label {
-      position: absolute; left: 100%; margin-left: 6px; top: 2px; width: max-content; white-space: nowrap; overflow: visible; max-width: none;
+      position: absolute; left: 100%; margin-left: 6px; top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block;
   }
 
   /* DRAGGING GLOBALS */
@@ -247,9 +247,9 @@
       font-family: 'JetBrains Mono', monospace; font-size: 11px;
       text-transform: uppercase; letter-spacing: 0.1em;
       color: var(--ink-soft); background: var(--bg-card);
-      border: 1px solid var(--line); padding: 4px 8px;
+      border: 1px solid var(--line); border-radius: 4px; padding: 4px 8px;
       white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: calc(100% - 16px);
-      box-shadow: 0 1px 3px rgba(0,0,0,0.02); height: max-content; border-radius: 4px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.02); height: max-content;
   }
   .time-off-label:hover { border-color: var(--ink); color: var(--ink); }
   body[data-view="vertical"] .time-off-label, body[data-view="single_week"] .time-off-label { left: 28px; margin-left: 28px; }
@@ -257,7 +257,7 @@
   /* EVENT BARS */
   .phase-layer { position: absolute; left: 70px; right: 0; top: 0; bottom: 0; pointer-events: none; z-index: 2; }
   body[data-view="horizontal"] .phase-layer { left: 0; }
-  .event-bar { position: absolute; height: 30px; display: flex; align-items: center; padding: 0 10px; font-family: 'JetBrains Mono', monospace; font-size: 12px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--ink); pointer-events: auto; cursor: grab; transition: filter 0.12s ease, transform 0.12s ease, opacity 0.2s ease; border: 1px solid; box-shadow: 0 2px 4px rgba(0,0,0,0.03); -ms-overflow-style: none; scrollbar-width: none; border-radius: 4px; }
+  .event-bar { position: absolute; height: 30px; display: flex; align-items: center; padding: 0 10px; font-family: 'JetBrains Mono', monospace; font-size: 12px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--ink); pointer-events: auto; cursor: grab; transition: filter 0.12s ease, transform 0.12s ease, opacity 0.2s ease; border: 1px solid; border-radius: 4px; box-shadow: 0 2px 4px rgba(0,0,0,0.03); -ms-overflow-style: none; scrollbar-width: none; }
   .event-bar::-webkit-scrollbar { display: none; }
   .event-bar:active { cursor: grabbing; }
   .event-bar:hover { filter: brightness(0.96); transform: translateY(-1px); z-index: 10; }
@@ -300,7 +300,7 @@
   body.read-only .project-title, body.read-only .project-desc, body.read-only .controls-left input { pointer-events: none; border-color: transparent; }
   body.read-only .modal-actions-right { display: none !important; }
   body.read-only .event-bar { cursor: pointer; }
-  body.read-only .footer-controls { display: none !important; }
+  body.read-only .settings-dropdown-wrap { display: none !important; }
   body.read-only #topSignInBtn, body.read-only #topCopyLinkBtn { display: none !important; }
 
   @media (max-width: 1100px) {
@@ -344,6 +344,71 @@
         <button class="action-btn ghost-danger" id="topSignInBtn" data-i18n="sign_in_drive" style="display: none; background: #fbeae9; color: var(--danger); font-weight: 500; font-size: 11px; padding: 6px 12px; border-radius: 0;">Sign in</button>
         <div class="cloud-status" id="cloudStatus" style="display: none;"></div>
         <button class="action-btn" id="topCopyLinkBtn" data-i18n="copy_client_link" style="font-weight: 500;">Copy Client Link</button>
+        
+        <div class="settings-dropdown-wrap">
+          <button class="action-btn" id="settingsBtn" data-i18n="settings">Settings</button>
+          
+          <div class="settings-menu" id="settingsMenu">
+            <div class="drive-panel">
+              <div id="driveLoginSection">
+                <button class="action-btn primary" style="width: 100%;" id="btnDriveLogin">Sign In with Google</button>
+              </div>
+              <div id="driveWorkspaceSection" style="display: none; flex-direction: column; gap: 10px;">
+                <div>
+                  <label>Workspace Folder</label>
+                  <div style="display: flex; align-items: center; gap: 8px; margin-top: 4px; margin-bottom: 8px; padding: 6px; background: var(--bg); border: 1px solid var(--line); border-radius: 0;">
+                    <span id="driveFolderNameLabel" style="flex-grow: 1; font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--ink-soft); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Saved Folder</span>
+                    <button class="action-btn" id="btnBrowseFolder" style="padding: 4px 8px; font-size: 10px; border-color: var(--line-soft);">Browse</button>
+                  </div>
+                </div>
+                <div>
+                  <label>Load Plan</label>
+                  <select class="drive-input" id="driveFileSelect" style="cursor: pointer;">
+                    <option value="">Select a file...</option>
+                  </select>
+                </div>
+                <button class="action-btn" style="width: 100%;" id="btnNewDriveFile">+ Save as New File</button>
+              </div>
+            </div>
+
+            <div class="settings-menu-divider"></div>
+
+            <div class="settings-toggle-row" id="readOnlyToggleWrapper">
+              <span data-i18n="read_only_link">Read-Only Link</span>
+              <div class="toggle-switch ctl" id="shareReadOnly">
+                <div class="toggle-switch-track"></div>
+              </div>
+            </div>
+            <button class="settings-menu-item" id="shareLinkBtn" data-i18n="share_link">Copy Share Link</button>
+            <button class="settings-menu-item" id="exportJsonBtn" data-i18n="export_data">Download Backup (JSON)</button>
+            <label class="settings-menu-item" for="importJsonInput" style="margin: 0;" data-i18n="import_data">Load Local File</label>
+            <input type="file" id="importJsonInput" accept=".json" style="display: none;" />
+            <button class="settings-menu-item" id="exportCsvBtn" data-i18n="export_csv">Export to CSV</button>
+            <button class="settings-menu-item" id="exportBtn" data-i18n="export_pdf">Export PDF</button>
+            
+            <div class="settings-menu-divider"></div>
+            
+            <div class="settings-toggle-row" id="weekendToggleWrapper">
+              <span data-i18n="show_weekends">Weekends</span>
+              <div class="toggle-switch ctl" id="weekendToggle">
+                <div class="toggle-switch-track"></div>
+              </div>
+            </div>
+
+            <div class="settings-toggle-row" id="langToggleWrapper">
+              <span data-i18n="language">Language</span>
+              <div class="toggle-switch ctl lang-toggle-wrap" id="langToggleBtn">
+                <span class="lbl-en">EN</span>
+                <div class="toggle-switch-track"></div>
+                <span class="lbl-nb">NO</span>
+              </div>
+            </div>
+
+            <div class="settings-menu-divider"></div>
+            
+            <button class="settings-menu-item danger" id="clearAllBtn" data-i18n="clear_all">Clear all</button>
+          </div>
+        </div>
       </div>
     </header>
 
@@ -394,74 +459,6 @@
   <div class="calendar-wrap">
     <div class="calendar" id="calendar"></div>
   </div>
-
-  <div class="footer-controls">
-    <div class="settings-dropdown-wrap">
-      <button class="action-btn" id="settingsBtn" data-i18n="settings">Settings</button>
-      
-      <div class="settings-menu" id="settingsMenu">
-        <div class="drive-panel">
-          <div id="driveLoginSection">
-            <button class="action-btn primary" style="width: 100%;" id="btnDriveLogin">Sign In with Google</button>
-          </div>
-          <div id="driveWorkspaceSection" style="display: none; flex-direction: column; gap: 10px;">
-            <div>
-              <label>Workspace Folder</label>
-              <div style="display: flex; align-items: center; gap: 8px; margin-top: 4px; margin-bottom: 8px; padding: 6px; background: var(--bg); border: 1px solid var(--line); border-radius: 0;">
-                <span id="driveFolderNameLabel" style="flex-grow: 1; font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--ink-soft); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Saved Folder</span>
-                <button class="action-btn" id="btnBrowseFolder" style="padding: 4px 8px; font-size: 10px; border-color: var(--line-soft);">Browse</button>
-              </div>
-            </div>
-            <div>
-              <label>Load Plan</label>
-              <select class="drive-input" id="driveFileSelect" style="cursor: pointer;">
-                <option value="">Select a file...</option>
-              </select>
-            </div>
-            <button class="action-btn" style="width: 100%;" id="btnNewDriveFile">+ Save as New File</button>
-          </div>
-        </div>
-
-        <div class="settings-menu-divider"></div>
-
-        <div class="settings-toggle-row" id="readOnlyToggleWrapper">
-          <span data-i18n="read_only_link">Read-Only Link</span>
-          <div class="toggle-switch ctl" id="shareReadOnly">
-            <div class="toggle-switch-track"></div>
-          </div>
-        </div>
-        <button class="settings-menu-item" id="shareLinkBtn" data-i18n="share_link">Copy Share Link</button>
-        <button class="settings-menu-item" id="exportJsonBtn" data-i18n="export_data">Download Backup (JSON)</button>
-        <label class="settings-menu-item" for="importJsonInput" style="margin: 0;" data-i18n="import_data">Load Local File</label>
-        <input type="file" id="importJsonInput" accept=".json" style="display: none;" />
-        <button class="settings-menu-item" id="exportCsvBtn" data-i18n="export_csv">Export to CSV</button>
-        <button class="settings-menu-item" id="exportBtn" data-i18n="export_pdf">Export PDF</button>
-        
-        <div class="settings-menu-divider"></div>
-        
-        <div class="settings-toggle-row" id="weekendToggleWrapper">
-          <span data-i18n="show_weekends">Weekends</span>
-          <div class="toggle-switch ctl" id="weekendToggle">
-            <div class="toggle-switch-track"></div>
-          </div>
-        </div>
-
-        <div class="settings-toggle-row" id="langToggleWrapper">
-          <span data-i18n="language">Language</span>
-          <div class="toggle-switch ctl lang-toggle-wrap" id="langToggleBtn">
-            <span class="lbl-en">EN</span>
-            <div class="toggle-switch-track"></div>
-            <span class="lbl-nb">NO</span>
-          </div>
-        </div>
-
-        <div class="settings-menu-divider"></div>
-        
-        <button class="settings-menu-item danger" id="clearAllBtn" data-i18n="clear_all">Clear all</button>
-      </div>
-    </div>
-  </div>
-
 </div>
 
 <!-- CUSTOM DIALOGS -->
@@ -949,13 +946,13 @@ function bindEventBarEvents(bar, ev, pxPerDay, segStart) {
   if (!window.__isReadOnly && state.viewMode !== 'overview') {
     bar.addEventListener('dragstart', (e) => {
       window.__isDraggingOrResizing = true; 
-      document.body.classList.add('is-dragging');
       const rect = bar.getBoundingClientRect(); let offsetDaysInSeg = Math.floor((e.clientX - rect.left) / pxPerDay); 
       const maxSpan = Math.round(rect.width / pxPerDay); offsetDaysInSeg = Math.max(0, Math.min(offsetDaysInSeg, maxSpan - 1));
       const totalOffsetDays = diffDays(ev.start, toISO(segStart)) + offsetDaysInSeg;
       e.dataTransfer.effectAllowed = 'move'; e.dataTransfer.setData('application/json', JSON.stringify({ id: ev.id, offsetDays: totalOffsetDays })); 
       setTimeout(() => { 
           bar.style.opacity = '0.3'; 
+          document.body.classList.add('is-dragging'); 
       }, 1);
     });
     bar.addEventListener('dragend', () => { 
@@ -1232,77 +1229,88 @@ function renderHorizontalCalendar() {
   });
   timeOffHtml += '</div>';
 
-  const normalEvents = state.events.filter(e => !e.isTimeOff).sort((a, b) => {
-      const durA = fromISO(a.end).getTime() - fromISO(a.start).getTime();
-      const durB = fromISO(b.end).getTime() - fromISO(b.start).getTime();
-      return durB - durA || fromISO(a.start).getTime() - fromISO(b.start).getTime();
+  const normalEvents = state.events.filter(e => !e.isTimeOff);
+  const singleDayEvents = []; const multiDayEvents = [];
+  normalEvents.forEach(ev => { if (ev.start === ev.end) singleDayEvents.push(ev); else multiDayEvents.push(ev); });
+
+  singleDayEvents.sort((a, b) => fromISO(a.start) - fromISO(b.start));
+  multiDayEvents.sort((a, b) => fromISO(a.start) - fromISO(b.start));
+
+  let currentSingleTrack = 0;
+  const singleGroups = new Map();
+  singleDayEvents.forEach(ev => {
+      if (!singleGroups.has(ev.name)) singleGroups.set(ev.name, []);
+      singleGroups.get(ev.name).push(ev);
   });
 
-  const groupedEvents = new Map();
-  normalEvents.forEach(ev => {
-      if (!groupedEvents.has(ev.name)) groupedEvents.set(ev.name, []);
-      groupedEvents.get(ev.name).push(ev);
+  singleGroups.forEach((group, name) => {
+      const localTracks = [];
+      group.forEach(ev => {
+          let startIdx = days.findIndex(d => d >= fromISO(ev.start)); 
+          if (startIdx === -1) return;
+          
+          const textWidthPx = ev.name.length * 8.5 + 45; 
+          const paddingDays = Math.ceil(textWidthPx / dayWidth);
+          const evS = startIdx; const evE = startIdx + paddingDays; 
+          
+          let placed = false;
+          for (let i = 0; i < localTracks.length; i++) {
+              let overlap = false;
+              for (let j = 0; j < localTracks[i].length; j++) { if (evS <= localTracks[i][j].e && evE >= localTracks[i][j].s) { overlap = true; break; } }
+              if (!overlap) { localTracks[i].push({s: evS, e: evE}); ev._track = currentSingleTrack + i; placed = true; break; }
+          }
+          if (!placed) { ev._track = currentSingleTrack + localTracks.length; localTracks.push([{s: evS, e: evE}]); }
+      });
+      currentSingleTrack += localTracks.length;
   });
 
-  let currentTrack = 0;
-  const groupBoundaries = new Set();
+  const startPhaseTrack = currentSingleTrack;
   const trackHeight = 56;
   let sidebarHtml = '';
-
+  
+  // Dynamic calculation for sidebar width based on text length
   let calculatedSidebarWidth = state.sidebarWidth || 240; 
   if (!state.sidebarWidth) {
-      normalEvents.forEach((ev) => { 
+      multiDayEvents.forEach((ev) => { 
           const textW = (ev.name.length * 8) + 48;
           if (textW > calculatedSidebarWidth) calculatedSidebarWidth = textW;
       });
       calculatedSidebarWidth = Math.min(calculatedSidebarWidth, 480);
   }
+  
+  let currentMultiTrack = startPhaseTrack;
+  const multiGroups = new Map();
+  multiDayEvents.forEach(ev => {
+      if (!multiGroups.has(ev.name)) multiGroups.set(ev.name, []);
+      multiGroups.get(ev.name).push(ev);
+  });
 
-  groupedEvents.forEach((group, name) => {
+  multiGroups.forEach((group, name) => {
       const localTracks = [];
       group.forEach(ev => {
-          let startIdx = days.findIndex(d => d >= fromISO(ev.start)); 
-          let endIdx = days.findIndex(d => d >= fromISO(ev.end));
-          if (endIdx === -1) endIdx = days.length - 1;
-          if (startIdx === -1) return;
-
-          const isSingle = ev.start === ev.end;
-          let evS = startIdx;
-          let evE = endIdx;
-
-          if (isSingle) {
-              const textWidthPx = ev.name.length * 8.5 + 45; 
-              const paddingDays = Math.ceil(textWidthPx / dayWidth);
-              evE = startIdx + paddingDays; 
-          }
-
+          const evS = fromISO(ev.start).getTime(); const evE = fromISO(ev.end).getTime();
           let placed = false;
           for (let i = 0; i < localTracks.length; i++) {
               let overlap = false;
-              for (let j = 0; j < localTracks[i].length; j++) { 
-                  if (evS <= localTracks[i][j].e && evE >= localTracks[i][j].s) { overlap = true; break; } 
-              }
-              if (!overlap) { localTracks[i].push({s: evS, e: evE}); ev._track = currentTrack + i; placed = true; break; }
+              for (let j = 0; j < localTracks[i].length; j++) { if (evS <= localTracks[i][j].e && evE >= localTracks[i][j].s) { overlap = true; break; } }
+              if (!overlap) { localTracks[i].push({s: evS, e: evE}); ev._track = currentMultiTrack + i; placed = true; break; }
           }
-          if (!placed) { ev._track = currentTrack + localTracks.length; localTracks.push([{s: evS, e: evE}]); }
+          if (!placed) { ev._track = currentMultiTrack + localTracks.length; localTracks.push([{s: evS, e: evE}]); }
       });
       
-      if (localTracks.length > 0) {
-          const yPos = 4 + currentTrack * trackHeight;
-          const labelHeight = (localTracks.length * trackHeight) - 8;
-          sidebarHtml += `<div class="hz-phase-label" style="top: ${yPos}px; height: ${labelHeight}px;" title="${escapeAttr(name)}">${escapeHtml(name)}</div>`;
-          
-          currentTrack += localTracks.length;
-          groupBoundaries.add(currentTrack - 1);
-      }
+      const yPos = 4 + currentMultiTrack * trackHeight;
+      const labelHeight = (localTracks.length * trackHeight) - 8;
+      sidebarHtml += `<div class="hz-phase-label" style="top: ${yPos}px; height: ${labelHeight}px;" title="${escapeAttr(name)}">${escapeHtml(name)}</div>`;
+      
+      currentMultiTrack += localTracks.length;
   });
-
-  const maxTrack = currentTrack > 0 ? currentTrack - 1 : -1;
+  
+  const maxTrack = currentMultiTrack - 1;
 
   let gridLinesHtml = '';
   let sidebarLinesHtml = '';
   for (let i = 0; i <= maxTrack; i++) {
-      if (groupBoundaries.has(i)) {
+      if (i < startPhaseTrack || multiGroups.size > 0) { 
           const yPos = (i + 1) * trackHeight; 
           gridLinesHtml += `<div class="hz-guideline" style="top: ${yPos}px; width: ${totalDays*dayWidth}px;"></div>`;
           sidebarLinesHtml += `<div class="hz-guideline" style="top: ${yPos}px;"></div>`;
@@ -1327,8 +1335,9 @@ function renderHorizontalCalendar() {
 
   const grid = document.getElementById('hzGrid');
   const layer = document.createElement('div'); layer.className = 'phase-layer';
+  const eventsToRender = [...singleDayEvents, ...multiDayEvents];
 
-  normalEvents.forEach(ev => {
+  eventsToRender.forEach(ev => {
     const eStart = fromISO(ev.start); const eEnd = fromISO(ev.end);
     let startIdx = days.findIndex(d => toISO(d) === toISO(eStart) || d > eStart);
     if (startIdx === -1 && days[days.length-1] < eStart) return;
@@ -1349,7 +1358,23 @@ function renderHorizontalCalendar() {
     
     if (isSingle) {
         bar.style.left = `${startIdx * dayWidth + 4}px`; bar.style.width = `${dayWidth - 8}px`;
-        const label = document.createElement('span'); label.className = 'event-label'; label.textContent = ev.name; bar.appendChild(label);
+        const label = document.createElement('span'); 
+        label.className = 'event-label'; 
+        label.style.display = 'inline-block';
+        label.textContent = ev.name; 
+        
+        // Calculate max width for collision with next event
+        const trackEvents = eventsToRender.filter(e => e._track === ev._track).sort((a,b) => fromISO(a.start) - fromISO(b.start));
+        const myIdx = trackEvents.findIndex(e => e.id === ev.id);
+        if (myIdx !== -1 && myIdx < trackEvents.length - 1) {
+            const nextEv = trackEvents[myIdx + 1];
+            let nextStartIdx = days.findIndex(d => toISO(d) === toISO(fromISO(nextEv.start)) || d > fromISO(nextEv.start));
+            if (nextStartIdx !== -1) {
+                const daysToNext = nextStartIdx - startIdx;
+                label.style.maxWidth = `${Math.max(0, daysToNext * dayWidth - 40)}px`;
+            }
+        }
+        bar.appendChild(label);
     } else {
         bar.style.left = `${startIdx * dayWidth + 4}px`; bar.style.width = `${span * dayWidth - 8}px`;
         
@@ -1475,6 +1500,8 @@ function renderOverviewCalendar() {
         row.style.width = '100%';
         row.style.minHeight = '44px';
 
+        track.sort((a, b) => a.s - b.s);
+
         track.forEach((item, idx) => {
             const ev = item.ev;
             const eStart = fromISO(ev.start) < spanStart ? spanStart : fromISO(ev.start);
@@ -1501,6 +1528,20 @@ function renderOverviewCalendar() {
             const dateStr = ev.start === ev.end ? formatD(ev.start) : `${formatD(ev.start)} - ${formatD(ev.end)}`;
 
             const label = document.createElement('div'); label.className = 'event-label'; 
+            
+            if (isSingle) {
+                let maxLabelW = 'none';
+                if (idx < track.length - 1) {
+                    const nextItem = track[idx + 1];
+                    const daysToNext = diffDays(ev.start, nextItem.ev.start);
+                    let gridWidth = grid.clientWidth || cal.clientWidth || window.innerWidth - 112;
+                    const pxPerDay = gridWidth / totalDays;
+                    maxLabelW = `${Math.max(0, daysToNext * pxPerDay - 24)}px`;
+                }
+                label.style.maxWidth = maxLabelW;
+                label.style.display = 'block';
+            }
+
             label.innerHTML = `<div style="margin-bottom: 2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; width: 100%;">${escapeHtml(ev.name)}</div><div style="color: var(--ink-soft); font-weight: 400; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; width: 100%;">${dateStr}</div>`; 
             bar.appendChild(label);
             
