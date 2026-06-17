@@ -1316,8 +1316,8 @@ function renderHorizontalCalendar() {
       let startIdx = days.findIndex(d => d >= fromISO(ev.start)); 
       if (startIdx === -1) return;
       
-      const intrinsicWidth = ev.name.length * 8 + 16;
-      const textWidthPx = ev.notes ? intrinsicWidth : Math.max(80, intrinsicWidth / 2); 
+      const estimatedWidth = ev.name.length * 8.5 + 24;
+      const textWidthPx = ev.notes ? estimatedWidth : Math.max(90, estimatedWidth * 0.6); 
       const paddingDays = Math.ceil(textWidthPx / dayWidth);
       const evS = startIdx; 
       const evE = startIdx + paddingDays; 
@@ -1444,7 +1444,6 @@ function renderHorizontalCalendar() {
             label.style.webkitBoxOrient = 'vertical';
             label.style.whiteSpace = 'normal';
             label.style.overflow = 'hidden';
-            label.style.overflowWrap = 'break-word';
             label.style.lineHeight = '1.2';
         }
         label.textContent = ev.name; 
@@ -1465,8 +1464,8 @@ function renderHorizontalCalendar() {
         const endPxGrid = daysToEndGrid * dayWidth - 24;
         maxLabelW = Math.min(maxLabelW, endPxGrid);
 
-        const intrinsicWidth = ev.name.length * 8 + 16;
-        label.style.width = `${Math.max(0, Math.min(intrinsicWidth, maxLabelW))}px`;
+        label.style.width = 'max-content';
+        label.style.maxWidth = `${Math.max(0, maxLabelW)}px`;
         bar.appendChild(label);
     } else {
         bar.style.left = `${startIdx * dayWidth + 4}px`; bar.style.width = `${span * dayWidth - 8}px`;
@@ -1595,8 +1594,8 @@ function renderOverviewCalendar() {
         
         // Pad end time for single day events to avoid label collision
         if (ev.start === ev.end) {
-            const intrinsicWidth = ev.name.length * 8 + 16;
-            const textWidthPx = ev.notes ? intrinsicWidth : Math.max(80, intrinsicWidth / 2);
+            const estimatedWidth = ev.name.length * 8.5 + 24;
+            const textWidthPx = ev.notes ? estimatedWidth : Math.max(90, estimatedWidth * 0.6);
             const paddingDays = textWidthPx / pxPerDay;
             evE += paddingDays * 86400000;
         }
@@ -1658,13 +1657,14 @@ function renderOverviewCalendar() {
                 const endPxGrid = daysToEndGrid * pxPerDay - 10;
                 maxLabelPx = Math.min(maxLabelPx, endPxGrid);
                 
-                const intrinsicWidth = ev.name.length * 8 + 16;
-                label.style.width = `${Math.max(0, Math.min(intrinsicWidth, maxLabelPx))}px`;
+                label.style.width = 'max-content';
+                label.style.maxWidth = `${Math.max(0, maxLabelPx)}px`;
                 label.style.display = ev.notes ? 'block' : '-webkit-box';
                 if (!ev.notes) {
                     label.style.whiteSpace = 'normal';
                     label.style.webkitLineClamp = '2';
                     label.style.webkitBoxOrient = 'vertical';
+                    label.style.overflow = 'hidden';
                 }
             }
 
