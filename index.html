@@ -161,6 +161,7 @@
   }
 
   .hz-timeline { display: block; flex-grow: 1; min-width: max-content; }
+  /* REMOVED: sticky vertically, to prevent bug in overflow-x layout */
   .hz-sticky-headers { 
       position: relative; z-index: 20; 
       background: var(--bg-card); 
@@ -456,7 +457,7 @@
 
 </div>
 
-<!-- DIALOG MODAL: Replaces native alert/prompt boxes -->
+<!-- CUSTOM DIALOGS -->
 <div class="modal-backdrop" id="dialogModal" style="z-index: 200;">
   <div class="modal" style="max-width: 400px; padding: 24px; border-radius: 0;">
     <h2 class="modal-title" id="dialogTitle" style="font-size: 16px; margin-bottom: 12px; font-weight: 600;"></h2>
@@ -465,6 +466,19 @@
     <div class="modal-actions" style="justify-content: flex-end; margin-top: 0; padding-top: 0; border: none;">
       <button class="action-btn" id="dialogCancel">Cancel</button>
       <button class="action-btn primary" id="dialogOk">OK</button>
+    </div>
+  </div>
+</div>
+
+<!-- FOLDER PICKER MODAL -->
+<div class="modal-backdrop" id="folderPickerModal" style="z-index: 200;">
+  <div class="modal" style="max-width: 400px; padding: 24px; border-radius: 0;">
+    <h2 class="modal-title" style="font-size: 16px; margin-bottom: 12px; font-weight: 600;">Select Workspace Folder</h2>
+    <div id="folderPickerList" style="max-height: 300px; overflow-y: auto; border: 1px solid var(--line); margin-bottom: 24px; background: var(--bg);">
+       <div style="padding: 12px; text-align: center; color: var(--ink-faint);">Loading folders...</div>
+    </div>
+    <div class="modal-actions" style="justify-content: flex-end; margin-top: 0; padding-top: 0; border: none;">
+      <button class="action-btn" id="folderPickerCancel">Cancel</button>
     </div>
   </div>
 </div>
@@ -526,13 +540,12 @@ let currentDriveFileId = localStorage.getItem('newslab-current-drive-file') || n
 
 window.onload = function() {
   updateCloudStatus('Disconnected');
-  if (typeof gapi !== 'undefined') { gapi.load('client:picker', initializeGapiClient); }
+  if (typeof gapi !== 'undefined') { gapi.load('client', initializeGapiClient); }
   if (typeof google !== 'undefined') {
     tokenClient = google.accounts.oauth2.initTokenClient({
       client_id: GOOGLE_CLIENT_ID, scope: SCOPES,
       callback: (tokenResponse) => {
         if (tokenResponse && tokenResponse.access_token) {
-          if (!google.accounts.oauth2.hasGrantedAllScopes(tokenResponse, SCOPES)) { customAlert("Warning: You did not grant Google Drive permissions."); return; }
           gapi.client.setToken({ access_token: tokenResponse.access_token });
           localStorage.setItem('newslab_drive_token', JSON.stringify({ token: tokenResponse.access_token, expiresAt: Date.now() + (tokenResponse.expires_in * 1000) }));
           localStorage.setItem('newslab_drive_connected', '1');
@@ -592,35 +605,60 @@ async function initializeGapiClient() {
 document.getElementById('btnDriveLogin')?.addEventListener('click', () => { if (gapiInited && gisInited) { if (gapi.client.getToken() === null) tokenClient.requestAccessToken({prompt: 'consent'}); else tokenClient.requestAccessToken({prompt: ''}); } });
 document.getElementById('topSignInBtn')?.addEventListener('click', () => { document.getElementById('btnDriveLogin')?.click(); });
 
-// Drive Picker Logic
-document.getElementById('btnBrowseFolder')?.addEventListener('click', () => {
+// Custom Drive Picker Logic
+document.getElementById('btnBrowseFolder')?.addEventListener('click', async () => {
   const token = gapi.client.getToken()?.access_token;
   if (!token) return customAlert("Please sign in first.");
   
-  const view = new google.picker.DocsView(google.picker.ViewId.FOLDERS)
-    .setIncludeFolders(true)
-    .setSelectFolderEnabled(true)
-    .setMimeTypes('application/vnd.google-apps.folder');
+  document.getElementById('folderPickerModal').classList.add('open');
+  const listContainer = document.getElementById('folderPickerList');
+  listContainer.innerHTML = '<div style="padding: 12px; text-align: center; font-family: \'JetBrains Mono\', monospace; font-size: 11px; color: var(--ink-faint);">Loading folders...</div>';
 
-  const picker = new google.picker.PickerBuilder()
-    .enableFeature(google.picker.Feature.NAV_HIDDEN)
-    .setDeveloperKey(GOOGLE_API_KEY)
-    .setAppId(GOOGLE_CLIENT_ID.split('-')[0])
-    .setOAuthToken(token)
-    .addView(view)
-    .setTitle('Select Workspace Folder')
-    .setCallback((data) => {
-      if (data.action === google.picker.Action.PICKED) {
-        const doc = data.docs[0];
-        localStorage.setItem('newslab-drive-folder', doc.id);
-        localStorage.setItem('newslab-drive-folder-name', doc.name);
-        document.getElementById('driveFolderNameLabel').textContent = doc.name;
-        fetchDriveFiles();
-      }
-    })
-    .build();
-  picker.setVisible(true);
+  try {
+    const response = await gapi.client.drive.files.list({
+      q: "mimeType='application/vnd.google-apps.folder' and trashed=false",
+      orderBy: "modifiedTime desc",
+      pageSize: 50,
+      fields: "files(id, name)",
+      supportsAllDrives: true,
+      includeItemsFromAllDrives: true
+    });
+
+    const folders = response.result.files;
+    if (!folders || folders.length === 0) {
+        listContainer.innerHTML = '<div style="padding: 12px; text-align: center; font-family: \'JetBrains Mono\', monospace; font-size: 11px; color: var(--ink-soft);">No folders found.</div>';
+        return;
+    }
+
+    listContainer.innerHTML = '';
+    folders.forEach(folder => {
+        const item = document.createElement('div');
+        item.style.padding = '10px 12px';
+        item.style.borderBottom = '1px solid var(--line)';
+        item.style.cursor = 'pointer';
+        item.style.fontFamily = "'JetBrains Mono', monospace";
+        item.style.fontSize = '12px';
+        item.onmouseover = () => item.style.background = 'var(--line-soft)';
+        item.onmouseout = () => item.style.background = 'transparent';
+        item.textContent = `📁 ${folder.name}`;
+        item.onclick = () => {
+            localStorage.setItem('newslab-drive-folder', folder.id);
+            localStorage.setItem('newslab-drive-folder-name', folder.name);
+            document.getElementById('driveFolderNameLabel').textContent = folder.name;
+            document.getElementById('folderPickerModal').classList.remove('open');
+            fetchDriveFiles();
+        };
+        listContainer.appendChild(item);
+    });
+  } catch (err) {
+    listContainer.innerHTML = '<div style="padding: 12px; text-align: center; font-family: \'JetBrains Mono\', monospace; font-size: 11px; color: var(--danger);">Failed to load folders. Check your connection.</div>';
+  }
 });
+
+document.getElementById('folderPickerCancel')?.addEventListener('click', () => {
+    document.getElementById('folderPickerModal').classList.remove('open');
+});
+
 
 async function fetchDriveFiles() {
   const folderId = localStorage.getItem('newslab-drive-folder') || '1c4WDZlXaWREt_luuf7cy03n6Iu0He97M'; 
