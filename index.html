@@ -997,23 +997,27 @@ function renderVerticalCalendar() {
       const durB = fromISO(b.end).getTime() - fromISO(b.start).getTime();
       return durB - durA || fromISO(a.start).getTime() - fromISO(b.start).getTime();
   });
-  const tracks = [];
-  const nameToTrack = {};
-
+  
+  const groupedEventsMap = new Map();
   events.forEach(ev => {
-      const evS = fromISO(ev.start).getTime(); const evE = fromISO(ev.end).getTime();
-      if (nameToTrack[ev.name] !== undefined) {
-          ev._track = nameToTrack[ev.name];
-          tracks[ev._track].push({s: evS, e: evE});
-          return;
-      }
-      let placed = false;
-      for (let i = 0; i < tracks.length; i++) {
-          let overlap = false;
-          for (let j = 0; j < tracks[i].length; j++) { if (evS <= tracks[i][j].e && evE >= tracks[i][j].s) { overlap = true; break; } }
-          if (!overlap) { tracks[i].push({s: evS, e: evE}); ev._track = i; nameToTrack[ev.name] = i; placed = true; break; }
-      }
-      if (!placed) { ev._track = tracks.length; nameToTrack[ev.name] = tracks.length; tracks.push([{s: evS, e: evE}]); }
+      if (!groupedEventsMap.has(ev.name)) groupedEventsMap.set(ev.name, []);
+      groupedEventsMap.get(ev.name).push(ev);
+  });
+
+  let currentGlobalTrack = 0;
+  groupedEventsMap.forEach((group, name) => {
+      const localTracks = [];
+      group.forEach(ev => {
+          const evS = fromISO(ev.start).getTime(); const evE = fromISO(ev.end).getTime();
+          let placed = false;
+          for (let i = 0; i < localTracks.length; i++) {
+              let overlap = false;
+              for (let j = 0; j < localTracks[i].length; j++) { if (evS <= localTracks[i][j].e && evE >= localTracks[i][j].s) { overlap = true; break; } }
+              if (!overlap) { localTracks[i].push({s: evS, e: evE}); ev._track = currentGlobalTrack + i; placed = true; break; }
+          }
+          if (!placed) { ev._track = currentGlobalTrack + localTracks.length; localTracks.push([{s: evS, e: evE}]); }
+      });
+      currentGlobalTrack += localTracks.length;
   });
   
   const isSingleWeek = state.viewMode === 'single_week'; const trackSpacing = isSingleWeek ? 140 : 36;
@@ -1105,32 +1109,35 @@ function renderHorizontalCalendar() {
   singleDayEvents.sort((a, b) => fromISO(a.start) - fromISO(b.start));
   multiDayEvents.sort((a, b) => fromISO(a.start) - fromISO(b.start));
 
-  const singleTracks = []; let maxSingleTrack = -1;
-  const singleNameToTrack = {};
-
+  let currentSingleTrack = 0;
+  const singleGroups = new Map();
   singleDayEvents.forEach(ev => {
-    let startIdx = days.findIndex(d => d >= fromISO(ev.start)); 
-    if (startIdx === -1) return;
-    
-    if (singleNameToTrack[ev.name] !== undefined) {
-        ev._track = singleNameToTrack[ev.name];
-        return;
-    }
-    
-    const textWidthPx = ev.name.length * 8.5 + 45; 
-    const paddingDays = Math.ceil(textWidthPx / dayWidth);
-    const evS = startIdx; const evE = startIdx + paddingDays; 
-    let placed = false;
-    for (let i = 0; i < singleTracks.length; i++) {
-      let overlap = false;
-      for (let j = 0; j < singleTracks[i].length; j++) { if (evS <= singleTracks[i][j].e && evE >= singleTracks[i][j].s) { overlap = true; break; } }
-      if (!overlap) { singleTracks[i].push({s: evS, e: evE}); ev._track = i; singleNameToTrack[ev.name] = i; placed = true; break; }
-    }
-    if (!placed) { ev._track = singleTracks.length; singleNameToTrack[ev.name] = ev._track; singleTracks.push([{s: evS, e: evE}]); }
-    maxSingleTrack = Math.max(maxSingleTrack, ev._track);
+      if (!singleGroups.has(ev.name)) singleGroups.set(ev.name, []);
+      singleGroups.get(ev.name).push(ev);
   });
 
-  const startPhaseTrack = maxSingleTrack + 1;
+  singleGroups.forEach((group, name) => {
+      const localTracks = [];
+      group.forEach(ev => {
+          let startIdx = days.findIndex(d => d >= fromISO(ev.start)); 
+          if (startIdx === -1) return;
+          
+          const textWidthPx = ev.name.length * 8.5 + 45; 
+          const paddingDays = Math.ceil(textWidthPx / dayWidth);
+          const evS = startIdx; const evE = startIdx + paddingDays; 
+          
+          let placed = false;
+          for (let i = 0; i < localTracks.length; i++) {
+              let overlap = false;
+              for (let j = 0; j < localTracks[i].length; j++) { if (evS <= localTracks[i][j].e && evE >= localTracks[i][j].s) { overlap = true; break; } }
+              if (!overlap) { localTracks[i].push({s: evS, e: evE}); ev._track = currentSingleTrack + i; placed = true; break; }
+          }
+          if (!placed) { ev._track = currentSingleTrack + localTracks.length; localTracks.push([{s: evS, e: evE}]); }
+      });
+      currentSingleTrack += localTracks.length;
+  });
+
+  const startPhaseTrack = currentSingleTrack;
   const trackHeight = 46;
   let sidebarHtml = '';
   
@@ -1144,19 +1151,30 @@ function renderHorizontalCalendar() {
       calculatedSidebarWidth = Math.min(calculatedSidebarWidth, 480);
   }
   
-  const multiNameToTrack = {};
   let currentMultiTrack = startPhaseTrack;
-  
-  multiDayEvents.forEach((ev, idx) => { 
-      if (multiNameToTrack[ev.name] !== undefined) {
-          ev._track = multiNameToTrack[ev.name];
-      } else {
-          ev._track = currentMultiTrack;
-          multiNameToTrack[ev.name] = currentMultiTrack;
-          const yPos = 8 + ev._track * trackHeight;
-          sidebarHtml += `<div class="hz-phase-label" style="top: ${yPos}px" title="${escapeAttr(ev.name)}">${escapeHtml(ev.name)}</div>`;
-          currentMultiTrack++;
-      }
+  const multiGroups = new Map();
+  multiDayEvents.forEach(ev => {
+      if (!multiGroups.has(ev.name)) multiGroups.set(ev.name, []);
+      multiGroups.get(ev.name).push(ev);
+  });
+
+  multiGroups.forEach((group, name) => {
+      const localTracks = [];
+      group.forEach(ev => {
+          const evS = fromISO(ev.start).getTime(); const evE = fromISO(ev.end).getTime();
+          let placed = false;
+          for (let i = 0; i < localTracks.length; i++) {
+              let overlap = false;
+              for (let j = 0; j < localTracks[i].length; j++) { if (evS <= localTracks[i][j].e && evE >= localTracks[i][j].s) { overlap = true; break; } }
+              if (!overlap) { localTracks[i].push({s: evS, e: evE}); ev._track = currentMultiTrack + i; placed = true; break; }
+          }
+          if (!placed) { ev._track = currentMultiTrack + localTracks.length; localTracks.push([{s: evS, e: evE}]); }
+      });
+      
+      const yPos = 8 + currentMultiTrack * trackHeight;
+      sidebarHtml += `<div class="hz-phase-label" style="top: ${yPos}px" title="${escapeAttr(name)}">${escapeHtml(name)}</div>`;
+      
+      currentMultiTrack += localTracks.length;
   });
   
   const maxTrack = currentMultiTrack - 1;
@@ -1216,34 +1234,32 @@ function renderHorizontalCalendar() {
         bar.style.height = '44px';
         bar.style.left = `${startIdx * dayWidth + 4}px`; bar.style.width = `${span * dayWidth - 8}px`;
         
-        const labelContainer = document.createElement('div');
-        labelContainer.className = 'event-label';
-        labelContainer.style.display = 'flex';
-        labelContainer.style.flexDirection = 'column';
-        labelContainer.style.justifyContent = 'center';
-        labelContainer.style.height = '100%';
-
-        const titleDiv = document.createElement('div');
-        titleDiv.style.fontWeight = '600';
-        titleDiv.style.lineHeight = '1.2';
-        titleDiv.textContent = ev.name;
-        labelContainer.appendChild(titleDiv);
-
         if (ev.notes) {
+            const labelContainer = document.createElement('div');
+            labelContainer.className = 'event-label';
+            labelContainer.style.display = 'flex';
+            labelContainer.style.flexDirection = 'column';
+            labelContainer.style.justifyContent = 'center';
+            labelContainer.style.height = '100%';
+            
             const notesDiv = document.createElement('div');
-            notesDiv.style.fontSize = '10px';
-            notesDiv.style.opacity = '0.7';
-            notesDiv.style.fontWeight = '400';
-            notesDiv.style.marginTop = '1px';
-            notesDiv.style.whiteSpace = 'nowrap';
+            notesDiv.style.fontSize = '11px';
+            notesDiv.style.opacity = '0.85';
+            notesDiv.style.fontWeight = '500';
+            notesDiv.style.lineHeight = '1.3';
+            notesDiv.style.whiteSpace = 'normal';
+            notesDiv.style.display = '-webkit-box';
+            notesDiv.style.webkitLineClamp = '2';
+            notesDiv.style.webkitBoxOrient = 'vertical';
             notesDiv.style.overflow = 'hidden';
             notesDiv.style.textOverflow = 'ellipsis';
             notesDiv.style.textTransform = 'none';
             notesDiv.style.letterSpacing = '0';
             notesDiv.textContent = ev.notes;
+            
             labelContainer.appendChild(notesDiv);
+            bar.appendChild(labelContainer);
         }
-        bar.appendChild(labelContainer);
     }
     
     if (fromISO(ev.start) < days[0]) bar.classList.add('continues-left'); if (fromISO(ev.end) > days[days.length-1]) bar.classList.add('continues-right');
@@ -1315,51 +1331,60 @@ function renderOverviewCalendar() {
 
   let trackIdx = 0;
   groupedEvents.forEach((group, name) => {
-    const row = document.createElement('div');
-    row.style.position = 'relative';
-    row.style.width = '100%';
-
-    let addedBar = false;
-
-    group.forEach((ev, idx) => {
-        const eStart = fromISO(ev.start) < spanStart ? spanStart : fromISO(ev.start);
-        const eEnd = fromISO(ev.end) > spanEnd ? spanEnd : fromISO(ev.end);
-        if (eStart > spanEnd || eEnd < spanStart) return;
-
-        const actualSpan = diffDays(toISO(eStart), toISO(eEnd)) + 1;
-        const startOffset = diffDays(toISO(spanStart), toISO(eStart));
-
-        const bar = document.createElement('div'); 
-        bar.className = 'event-bar ov-phase';
-        bar.dataset.id = ev.id; bar.dataset.color = ev.color;
-        
-        const colors = resolveColor(ev.color); bar.style.background = colors.bg; bar.style.borderColor = colors.edge;
-        bar.style.left = `calc(${(startOffset / totalDays) * 100}% + 4px)`; bar.style.width = `calc(${(actualSpan / totalDays) * 100}% - 8px)`;
-        if (fromISO(ev.start) < spanStart) bar.classList.add('continues-left'); if (fromISO(ev.end) > spanEnd) bar.classList.add('continues-right');
-
-        // Layout hack for flex-grouped identical events
-        bar.style.position = idx === 0 ? 'relative' : 'absolute';
-        bar.style.top = '0';
-        if (idx > 0) bar.style.height = '100%';
-
-        const formatD = (iso) => { const d = fromISO(iso); return `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}`; };
-        const dateStr = ev.start === ev.end ? formatD(ev.start) : `${formatD(ev.start)} - ${formatD(ev.end)}`;
-
-        const label = document.createElement('div'); label.className = 'event-label'; 
-        label.innerHTML = `<div style="margin-bottom: 2px;">${escapeHtml(ev.name)}</div><div style="color: var(--ink-soft); font-weight: 400;">${dateStr}</div>`; 
-        bar.appendChild(label);
-        
-        bar.draggable = false;
-        bar.addEventListener('click', (e) => { e.stopPropagation(); openEventModal(ev); });
-
-        row.appendChild(bar);
-        addedBar = true;
+    const localTracks = [];
+    group.forEach(ev => {
+        const evS = fromISO(ev.start).getTime(); const evE = fromISO(ev.end).getTime();
+        let placed = false;
+        for (let i = 0; i < localTracks.length; i++) {
+            let overlap = false;
+            for (let j = 0; j < localTracks[i].length; j++) { if (evS <= localTracks[i][j].e && evE >= localTracks[i][j].s) { overlap = true; break; } }
+            if (!overlap) { localTracks[i].push({s: evS, e: evE, ev: ev}); placed = true; break; }
+        }
+        if (!placed) { localTracks.push([{s: evS, e: evE, ev: ev}]); }
     });
 
-    if (addedBar) {
+    localTracks.forEach(track => {
+        const row = document.createElement('div');
+        row.style.position = 'relative';
+        row.style.width = '100%';
+        row.style.minHeight = '44px';
+
+        track.forEach((item, idx) => {
+            const ev = item.ev;
+            const eStart = fromISO(ev.start) < spanStart ? spanStart : fromISO(ev.start);
+            const eEnd = fromISO(ev.end) > spanEnd ? spanEnd : fromISO(ev.end);
+            if (eStart > spanEnd || eEnd < spanStart) return;
+
+            const actualSpan = diffDays(toISO(eStart), toISO(eEnd)) + 1;
+            const startOffset = diffDays(toISO(spanStart), toISO(eStart));
+
+            const bar = document.createElement('div'); 
+            bar.className = 'event-bar ov-phase';
+            bar.dataset.id = ev.id; bar.dataset.color = ev.color;
+            
+            const colors = resolveColor(ev.color); bar.style.background = colors.bg; bar.style.borderColor = colors.edge;
+            bar.style.left = `calc(${(startOffset / totalDays) * 100}% + 4px)`; bar.style.width = `calc(${(actualSpan / totalDays) * 100}% - 8px)`;
+            if (fromISO(ev.start) < spanStart) bar.classList.add('continues-left'); if (fromISO(ev.end) > spanEnd) bar.classList.add('continues-right');
+
+            bar.style.position = idx === 0 ? 'relative' : 'absolute';
+            bar.style.top = '0';
+            if (idx > 0) bar.style.height = '100%';
+
+            const formatD = (iso) => { const d = fromISO(iso); return `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}`; };
+            const dateStr = ev.start === ev.end ? formatD(ev.start) : `${formatD(ev.start)} - ${formatD(ev.end)}`;
+
+            const label = document.createElement('div'); label.className = 'event-label'; 
+            label.innerHTML = `<div style="margin-bottom: 2px;">${escapeHtml(ev.name)}</div><div style="color: var(--ink-soft); font-weight: 400;">${dateStr}</div>`; 
+            bar.appendChild(label);
+            
+            bar.draggable = false;
+            bar.addEventListener('click', (e) => { e.stopPropagation(); openEventModal(ev); });
+
+            row.appendChild(bar);
+        });
         ovEventsContainer.appendChild(row);
         trackIdx++;
-    }
+    });
   });
   
   grid.appendChild(ovEventsContainer);
