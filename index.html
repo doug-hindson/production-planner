@@ -68,6 +68,8 @@
   .cloud-status { font-family: 'JetBrains Mono', monospace; font-size: 12px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--ink-faint); display: flex; align-items: center; gap: 6px; }
   .cloud-status.saved { color: #539853; }
   .cloud-status.saving { color: #d99587; }
+  
+  /* Settings Dropdown updated for top-right placement */
   .settings-dropdown-wrap { position: relative; }
   .settings-menu { position: absolute; top: calc(100% + 8px); right: 0; background: var(--bg-card); border: 1px solid var(--ink); border-radius: 0; z-index: 100; min-width: 260px; display: none; flex-direction: column; box-shadow: 0 6px 16px rgba(0,0,0,0.08); max-height: calc(100vh - 100px); overflow-y: auto; }
   .settings-menu.open { display: flex; }
@@ -164,7 +166,6 @@
   }
 
   .hz-timeline { display: block; flex-grow: 1; min-width: max-content; }
-  /* REMOVED: sticky vertically, to prevent bug in overflow-x layout */
   .hz-sticky-headers { 
       position: relative; z-index: 20; 
       background: var(--bg-card); 
@@ -191,6 +192,7 @@
       white-space: nowrap; color: var(--ink); font-weight: 500; display: inline-block;
       text-transform: uppercase; font-family: 'JetBrains Mono', monospace;
       letter-spacing: 0.08em; pointer-events: none; overflow: hidden; text-overflow: ellipsis;
+      max-width: none; width: max-content;
   }
 
   /* ===== OVERVIEW VIEW (A4 One-Pager) ===== */
@@ -220,6 +222,7 @@
   body[data-view="overview"] .event-bar.ov-single-day { overflow: visible; }
   body[data-view="overview"] .event-bar.ov-single-day .event-label {
       position: absolute; left: 100%; margin-left: 6px; top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block;
+      max-width: none; width: max-content;
   }
 
   /* DRAGGING GLOBALS */
@@ -1024,7 +1027,29 @@ function renderVerticalCalendar() {
   const daysToShow = state.showWeekends ? 7 : 5;
   const wkHeader = document.createElement('div'); wkHeader.className = 'weekday-row' + (state.showWeekends ? '' : ' hide-weekends'); wkHeader.innerHTML = `<div>${t('uke')}</div>` + getDayShort().map(d => `<div>${d}</div>`).join('');
   
-  cal.appendChild(wkHeader);
+  if (state.viewMode === 'single_week') {
+      const headerWrap = document.createElement('div');
+      headerWrap.style.position = 'sticky'; headerWrap.style.top = 'var(--sticky-h)'; headerWrap.style.zIndex = '10'; headerWrap.style.background = 'var(--bg-card)';
+      
+      const monthRow = document.createElement('div'); monthRow.style.display = 'flex'; monthRow.style.borderBottom = '1px solid var(--line)';
+      monthRow.innerHTML = `<div style="width: 70px; flex-shrink: 0; border-right: 1px solid var(--line-soft);"></div>`;
+      
+      let currentMonth = -1; let daysInMonth = 0; const days = [];
+      for(let i=0; i<daysToShow; i++) days.push(addDays(gridStart, i));
+      
+      days.forEach((d, i) => {
+          if (d.getMonth() !== currentMonth) {
+              if (currentMonth !== -1) monthRow.innerHTML += `<div class="hz-month" style="flex: ${daysInMonth}; border-right: 1px solid var(--line-soft);">${getMonthNames()[currentMonth]} '${days[i-1].getFullYear().toString().substring(2)}</div>`;
+              currentMonth = d.getMonth(); daysInMonth = 1;
+          } else { daysInMonth++; }
+      });
+      if (daysInMonth > 0) monthRow.innerHTML += `<div class="hz-month" style="flex: ${daysInMonth}; border-right: none;">${getMonthNames()[currentMonth]} '${days[days.length-1].getFullYear().toString().substring(2)}</div>`;
+      
+      wkHeader.style.position = 'static';
+      headerWrap.appendChild(monthRow); headerWrap.appendChild(wkHeader); cal.appendChild(headerWrap);
+  } else {
+      cal.appendChild(wkHeader);
+  }
 
   let currentMonthKey = null; 
   const timeOffEvents = state.events.filter(e => e.isTimeOff);
@@ -1402,14 +1427,16 @@ function renderHorizontalCalendar() {
         // Calculate max width for collision with next event
         const trackEvents = eventsToRender.filter(e => e._track === ev._track).sort((a,b) => fromISO(a.start) - fromISO(b.start));
         const myIdx = trackEvents.findIndex(e => e.id === ev.id);
+        let maxLabelW = 'none';
         if (myIdx !== -1 && myIdx < trackEvents.length - 1) {
             const nextEv = trackEvents[myIdx + 1];
             let nextStartIdx = days.findIndex(d => toISO(d) === toISO(fromISO(nextEv.start)) || d > fromISO(nextEv.start));
             if (nextStartIdx !== -1) {
                 const daysToNext = nextStartIdx - startIdx;
-                label.style.maxWidth = `${Math.max(0, daysToNext * dayWidth - 40)}px`;
+                maxLabelW = `${Math.max(0, daysToNext * dayWidth - 40)}px`;
             }
         }
+        label.style.maxWidth = maxLabelW;
         bar.appendChild(label);
     } else {
         bar.style.left = `${startIdx * dayWidth + 4}px`; bar.style.width = `${span * dayWidth - 8}px`;
