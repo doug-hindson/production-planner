@@ -16,9 +16,9 @@
   .sticky-zone.compact { padding-top: 14px; }
   header.top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 36px; padding-bottom: 20px; border-bottom: 1px solid var(--line); transition: margin 0.25s ease, padding 0.25s ease; }
   .sticky-zone.compact header.top { margin-bottom: 14px; padding-bottom: 10px; }
-  .brand { font-size: 13px; font-weight: 500; letter-spacing: 0.02em; color: var(--ink-soft); }
-  .brand-mark { font-family: 'JetBrains Mono', monospace; font-size: 13px; color: var(--ink-soft); letter-spacing: 0.04em; }
-  .header-meta { text-align: right; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--ink-faint); letter-spacing: 0.06em; text-transform: uppercase; }
+  .brand { font-size: 15px; font-weight: 500; letter-spacing: 0.02em; color: var(--ink-soft); }
+  .brand-mark { font-family: 'JetBrains Mono', monospace; font-size: 15px; color: var(--ink-soft); letter-spacing: 0.04em; }
+  .header-meta { text-align: right; font-family: 'JetBrains Mono', monospace; font-size: 13px; color: var(--ink-faint); letter-spacing: 0.06em; text-transform: uppercase; }
   .title-row { display: grid; grid-template-columns: auto 1fr; gap: 64px; margin-bottom: 32px; align-items: start; transition: gap 0.25s ease, margin 0.25s ease; }
   .sticky-zone.compact .title-row { grid-template-columns: 1fr; gap: 0; margin-bottom: 16px; }
   .project-title { font-weight: 400; font-size: 64px; line-height: 1; letter-spacing: -0.035em; color: var(--ink); background: transparent; border: none; outline: none; width: 100%; padding: 0; transition: font-size 0.25s ease; }
@@ -29,9 +29,9 @@
   .sticky-zone.compact .project-desc { opacity: 0; max-height: 0; min-height: 0; overflow: hidden; pointer-events: none; margin: 0; }
   .controls { display: flex; align-items: center; justify-content: space-between; padding: 12px 0; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); gap: 14px; flex-wrap: wrap; }
   .controls-left, .controls-right { display: flex; align-items: center; gap: 18px; flex-wrap: wrap; }
-  .ctl { display: flex; align-items: center; gap: 8px; font-family: 'JetBrains Mono', monospace; font-size: 13px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--ink-soft); }
+  .ctl { display: flex; align-items: center; gap: 8px; font-family: 'JetBrains Mono', monospace; font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--ink-soft); }
   .ctl label { color: var(--ink-faint); }
-  .ctl input[type="date"] { font-family: 'JetBrains Mono', monospace; font-size: 13px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--ink); background: transparent; border: none; border-bottom: 1px solid var(--line); padding: 4px 0; outline: none; cursor: pointer; }
+  .ctl input[type="date"] { font-family: 'JetBrains Mono', monospace; font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--ink); background: transparent; border: none; border-bottom: 1px solid var(--line); padding: 4px 0; outline: none; cursor: pointer; border-radius: 0; }
   .ctl input:focus { border-bottom-color: var(--ink); }
   .toggle-switch { cursor: pointer; user-select: none; }
   .toggle-switch-track { width: 28px; height: 14px; background: var(--line); border-radius: 0; position: relative; transition: background 0.15s ease; }
@@ -39,13 +39,13 @@
   .toggle-switch.on .toggle-switch-track { background: var(--ink); }
   .toggle-switch.on .toggle-switch-track::after { transform: translateX(14px); }
   .lang-toggle-wrap { display: flex; align-items: center; gap: 6px; margin: 0; }
-  .lang-toggle-wrap span { font-weight: 500; transition: color 0.15s ease; color: var(--ink-faint); font-family: 'JetBrains Mono', monospace; font-size: 12px; }
+  .lang-toggle-wrap span { font-weight: 500; transition: color 0.15s ease; color: var(--ink-faint); font-family: 'JetBrains Mono', monospace; font-size: 10px; }
   .lang-toggle-wrap.is-nb .lbl-nb { color: var(--ink); }
   .lang-toggle-wrap:not(.is-nb) .lbl-en { color: var(--ink); }
-  input[type="checkbox"] { accent-color: var(--ink); width: 16px; height: 16px; cursor: pointer; }
+  input[type="checkbox"] { accent-color: var(--ink); width: 16px; height: 16px; cursor: pointer; border-radius: 0; }
   
   /* Buttons & Toggles */
-  .nav-btn, .action-btn { font-family: 'JetBrains Mono', monospace; font-size: 13px; text-transform: uppercase; letter-spacing: 0.08em; background: transparent; border: 1px solid var(--line); border-radius: 0; color: var(--ink); padding: 10px 16px; cursor: pointer; transition: all 0.15s ease; display: inline-flex; align-items: center; justify-content: center; }
+  .nav-btn, .action-btn { font-family: 'JetBrains Mono', monospace; font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; background: transparent; border: 1px solid var(--line); border-radius: 0; color: var(--ink); padding: 8px 14px; cursor: pointer; transition: all 0.15s ease; display: inline-flex; align-items: center; justify-content: center; }
   .nav-btn:hover, .action-btn:hover { border-color: var(--ink); background: var(--ink); color: var(--bg); }
   .action-btn.primary { background: var(--ink); color: var(--bg); border-color: var(--ink); }
   .action-btn.primary:hover { background: transparent; color: var(--ink); }
@@ -56,12 +56,12 @@
   .view-toggle-tooltip { position: absolute; bottom: calc(100% + 8px); left: 50%; transform: translateX(-50%); background: var(--ink); color: var(--bg); padding: 6px 10px; border-radius: 0; font-family: 'JetBrains Mono', monospace; font-size: 9px; text-transform: uppercase; letter-spacing: 0.08em; white-space: nowrap; opacity: 0; z-index: 100; display: none; align-items: center; gap: 8px; }
   .view-toggle-tooltip::after { content: ''; position: absolute; top: 100%; left: 50%; transform: translateX(-50%); border-width: 4px; border-style: solid; border-color: var(--ink) transparent transparent transparent; }
   body.read-only .view-toggle-tooltip:not(.dismissed) { display: flex; animation: slideUpFade 0.4s ease forwards 1s; pointer-events: auto; }
-  .view-toggle-tooltip-close { background: transparent; border: none; color: var(--bg); font-size: 12px; cursor: pointer; padding: 0 4px; opacity: 0.7; }
+  .view-toggle-tooltip-close { background: transparent; border: none; color: var(--bg); font-size: 12px; cursor: pointer; padding: 0 4px; opacity: 0.7; border-radius: 0; }
   .view-toggle-tooltip-close:hover { opacity: 1; }
   @keyframes slideUpFade { from { opacity: 0; transform: translate(-50%, 4px); } to { opacity: 1; transform: translate(-50%, 0); } }
 
   .view-toggle { display: flex; border: 1px solid var(--line); border-radius: 0; overflow: hidden; }
-  .view-toggle button { border: none; font-family: 'JetBrains Mono', monospace; font-size: 12px; text-transform: uppercase; letter-spacing: 0.08em; padding: 10px 14px; cursor: pointer; background: transparent; color: var(--ink-soft); transition: all 0.15s ease; }
+  .view-toggle button { border: none; font-family: 'JetBrains Mono', monospace; font-size: 12px; text-transform: uppercase; letter-spacing: 0.08em; padding: 10px 14px; cursor: pointer; background: transparent; color: var(--ink-soft); transition: all 0.15s ease; border-radius: 0; }
   .view-toggle button.active { background: var(--line); color: var(--ink); font-weight: 500; }
   .view-toggle button:hover:not(.active) { background: rgba(0,0,0,0.03); }
 
@@ -72,7 +72,7 @@
   .settings-dropdown-wrap { position: relative; }
   .settings-menu { position: absolute; bottom: calc(100% + 8px); right: 0; background: var(--bg-card); border: 1px solid var(--ink); border-radius: 0; z-index: 100; min-width: 260px; display: none; flex-direction: column; box-shadow: 0 -6px 16px rgba(0,0,0,0.08); max-height: 80vh; overflow-y: auto; }
   .settings-menu.open { display: flex; }
-  .settings-menu-item { display: flex; width: 100%; text-align: left; background: transparent; border: none; padding: 12px 16px; font-family: 'JetBrains Mono', monospace; font-size: 12px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--ink); cursor: pointer; }
+  .settings-menu-item { display: flex; width: 100%; text-align: left; background: transparent; border: none; border-radius: 0; padding: 12px 16px; font-family: 'JetBrains Mono', monospace; font-size: 12px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--ink); cursor: pointer; }
   .settings-menu-item:hover { background: var(--ink); color: var(--bg); }
   .settings-menu-item.danger { color: var(--danger); }
   .settings-menu-item.danger:hover { background: var(--danger); color: var(--bg); }
@@ -115,7 +115,11 @@
   .uke-cell .uke-num { font-size: 13px; font-weight: 500; color: var(--ink); }
   .vertical-cell { padding: 6px 8px; border-right: 1px solid var(--line-soft); min-height: 55px; }
   .vertical-cell:last-child { border-right: none; }
-  .vertical-cell.today .day-num { background: var(--ink); color: var(--bg); border-radius: 0; width: 24px; height: 24px; display: inline-flex; align-items: center; justify-content: center; font-size: 12px; }
+  
+  /* Strict "Today" styling */
+  .vertical-cell.today { outline: 2px solid var(--ink); outline-offset: -2px; z-index: 4; background: rgba(20, 19, 15, 0.02); }
+  .hz-day.today { outline: 2px solid var(--ink); outline-offset: -2px; z-index: 4; background: rgba(20, 19, 15, 0.02); }
+  .hz-col.today { outline: 2px solid var(--ink); outline-offset: -2px; z-index: 2; background: rgba(20, 19, 15, 0.02); }
 
   /* OVERRIDES FOR SINGLE WEEK */
   body[data-view="single_week"] .vertical-cell { min-height: 40vh; }
@@ -174,7 +178,6 @@
   .hz-day.end-of-week { border-right: 1px solid var(--line); }
   .hz-day .wk { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--ink-faint); }
   .hz-day .nm { font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 500; color: var(--ink); }
-  .hz-day.today .nm { background: var(--ink); color: var(--bg); border-radius: 0; width: 24px; height: 24px; display: inline-flex; justify-content: center; align-items: center; }
   
   .hz-grid { display: flex; position: relative; min-height: 50vh; }
   .hz-col { width: 56px; flex-shrink: 0; border-right: 1px dashed var(--line-soft); position: relative; box-sizing: border-box; }
@@ -197,11 +200,15 @@
   .ov-month:last-child { border-right: none; }
   .ov-grid { position: relative; width: 100%; background: var(--bg-card); }
   .ov-line { position: absolute; top: 0; bottom: 0; width: 1px; background: var(--line-soft); z-index: 1; pointer-events: none; }
+  
+  .today-line { background: var(--ink); z-index: 5; pointer-events: none; }
+  .today-tag { position: absolute; top: 4px; left: 0; transform: translateX(-50%); background: var(--ink); color: var(--bg); font-family: 'JetBrains Mono', monospace; font-size: 9px; padding: 4px 6px; letter-spacing: 0.1em; text-transform: uppercase; white-space: nowrap; border-radius: 0; line-height: 1; z-index: 10; }
+
   body[data-view="overview"] .phase-layer { left: 0; }
   
   /* Flexbox logic for dynamic row heights */
   .ov-events-container {
-      position: relative; width: 100%; padding: 20px 0;
+      position: relative; width: 100%; padding: 32px 0 20px;
       display: flex; flex-direction: column; gap: 12px; z-index: 2;
   }
   
@@ -272,11 +279,11 @@
   .modal-backdrop.open { display: flex; }
   .modal { background: var(--bg-card); border: 1px solid var(--line); width: 100%; max-width: 480px; padding: 32px; position: relative; max-height: 90vh; overflow-y: auto; border-radius: 0; }
   .modal-title { font-weight: 500; font-size: 24px; letter-spacing: -0.025em; margin-bottom: 24px; }
-  .modal-close { position: absolute; top: 20px; right: 20px; background: transparent; border: none; font-family: 'JetBrains Mono', monospace; font-size: 14px; cursor: pointer; color: var(--ink-soft); }
+  .modal-close { position: absolute; top: 20px; right: 20px; background: transparent; border: none; font-family: 'JetBrains Mono', monospace; font-size: 14px; cursor: pointer; color: var(--ink-soft); border-radius: 0; }
   .modal-close:hover { color: var(--ink); }
   .field { margin-bottom: 18px; }
   .field label { display: block; font-family: 'JetBrains Mono', monospace; font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--ink-faint); margin-bottom: 6px; }
-  .field input[type="text"], .field input[type="date"], .field textarea { width: 100%; font-size: 14px; color: var(--ink); background: transparent; border: none; border-bottom: 1px solid var(--line); padding: 6px 0; outline: none; font-family: 'ABC Diatype', Arial, sans-serif; }
+  .field input[type="text"], .field input[type="date"], .field textarea { width: 100%; font-size: 14px; color: var(--ink); background: transparent; border: none; border-bottom: 1px solid var(--line); padding: 6px 0; outline: none; font-family: 'ABC Diatype', Arial, sans-serif; border-radius: 0; }
   .field input:focus, .field textarea:focus { border-bottom-color: var(--ink); }
   .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
   .color-picker { display: flex; gap: 8px; margin-top: 6px; flex-wrap: wrap; align-items: center; }
@@ -572,7 +579,6 @@ window.onload = function() {
     });
     gisInited = true;
 
-    // Automatic silent login refresh if previously connected
     if (localStorage.getItem('newslab_drive_connected') === '1' && !window.__isReadOnly) {
         const savedToken = localStorage.getItem('newslab_drive_token');
         let needsRefresh = true;
@@ -615,7 +621,6 @@ async function initializeGapiClient() {
 document.getElementById('btnDriveLogin')?.addEventListener('click', () => { if (gapiInited && gisInited) { if (gapi.client.getToken() === null) tokenClient.requestAccessToken({prompt: 'consent'}); else tokenClient.requestAccessToken({prompt: ''}); } });
 document.getElementById('topSignInBtn')?.addEventListener('click', () => { document.getElementById('btnDriveLogin')?.click(); });
 
-// Custom Drive Picker Logic
 let pickerHistory = [{id: 'root', name: 'My Drive'}];
 
 document.getElementById('btnBrowseFolder')?.addEventListener('click', async () => {
@@ -702,7 +707,6 @@ document.getElementById('folderPickerSelectCurrent')?.addEventListener('click', 
 document.getElementById('folderPickerCancel')?.addEventListener('click', () => {
     document.getElementById('folderPickerModal').classList.remove('open');
 });
-
 
 async function fetchDriveFiles() {
   const folderId = localStorage.getItem('newslab-drive-folder') || '1c4WDZlXaWREt_luuf7cy03n6Iu0He97M'; 
@@ -900,14 +904,14 @@ function bindEventBarEvents(bar, ev, pxPerDay, segStart) {
   if (!window.__isReadOnly && state.viewMode !== 'overview') {
     bar.addEventListener('dragstart', (e) => {
       window.__isDraggingOrResizing = true; 
+      document.body.classList.add('is-dragging');
       const rect = bar.getBoundingClientRect(); let offsetDaysInSeg = Math.floor((e.clientX - rect.left) / pxPerDay); 
       const maxSpan = Math.round(rect.width / pxPerDay); offsetDaysInSeg = Math.max(0, Math.min(offsetDaysInSeg, maxSpan - 1));
       const totalOffsetDays = diffDays(ev.start, toISO(segStart)) + offsetDaysInSeg;
       e.dataTransfer.effectAllowed = 'move'; e.dataTransfer.setData('application/json', JSON.stringify({ id: ev.id, offsetDays: totalOffsetDays })); 
       setTimeout(() => { 
           bar.style.opacity = '0.3'; 
-          document.body.classList.add('is-dragging'); 
-      }, 0);
+      }, 1);
     });
     bar.addEventListener('dragend', () => { 
       bar.style.opacity = ''; 
@@ -1044,27 +1048,32 @@ function renderVerticalCalendar() {
       const durB = fromISO(b.end).getTime() - fromISO(b.start).getTime();
       return durB - durA || fromISO(a.start).getTime() - fromISO(b.start).getTime();
   });
-  
-  const groupedEventsMap = new Map();
-  events.forEach(ev => {
-      if (!groupedEventsMap.has(ev.name)) groupedEventsMap.set(ev.name, []);
-      groupedEventsMap.get(ev.name).push(ev);
-  });
+  const tracks = [];
+  const nameToTrack = {};
 
-  let currentGlobalTrack = 0;
-  groupedEventsMap.forEach((group, name) => {
-      const localTracks = [];
-      group.forEach(ev => {
-          const evS = fromISO(ev.start).getTime(); const evE = fromISO(ev.end).getTime();
-          let placed = false;
-          for (let i = 0; i < localTracks.length; i++) {
+  events.forEach(ev => {
+      const evS = fromISO(ev.start).getTime(); const evE = fromISO(ev.end).getTime();
+      let trackToUse = -1;
+      if (nameToTrack[ev.name] !== undefined) {
+          const preferredTrack = nameToTrack[ev.name];
+          let overlap = false;
+          for (let j = 0; j < tracks[preferredTrack].length; j++) { if (evS <= tracks[preferredTrack][j].e && evE >= tracks[preferredTrack][j].s) { overlap = true; break; } }
+          if (!overlap) trackToUse = preferredTrack;
+      }
+      
+      if (trackToUse === -1) {
+          for (let i = 0; i < tracks.length; i++) {
               let overlap = false;
-              for (let j = 0; j < localTracks[i].length; j++) { if (evS <= localTracks[i][j].e && evE >= localTracks[i][j].s) { overlap = true; break; } }
-              if (!overlap) { localTracks[i].push({s: evS, e: evE}); ev._track = currentGlobalTrack + i; placed = true; break; }
+              for (let j = 0; j < tracks[i].length; j++) { if (evS <= tracks[i][j].e && evE >= tracks[i][j].s) { overlap = true; break; } }
+              if (!overlap) { trackToUse = i; break; }
           }
-          if (!placed) { ev._track = currentGlobalTrack + localTracks.length; localTracks.push([{s: evS, e: evE}]); }
-      });
-      currentGlobalTrack += localTracks.length;
+      }
+      
+      if (trackToUse === -1) { trackToUse = tracks.length; tracks.push([]); }
+      
+      ev._track = trackToUse;
+      nameToTrack[ev.name] = trackToUse;
+      tracks[trackToUse].push({s: evS, e: evE});
   });
   
   const isSingleWeek = state.viewMode === 'single_week'; const trackSpacing = isSingleWeek ? 140 : 36;
@@ -1127,11 +1136,13 @@ function renderHorizontalCalendar() {
 
   let daysHtml = days.map(d => {
     const isEndOfWeek = d.getDay() === 0 || (!state.showWeekends && d.getDay() === 5);
-    return `<div class="hz-day ${sameDay(d, new Date()) ? 'today' : ''} ${isEndOfWeek ? 'end-of-week' : ''}"><div class="wk">${getDayShort()[d.getDay() === 0 ? 6 : d.getDay() - 1][0]}</div><div class="nm">${d.getDate()}</div></div>`;
+    const isToday = sameDay(d, new Date());
+    return `<div class="hz-day ${isToday ? 'today' : ''} ${isEndOfWeek ? 'end-of-week' : ''}"><div class="wk">${getDayShort()[d.getDay() === 0 ? 6 : d.getDay() - 1][0]}</div><div class="nm">${d.getDate()}</div></div>`;
   }).join('');
   let gridHtml = days.map(d => {
     const isEndOfWeek = d.getDay() === 0 || (!state.showWeekends && d.getDay() === 5);
-    return `<div class="hz-col day-cell ${isWeekend(d) ? 'weekend' : ''} ${isEndOfWeek ? 'end-of-week' : ''}" data-date="${toISO(d)}"><button class="day-add-btn">+</button></div>`;
+    const isToday = sameDay(d, new Date());
+    return `<div class="hz-col day-cell ${isWeekend(d) ? 'weekend' : ''} ${isEndOfWeek ? 'end-of-week' : ''} ${isToday ? 'today' : ''}" data-date="${toISO(d)}"><button class="day-add-btn">+</button></div>`;
   }).join('');
 
   // Time off blocks
@@ -1156,35 +1167,40 @@ function renderHorizontalCalendar() {
   singleDayEvents.sort((a, b) => fromISO(a.start) - fromISO(b.start));
   multiDayEvents.sort((a, b) => fromISO(a.start) - fromISO(b.start));
 
-  let currentSingleTrack = 0;
-  const singleGroups = new Map();
+  const singleTracks = []; let maxSingleTrack = -1;
+  const singleNameToTrack = {};
+
   singleDayEvents.forEach(ev => {
-      if (!singleGroups.has(ev.name)) singleGroups.set(ev.name, []);
-      singleGroups.get(ev.name).push(ev);
+    let startIdx = days.findIndex(d => d >= fromISO(ev.start)); 
+    if (startIdx === -1) return;
+    
+    const evS = startIdx; const evE = startIdx + Math.ceil((ev.name.length * 8.5 + 45) / dayWidth); 
+    let trackToUse = -1;
+    
+    if (singleNameToTrack[ev.name] !== undefined) {
+        const preferredTrack = singleNameToTrack[ev.name];
+        let overlap = false;
+        for (let j = 0; j < singleTracks[preferredTrack].length; j++) { if (evS <= singleTracks[preferredTrack][j].e && evE >= singleTracks[preferredTrack][j].s) { overlap = true; break; } }
+        if (!overlap) trackToUse = preferredTrack;
+    }
+    
+    if (trackToUse === -1) {
+        for (let i = 0; i < singleTracks.length; i++) {
+          let overlap = false;
+          for (let j = 0; j < singleTracks[i].length; j++) { if (evS <= singleTracks[i][j].e && evE >= singleTracks[i][j].s) { overlap = true; break; } }
+          if (!overlap) { trackToUse = i; break; }
+        }
+    }
+    
+    if (trackToUse === -1) { trackToUse = singleTracks.length; singleTracks.push([]); }
+    
+    ev._track = trackToUse;
+    singleNameToTrack[ev.name] = trackToUse;
+    singleTracks[trackToUse].push({s: evS, e: evE});
+    maxSingleTrack = Math.max(maxSingleTrack, ev._track);
   });
 
-  singleGroups.forEach((group, name) => {
-      const localTracks = [];
-      group.forEach(ev => {
-          let startIdx = days.findIndex(d => d >= fromISO(ev.start)); 
-          if (startIdx === -1) return;
-          
-          const textWidthPx = ev.name.length * 8.5 + 45; 
-          const paddingDays = Math.ceil(textWidthPx / dayWidth);
-          const evS = startIdx; const evE = startIdx + paddingDays; 
-          
-          let placed = false;
-          for (let i = 0; i < localTracks.length; i++) {
-              let overlap = false;
-              for (let j = 0; j < localTracks[i].length; j++) { if (evS <= localTracks[i][j].e && evE >= localTracks[i][j].s) { overlap = true; break; } }
-              if (!overlap) { localTracks[i].push({s: evS, e: evE}); ev._track = currentSingleTrack + i; placed = true; break; }
-          }
-          if (!placed) { ev._track = currentSingleTrack + localTracks.length; localTracks.push([{s: evS, e: evE}]); }
-      });
-      currentSingleTrack += localTracks.length;
-  });
-
-  const startPhaseTrack = currentSingleTrack;
+  const startPhaseTrack = maxSingleTrack + 1;
   const trackHeight = 56;
   let sidebarHtml = '';
   
@@ -1198,34 +1214,42 @@ function renderHorizontalCalendar() {
       calculatedSidebarWidth = Math.min(calculatedSidebarWidth, 480);
   }
   
-  let currentMultiTrack = startPhaseTrack;
-  const multiGroups = new Map();
+  const multiTracks = [];
+  const multiNameToTrackList = {};
+  
   multiDayEvents.forEach(ev => {
-      if (!multiGroups.has(ev.name)) multiGroups.set(ev.name, []);
-      multiGroups.get(ev.name).push(ev);
+      const evS = fromISO(ev.start).getTime(); const evE = fromISO(ev.end).getTime();
+      let trackToUse = -1;
+
+      if (multiNameToTrackList[ev.name]) {
+          for (let pt of multiNameToTrackList[ev.name]) {
+              let overlap = false;
+              for (let j = 0; j < multiTracks[pt].length; j++) { if (evS <= multiTracks[pt][j].e && evE >= multiTracks[pt][j].s) { overlap = true; break; } }
+              if (!overlap) { trackToUse = pt; break; }
+          }
+      }
+
+      if (trackToUse === -1) {
+          trackToUse = multiTracks.length;
+          multiTracks.push([]);
+          if (!multiNameToTrackList[ev.name]) multiNameToTrackList[ev.name] = [];
+          multiNameToTrackList[ev.name].push(trackToUse);
+      }
+      
+      ev._track = startPhaseTrack + trackToUse;
+      multiTracks[trackToUse].push({s: evS, e: evE});
   });
 
-  multiGroups.forEach((group, name) => {
-      const localTracks = [];
-      group.forEach(ev => {
-          const evS = fromISO(ev.start).getTime(); const evE = fromISO(ev.end).getTime();
-          let placed = false;
-          for (let i = 0; i < localTracks.length; i++) {
-              let overlap = false;
-              for (let j = 0; j < localTracks[i].length; j++) { if (evS <= localTracks[i][j].e && evE >= localTracks[i][j].s) { overlap = true; break; } }
-              if (!overlap) { localTracks[i].push({s: evS, e: evE}); ev._track = currentMultiTrack + i; placed = true; break; }
-          }
-          if (!placed) { ev._track = currentMultiTrack + localTracks.length; localTracks.push([{s: evS, e: evE}]); }
-      });
-      
-      const yPos = 4 + currentMultiTrack * trackHeight;
-      const labelHeight = (localTracks.length * trackHeight) - 8;
-      sidebarHtml += `<div class="hz-phase-label" style="top: ${yPos}px; height: ${labelHeight}px;" title="${escapeAttr(name)}">${escapeHtml(name)}</div>`;
-      
-      currentMultiTrack += localTracks.length;
+  Object.keys(multiNameToTrackList).forEach(name => {
+      const tracksUsed = multiNameToTrackList[name];
+      const minTrack = Math.min(...tracksUsed);
+      const maxTrack = Math.max(...tracksUsed);
+      const yPos = 4 + (startPhaseTrack + minTrack) * trackHeight;
+      const hPos = ((maxTrack - minTrack + 1) * trackHeight) - 8;
+      sidebarHtml += `<div class="hz-phase-label" style="top: ${yPos}px; height: ${hPos}px;" title="${escapeAttr(name)}">${escapeHtml(name)}</div>`;
   });
   
-  const maxTrack = currentMultiTrack - 1;
+  const maxTrack = startPhaseTrack + multiTracks.length - 1;
 
   let gridLinesHtml = '';
   let sidebarLinesHtml = '';
@@ -1348,6 +1372,13 @@ function renderOverviewCalendar() {
     curr = addDays(endOfMonth, 1);
   }
 
+  // Today Line
+  const todayD = new Date();
+  if (todayD >= spanStart && todayD <= spanEnd) {
+    const leftPct = (diffDays(toISO(spanStart), toISO(todayD)) / totalDays) * 100;
+    lineHtml += `<div class="today-line" style="left: calc(${leftPct}% + 0.5px)"><div class="today-tag">TODAY</div></div>`;
+  }
+
   // Time off blocks
   const timeOffEvents = state.events.filter(e => e.isTimeOff);
   let timeOffHtml = '<div class="time-off-layer">';
@@ -1368,7 +1399,7 @@ function renderOverviewCalendar() {
   ovEventsContainer.className = 'ov-events-container';
   
   const events = [...state.events]
-    .filter(ev => ev.start !== ev.end && !ev.isTimeOff)
+    .filter(ev => !ev.isTimeOff)
     .sort((a, b) => fromISO(a.start) - fromISO(b.start) || (fromISO(b.end) - fromISO(a.start)) - (fromISO(a.end) - fromISO(a.start)));
 
   const groupedEvents = new Map();
@@ -1490,7 +1521,6 @@ document.addEventListener('mouseup', (e) => {
       saveState(false);
   }
   if (window.__resizeData) { saveState(); window.__resizeData = null; window.__resizeHoverDate = null; document.body.classList.remove('is-resizing'); render(); setTimeout(() => window.__isDraggingOrResizing = false, 100); }
-  document.body.classList.remove('is-dragging');
 });
 
 function setupStickyHeader() {
