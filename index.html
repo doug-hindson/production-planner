@@ -16,22 +16,22 @@
   .sticky-zone.compact { padding-top: 14px; }
   header.top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 36px; padding-bottom: 20px; border-bottom: 1px solid var(--line); transition: margin 0.25s ease, padding 0.25s ease; }
   .sticky-zone.compact header.top { margin-bottom: 14px; padding-bottom: 10px; }
-  .brand { font-size: 13px; font-weight: 500; letter-spacing: 0.02em; color: var(--ink-soft); }
-  .brand-mark { font-family: 'JetBrains Mono', monospace; font-size: 13px; color: var(--ink-soft); letter-spacing: 0.04em; }
-  .header-meta { text-align: right; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--ink-faint); letter-spacing: 0.06em; text-transform: uppercase; }
+  .brand { font-size: 15px; font-weight: 500; letter-spacing: 0.02em; color: var(--ink-soft); }
+  .brand-mark { font-family: 'JetBrains Mono', monospace; font-size: 15px; color: var(--ink-soft); letter-spacing: 0.04em; }
+  .header-meta { text-align: right; font-family: 'JetBrains Mono', monospace; font-size: 13px; color: var(--ink-faint); letter-spacing: 0.06em; text-transform: uppercase; }
   .title-row { display: grid; grid-template-columns: auto 1fr; gap: 64px; margin-bottom: 32px; align-items: start; transition: gap 0.25s ease, margin 0.25s ease; }
   .sticky-zone.compact .title-row { grid-template-columns: 1fr; gap: 0; margin-bottom: 16px; }
   .project-title { font-weight: 400; font-size: 64px; line-height: 1; letter-spacing: -0.035em; color: var(--ink); background: transparent; border: none; outline: none; width: 100%; padding: 0; transition: font-size 0.25s ease; }
   .sticky-zone.compact .project-title { font-size: 24px; letter-spacing: -0.025em; }
   .project-title::placeholder { color: var(--ink-faint); }
-  .project-desc { font-size: 15px; line-height: 1.55; color: var(--ink-soft); background: transparent; border: none; outline: none; width: 100%; resize: none; min-height: 100px; transition: opacity 0.2s ease, max-height 0.25s ease, min-height 0.25s ease; }
+  .project-desc { font-size: 17px; line-height: 1.55; color: var(--ink-soft); background: transparent; border: none; outline: none; width: 100%; resize: none; min-height: 100px; transition: opacity 0.2s ease, max-height 0.25s ease, min-height 0.25s ease; }
   .project-desc::placeholder { color: var(--ink-faint); }
   .sticky-zone.compact .project-desc { opacity: 0; max-height: 0; min-height: 0; overflow: hidden; pointer-events: none; margin: 0; }
   .controls { display: flex; align-items: center; justify-content: space-between; padding: 12px 0; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); gap: 14px; flex-wrap: wrap; }
   .controls-left, .controls-right { display: flex; align-items: center; gap: 18px; flex-wrap: wrap; }
-  .ctl { display: flex; align-items: center; gap: 8px; font-family: 'JetBrains Mono', monospace; font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--ink-soft); }
+  .ctl { display: flex; align-items: center; gap: 8px; font-family: 'JetBrains Mono', monospace; font-size: 13px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--ink-soft); }
   .ctl label { color: var(--ink-faint); }
-  .ctl input[type="date"] { font-family: 'JetBrains Mono', monospace; font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--ink); background: transparent; border: none; border-bottom: 1px solid var(--line); padding: 4px 0; outline: none; cursor: pointer; }
+  .ctl input[type="date"] { font-family: 'JetBrains Mono', monospace; font-size: 13px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--ink); background: transparent; border: none; border-bottom: 1px solid var(--line); padding: 4px 0; outline: none; cursor: pointer; }
   .ctl input:focus { border-bottom-color: var(--ink); }
   .toggle-switch { cursor: pointer; user-select: none; }
   .toggle-switch-track { width: 28px; height: 14px; background: var(--line); border-radius: 999px; position: relative; transition: background 0.15s ease; }
@@ -39,13 +39,13 @@
   .toggle-switch.on .toggle-switch-track { background: var(--ink); }
   .toggle-switch.on .toggle-switch-track::after { transform: translateX(14px); }
   .lang-toggle-wrap { display: flex; align-items: center; gap: 6px; margin: 0; }
-  .lang-toggle-wrap span { font-weight: 500; transition: color 0.15s ease; color: var(--ink-faint); font-family: 'JetBrains Mono', monospace; font-size: 10px; }
+  .lang-toggle-wrap span { font-weight: 500; transition: color 0.15s ease; color: var(--ink-faint); font-family: 'JetBrains Mono', monospace; font-size: 12px; }
   .lang-toggle-wrap.is-nb .lbl-nb { color: var(--ink); }
   .lang-toggle-wrap:not(.is-nb) .lbl-en { color: var(--ink); }
   input[type="checkbox"] { accent-color: var(--ink); width: 16px; height: 16px; cursor: pointer; }
   
   /* Buttons & Toggles */
-  .nav-btn, .action-btn { font-family: 'JetBrains Mono', monospace; font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; background: transparent; border: 1px solid var(--line); color: var(--ink); padding: 8px 14px; cursor: pointer; transition: all 0.15s ease; display: inline-flex; align-items: center; justify-content: center; }
+  .nav-btn, .action-btn { font-family: 'JetBrains Mono', monospace; font-size: 13px; text-transform: uppercase; letter-spacing: 0.08em; background: transparent; border: 1px solid var(--line); color: var(--ink); padding: 10px 16px; cursor: pointer; transition: all 0.15s ease; display: inline-flex; align-items: center; justify-content: center; }
   .nav-btn:hover, .action-btn:hover { border-color: var(--ink); background: var(--ink); color: var(--bg); }
   .action-btn.primary { background: var(--ink); color: var(--bg); border-color: var(--ink); }
   .action-btn.primary:hover { background: transparent; color: var(--ink); }
@@ -135,15 +135,21 @@
       box-shadow: 2px 0 8px rgba(0,0,0,0.03);
       display: flex; flex-direction: column;
   }
+  .sidebar-resizer {
+      position: absolute; top: 0; bottom: 0; right: -3px; width: 6px; 
+      cursor: col-resize; z-index: 50; transition: background 0.2s ease;
+  }
+  .sidebar-resizer:hover { background: var(--ink); opacity: 0.15; }
+  
   .hz-sidebar-header {
       height: 90px; 
       border-bottom: 1px solid var(--line);
       background: var(--bg-card); 
   }
-  .hz-sidebar-labels { position: relative; flex-grow: 1; }
+  .hz-sidebar-labels { position: relative; flex-grow: 1; overflow: hidden; }
   .hz-phase-label {
       position: absolute; left: 16px; right: 16px;
-      height: 30px; line-height: 30px;
+      height: 44px; display: flex; flex-direction: column; justify-content: center;
       font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 500;
       text-transform: uppercase; letter-spacing: 0.08em; color: var(--ink);
       white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
@@ -155,7 +161,6 @@
   }
 
   .hz-timeline { display: block; flex-grow: 1; min-width: max-content; }
-  /* REMOVED: sticky vertically, to prevent bug in overflow-x layout */
   .hz-sticky-headers { 
       position: relative; z-index: 20; 
       background: var(--bg-card); 
@@ -210,8 +215,11 @@
   }
 
   /* DRAGGING GLOBALS */
-  body.is-resizing * { user-select: none !important; }
-  body.is-resizing .phase-layer, body.is-resizing .event-bar { pointer-events: none !important; }
+  body.is-dragging, body.is-dragging * { cursor: grabbing !important; }
+  body.is-resizing, body.is-resizing * { cursor: ew-resize !important; }
+  body.is-resizing-sidebar, body.is-resizing-sidebar * { cursor: col-resize !important; user-select: none; }
+  
+  body.is-resizing .phase-layer, body.is-resizing .event-bar, body.is-dragging .phase-layer, body.is-dragging .event-bar { pointer-events: none !important; }
   
   /* ===== TIME OFF LAYER (GREYED OUT BLOCKS) ===== */
   .time-off-layer { position: absolute; left: 70px; right: 0; top: 0; bottom: 0; pointer-events: none; z-index: 1; }
@@ -250,7 +258,7 @@
   .event-bar.continues-right { border-right: 1px dashed var(--ink); border-top-right-radius: 0; border-bottom-right-radius: 0; }
   .event-label { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; pointer-events: none; }
   .event-notes { display: none; }
-  .resize-handle { position: absolute; top: 0; bottom: 0; width: 24px; cursor: ew-resize; z-index: 5; }
+  .resize-handle { position: absolute; top: 0; bottom: 0; width: 12px; cursor: ew-resize; z-index: 5; }
   .resize-handle.left { left: 0; }
   .resize-handle.right { right: 0; }
 
@@ -809,12 +817,18 @@ function bindEventBarEvents(bar, ev, pxPerDay, segStart) {
   bar.addEventListener('click', (e) => { if(window.__isDraggingOrResizing) return; e.stopPropagation(); openEventModal(ev); });
   if (!window.__isReadOnly && state.viewMode !== 'overview') {
     bar.addEventListener('dragstart', (e) => {
-      window.__isDraggingOrResizing = true; const rect = bar.getBoundingClientRect(); let offsetDaysInSeg = Math.floor((e.clientX - rect.left) / pxPerDay); 
+      window.__isDraggingOrResizing = true; 
+      document.body.classList.add('is-dragging');
+      const rect = bar.getBoundingClientRect(); let offsetDaysInSeg = Math.floor((e.clientX - rect.left) / pxPerDay); 
       const maxSpan = Math.round(rect.width / pxPerDay); offsetDaysInSeg = Math.max(0, Math.min(offsetDaysInSeg, maxSpan - 1));
       const totalOffsetDays = diffDays(ev.start, toISO(segStart)) + offsetDaysInSeg;
       e.dataTransfer.effectAllowed = 'move'; e.dataTransfer.setData('application/json', JSON.stringify({ id: ev.id, offsetDays: totalOffsetDays })); setTimeout(() => bar.style.opacity = '0.3', 0);
     });
-    bar.addEventListener('dragend', () => { bar.style.opacity = ''; setTimeout(() => window.__isDraggingOrResizing = false, 100); });
+    bar.addEventListener('dragend', () => { 
+      bar.style.opacity = ''; 
+      document.body.classList.remove('is-dragging');
+      setTimeout(() => window.__isDraggingOrResizing = false, 100); 
+    });
   }
 }
 
@@ -1060,23 +1074,24 @@ function renderHorizontalCalendar() {
   });
 
   const startPhaseTrack = maxSingleTrack + 1;
-  const trackHeight = 46;
+  const trackHeight = 56;
   let sidebarHtml = '';
   
   // Dynamic calculation for sidebar width based on text length
-  let calculatedSidebarWidth = 240; 
+  let calculatedSidebarWidth = state.sidebarWidth || 240; 
+  if (!state.sidebarWidth) {
+      multiDayEvents.forEach((ev) => { 
+          const textW = (ev.name.length * 8) + 48;
+          if (textW > calculatedSidebarWidth) calculatedSidebarWidth = textW;
+      });
+      calculatedSidebarWidth = Math.min(calculatedSidebarWidth, 480);
+  }
   
   multiDayEvents.forEach((ev, idx) => { 
       ev._track = startPhaseTrack + idx; 
-      const yPos = 8 + ev._track * trackHeight;
+      const yPos = 6 + ev._track * trackHeight;
       sidebarHtml += `<div class="hz-phase-label" style="top: ${yPos}px" title="${escapeAttr(ev.name)}">${escapeHtml(ev.name)}</div>`;
-      
-      const textW = (ev.name.length * 8) + 48;
-      if (textW > calculatedSidebarWidth) calculatedSidebarWidth = textW;
   });
-  
-  // Cap at reasonable width
-  calculatedSidebarWidth = Math.min(calculatedSidebarWidth, 480);
   
   const maxTrack = startPhaseTrack + multiDayEvents.length - 1;
 
@@ -1091,6 +1106,7 @@ function renderHorizontalCalendar() {
   cal.innerHTML = `
     <div class="hz-layout">
       <div class="hz-sidebar" style="width: ${calculatedSidebarWidth}px; min-width: ${calculatedSidebarWidth}px;">
+        <div class="sidebar-resizer"></div>
         <div class="hz-sidebar-header"></div>
         <div class="hz-sidebar-labels">${sidebarLinesHtml}${sidebarHtml}</div>
       </div>
@@ -1121,19 +1137,50 @@ function renderHorizontalCalendar() {
     bar.draggable = !window.__isReadOnly && !(window.__resizeData && window.__resizeData.id === ev.id); bar.dataset.id = ev.id; bar.dataset.color = ev.color;
     if (window.__resizeData && window.__resizeData.id === ev.id) bar.classList.add('is-preview');
     
-    bar.style.top = `${8 + ev._track * trackHeight}px`; const colors = resolveColor(ev.color); bar.style.background = colors.bg; bar.style.borderColor = colors.edge;
+    const colors = resolveColor(ev.color); bar.style.background = colors.bg; bar.style.borderColor = colors.edge;
     
     if (isSingle) {
+        bar.style.top = `${13 + ev._track * trackHeight}px`;
+        bar.style.height = '30px';
         bar.style.left = `${startIdx * dayWidth + 12}px`; bar.style.width = `32px`;
+        
+        const label = document.createElement('span'); label.className = 'event-label'; label.textContent = ev.name; bar.appendChild(label);
     } else {
+        bar.style.top = `${6 + ev._track * trackHeight}px`;
+        bar.style.height = '44px';
         bar.style.left = `${startIdx * dayWidth + 4}px`; bar.style.width = `${span * dayWidth - 8}px`;
+        
+        const labelContainer = document.createElement('div');
+        labelContainer.className = 'event-label';
+        labelContainer.style.display = 'flex';
+        labelContainer.style.flexDirection = 'column';
+        labelContainer.style.justifyContent = 'center';
+        labelContainer.style.height = '100%';
+
+        const titleDiv = document.createElement('div');
+        titleDiv.style.fontWeight = '600';
+        titleDiv.style.lineHeight = '1.2';
+        titleDiv.textContent = ev.name;
+        labelContainer.appendChild(titleDiv);
+
+        if (ev.notes) {
+            const notesDiv = document.createElement('div');
+            notesDiv.style.fontSize = '10px';
+            notesDiv.style.opacity = '0.7';
+            notesDiv.style.fontWeight = '400';
+            notesDiv.style.marginTop = '1px';
+            notesDiv.style.whiteSpace = 'nowrap';
+            notesDiv.style.overflow = 'hidden';
+            notesDiv.style.textOverflow = 'ellipsis';
+            notesDiv.style.textTransform = 'none';
+            notesDiv.style.letterSpacing = '0';
+            notesDiv.textContent = ev.notes;
+            labelContainer.appendChild(notesDiv);
+        }
+        bar.appendChild(labelContainer);
     }
     
     if (fromISO(ev.start) < days[0]) bar.classList.add('continues-left'); if (fromISO(ev.end) > days[days.length-1]) bar.classList.add('continues-right');
-    
-    if (isSingle) {
-        const label = document.createElement('span'); label.className = 'event-label'; label.textContent = ev.name; bar.appendChild(label);
-    }
     
     const dateText = ev.start !== ev.end ? `${ev.start} → ${ev.end}` : ev.start; bar.title = `${ev.name} · ${dateText}${ev.notes ? '\n\n' + ev.notes : ''}`;
     
@@ -1233,8 +1280,27 @@ function renderOverviewCalendar() {
 }
 
 // ============ GLOBAL RESIZE LOGIC ============
+document.addEventListener('mousedown', (e) => {
+    if (e.target.classList.contains('sidebar-resizer')) {
+        window.__isResizingSidebar = true;
+        window.__sidebarStartWidth = document.querySelector('.hz-sidebar').offsetWidth;
+        window.__sidebarStartX = e.clientX;
+        document.body.classList.add('is-resizing-sidebar');
+    }
+});
+
 document.addEventListener('mousemove', (e) => {
-  if (window.__resizeData && state.viewMode !== 'overview') {
+  if (window.__isResizingSidebar) {
+      const diff = e.clientX - window.__sidebarStartX;
+      const newWidth = Math.max(200, Math.min(800, window.__sidebarStartWidth + diff));
+      const sidebar = document.querySelector('.hz-sidebar');
+      if(sidebar) {
+          sidebar.style.width = newWidth + 'px';
+          sidebar.style.minWidth = newWidth + 'px';
+      }
+      state.sidebarWidth = newWidth;
+  }
+  else if (window.__resizeData && state.viewMode !== 'overview') {
     const el = document.elementFromPoint(e.clientX, e.clientY); const cell = el ? el.closest('.day-cell') : null;
     if (cell) {
       const hoverDate = cell.dataset.date;
@@ -1257,6 +1323,11 @@ document.addEventListener('mousemove', (e) => {
 });
 
 document.addEventListener('mouseup', (e) => {
+  if (window.__isResizingSidebar) {
+      window.__isResizingSidebar = false;
+      document.body.classList.remove('is-resizing-sidebar');
+      saveState(false);
+  }
   if (window.__resizeData) { saveState(); window.__resizeData = null; window.__resizeHoverDate = null; document.body.classList.remove('is-resizing'); render(); setTimeout(() => window.__isDraggingOrResizing = false, 100); }
 });
 
