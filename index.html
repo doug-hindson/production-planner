@@ -233,7 +233,8 @@
   
   /* CONTINUATION FADE FOR MULTI-WEEK EVENTS */
   body[data-view="vertical"] .event-bar.is-continuation .event-label-container { opacity: 0; transition: opacity 0.2s ease; }
-  body[data-view="vertical"] .event-bar.is-continuation:hover .event-label-container { opacity: 1; }
+  body[data-view="vertical"] .event-bar.is-continuation:hover .event-label-container,
+  body[data-view="vertical"] .event-bar.is-continuation.force-label-visible .event-label-container { opacity: 1; }
   
   /* ===== TIME OFF LAYER (GREYED OUT BLOCKS) ===== */
   .time-off-layer { position: absolute; left: 70px; right: 0; top: 0; bottom: 0; pointer-events: none; z-index: 1; }
@@ -1750,15 +1751,47 @@ function setupStickyHeader() {
   if (window.__stickyScroll) window.removeEventListener('scroll', window.__stickyScroll); window.__stickyScroll = handleScroll; window.addEventListener('scroll', handleScroll, { passive: true });
 }
 
+function updateVisibleEventLabels() {
+    const stickyZone = document.getElementById('stickyZone');
+    if (!stickyZone) return;
+    
+    const stickyH = stickyZone.getBoundingClientRect().height;
+    const weekdayH = document.querySelector('.weekday-row')?.getBoundingClientRect().height || 0;
+    const threshold = stickyH + weekdayH;
+
+    const grouped = {};
+    document.querySelectorAll('body[data-view="vertical"] .event-bar').forEach(bar => {
+        const id = bar.dataset.id;
+        if (!grouped[id]) grouped[id] = [];
+        grouped[id].push(bar);
+    });
+
+    Object.values(grouped).forEach(group => {
+        if (group.length <= 1) return;
+        
+        group.forEach(bar => bar.classList.remove('force-label-visible'));
+        
+        for (let i = 0; i < group.length; i++) {
+            if (group[i].getBoundingClientRect().bottom > threshold) {
+                group[i].classList.add('force-label-visible');
+                break;
+            }
+        }
+    });
+}
+
 function setupScrollAnchor() {
-  if (state.viewMode === 'single_week' || state.viewMode === 'horizontal' || state.viewMode === 'overview') return;
+  if (window.__anchorScroll) window.removeEventListener('scroll', window.__anchorScroll);
   const updateAnchor = () => {
+    if (state.viewMode === 'vertical') updateVisibleEventLabels();
+    if (state.viewMode === 'single_week' || state.viewMode === 'horizontal' || state.viewMode === 'overview') return;
+    
     const stickyH = document.getElementById('stickyZone').getBoundingClientRect().height; const weekdayH = document.querySelector('.weekday-row')?.getBoundingClientRect().height || 0; const targetY = stickyH + weekdayH + 4;
     const rows = document.querySelectorAll('.week-row'); let chosen = null;
     rows.forEach(r => { if (r.getBoundingClientRect().bottom > targetY && !chosen) chosen = r; });
     if (chosen) anchorDateISO = chosen.dataset.weekStart;
   };
-  if (window.__anchorScroll) window.removeEventListener('scroll', window.__anchorScroll); window.__anchorScroll = updateAnchor; window.addEventListener('scroll', updateAnchor, { passive: true }); updateAnchor();
+  window.__anchorScroll = updateAnchor; window.addEventListener('scroll', updateAnchor, { passive: true }); updateAnchor();
 }
 
 function escapeAttr(s) { return String(s||'').replace(/"/g, '&quot;'); } function escapeText(s) { return String(s||'').replace(/</g, '&lt;'); } function escapeHtml(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
