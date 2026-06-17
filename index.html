@@ -117,9 +117,14 @@
   .vertical-cell:last-child { border-right: none; }
   
   /* Strict "Today" styling */
-  .vertical-cell.today { outline: 1px solid var(--ink); outline-offset: -1px; z-index: 1; background: rgba(20, 19, 15, 0.02); border-radius: 4px; }
-  .hz-day.today { outline: 1px solid var(--ink); outline-offset: -1px; z-index: 1; background: rgba(20, 19, 15, 0.02); border-radius: 4px; }
-  .hz-col.today { outline: 1px solid var(--ink); outline-offset: -1px; z-index: 1; background: rgba(20, 19, 15, 0.02); border-radius: 4px; }
+  .vertical-cell.today { background: rgba(20, 19, 15, 0.02); border-left: 1px solid var(--ink); border-right: 1px solid var(--ink); border-radius: 0; position: relative; }
+  .vertical-cell.today::before { content: 'TODAY'; position: absolute; top: -1px; right: 0; background: var(--ink); color: var(--bg); font-family: 'JetBrains Mono', monospace; font-size: 9px; padding: 4px 6px; letter-spacing: 0.1em; text-transform: uppercase; line-height: 1; z-index: 10; border-bottom-left-radius: 4px; }
+  .vertical-cell.today::after { content: ''; position: absolute; bottom: 0; left: -1px; right: -1px; height: 1px; background: var(--ink); z-index: 10; }
+  .week-row[data-is-first-week="true"] .vertical-cell.today { border-top: 1px solid var(--ink); }
+  
+  .hz-day.today { background: rgba(20, 19, 15, 0.02); border-left: 1px solid var(--ink); border-right: 1px solid var(--ink); border-top: 1px solid var(--ink); border-bottom: none; border-radius: 0; position: relative; z-index: 2; margin-bottom: -1px; padding-bottom: 7px; }
+  .hz-day.today::before { content: 'TODAY'; position: absolute; top: -1px; right: 0; background: var(--ink); color: var(--bg); font-family: 'JetBrains Mono', monospace; font-size: 9px; padding: 4px 6px; letter-spacing: 0.1em; text-transform: uppercase; line-height: 1; z-index: 10; border-bottom-left-radius: 4px; }
+  .hz-col.today { background: rgba(20, 19, 15, 0.02); border-left: 1px solid var(--ink); border-right: 1px solid var(--ink); border-bottom: 1px solid var(--ink); border-radius: 0; position: relative; z-index: 2; margin-top: -1px; }
 
   /* OVERRIDES FOR SINGLE WEEK */
   body[data-view="single_week"] .vertical-cell { min-height: 40vh; }
@@ -199,7 +204,7 @@
   .ov-line { position: absolute; top: 0; bottom: 0; width: 1px; background: var(--line-soft); z-index: 1; pointer-events: none; }
   
   .today-line { position: absolute; top: 0; bottom: 0; width: 1px; background: var(--ink); z-index: 5; pointer-events: none; }
-  .today-tag { position: absolute; top: 4px; left: 0; transform: translateX(-50%); background: var(--ink); color: var(--bg); font-family: 'JetBrains Mono', monospace; font-size: 9px; padding: 4px 6px; letter-spacing: 0.1em; text-transform: uppercase; white-space: nowrap; border-radius: 0; line-height: 1; z-index: 10; }
+  .today-tag { position: absolute; top: 4px; left: 0; transform: translateX(-50%); background: var(--ink); color: var(--bg); font-family: 'JetBrains Mono', monospace; font-size: 11px; padding: 4px 6px; letter-spacing: 0.1em; text-transform: uppercase; white-space: nowrap; border-radius: 0; line-height: 1; z-index: 10; }
 
   body[data-view="overview"] .phase-layer { left: 0; }
   
@@ -1065,6 +1070,7 @@ function renderVerticalCalendar() {
       divider.innerHTML = `<div class="uke-spacer"></div><div class="month-label-cell"><span class="month-name">${getMonthNames()[weekAnchor.getMonth()]}</span><span class="month-year">${weekAnchor.getFullYear()}</span></div>`; cal.appendChild(divider);
     }
     const row = document.createElement('div'); row.className = 'week-row' + (state.showWeekends ? '' : ' hide-weekends'); row.dataset.weekStart = toISO(weekStart);
+    if (w === 0) row.dataset.isFirstWeek = 'true';
     const ukeCell = document.createElement('div'); ukeCell.className = 'uke-cell'; ukeCell.innerHTML = `<span class="uke-num">${t('uke')} ${weekNum}</span>`; row.appendChild(ukeCell);
 
     for (let i = 0; i < daysToShow; i++) {
