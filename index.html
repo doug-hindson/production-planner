@@ -1316,7 +1316,8 @@ function renderHorizontalCalendar() {
       let startIdx = days.findIndex(d => d >= fromISO(ev.start)); 
       if (startIdx === -1) return;
       
-      const textWidthPx = ev.name.length * 8.5 + 45; 
+      const intrinsicWidth = ev.name.length * 8 + 16;
+      const textWidthPx = ev.notes ? intrinsicWidth : Math.max(80, intrinsicWidth / 2); 
       const paddingDays = Math.ceil(textWidthPx / dayWidth);
       const evS = startIdx; 
       const evE = startIdx + paddingDays; 
@@ -1426,6 +1427,8 @@ function renderHorizontalCalendar() {
     bar.style.height = '48px';
     
     if (isSingle) {
+        bar.style.top = `${4 + ev._track * trackHeight}px`;
+        bar.style.height = '48px';
         bar.style.left = `${startIdx * dayWidth + 4}px`; bar.style.width = `${dayWidth - 8}px`;
         const label = document.createElement('span'); 
         label.className = 'event-label'; 
@@ -1462,7 +1465,8 @@ function renderHorizontalCalendar() {
         const endPxGrid = daysToEndGrid * dayWidth - 24;
         maxLabelW = Math.min(maxLabelW, endPxGrid);
 
-        label.style.maxWidth = `${Math.max(0, maxLabelW)}px`;
+        const intrinsicWidth = ev.name.length * 8 + 16;
+        label.style.width = `${Math.max(0, Math.min(intrinsicWidth, maxLabelW))}px`;
         bar.appendChild(label);
     } else {
         bar.style.left = `${startIdx * dayWidth + 4}px`; bar.style.width = `${span * dayWidth - 8}px`;
@@ -1579,11 +1583,24 @@ function renderOverviewCalendar() {
       groupedEvents.get(ev.name).push(ev);
   });
 
+  const gridWidth = cal.clientWidth || window.innerWidth - 112;
+  const pxPerDay = gridWidth / totalDays;
+
   let trackIdx = 0;
   groupedEvents.forEach((group, name) => {
     const localTracks = [];
     group.forEach(ev => {
-        const evS = fromISO(ev.start).getTime(); const evE = fromISO(ev.end).getTime();
+        const evS = fromISO(ev.start).getTime(); 
+        let evE = fromISO(ev.end).getTime();
+        
+        // Pad end time for single day events to avoid label collision
+        if (ev.start === ev.end) {
+            const intrinsicWidth = ev.name.length * 8 + 16;
+            const textWidthPx = ev.notes ? intrinsicWidth : Math.max(80, intrinsicWidth / 2);
+            const paddingDays = textWidthPx / pxPerDay;
+            evE += paddingDays * 86400000;
+        }
+
         let placed = false;
         for (let i = 0; i < localTracks.length; i++) {
             let overlap = false;
@@ -1630,8 +1647,6 @@ function renderOverviewCalendar() {
             
             if (isSingle) {
                 let maxLabelPx = Infinity;
-                const gridWidth = cal.clientWidth || window.innerWidth - 112;
-                const pxPerDay = gridWidth / totalDays;
                 
                 if (idx < track.length - 1) {
                     const nextItem = track[idx + 1];
@@ -1643,7 +1658,8 @@ function renderOverviewCalendar() {
                 const endPxGrid = daysToEndGrid * pxPerDay - 10;
                 maxLabelPx = Math.min(maxLabelPx, endPxGrid);
                 
-                label.style.maxWidth = `${Math.max(0, maxLabelPx)}px`;
+                const intrinsicWidth = ev.name.length * 8 + 16;
+                label.style.width = `${Math.max(0, Math.min(intrinsicWidth, maxLabelPx))}px`;
                 label.style.display = ev.notes ? 'block' : '-webkit-box';
                 if (!ev.notes) {
                     label.style.whiteSpace = 'normal';
