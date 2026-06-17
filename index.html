@@ -65,7 +65,7 @@
   .view-toggle button.active { background: var(--line); color: var(--ink); font-weight: 500; }
   .view-toggle button:hover:not(.active) { background: rgba(0,0,0,0.03); }
 
-  .cloud-status { font-family: 'JetBrains Mono', monospace; font-size: 12px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--ink-faint); display: flex; align-items: center; gap: 6px; }
+  .cloud-status { font-family: 'JetBrains Mono', monospace; font-size: 12px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--ink-faint); align-items: center; gap: 6px; }
   .cloud-status.saved { color: #539853; }
   .cloud-status.saving { color: #d99587; }
   .footer-controls { display: flex; justify-content: flex-end; margin-top: 16px; margin-bottom: 24px; }
@@ -250,7 +250,7 @@
   .event-bar.continues-right { border-right: 1px dashed var(--ink); border-top-right-radius: 0; border-bottom-right-radius: 0; }
   .event-label { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; pointer-events: none; }
   .event-notes { display: none; }
-  .resize-handle { position: absolute; top: 0; bottom: 0; width: 10px; cursor: ew-resize; z-index: 5; }
+  .resize-handle { position: absolute; top: 0; bottom: 0; width: 24px; cursor: ew-resize; z-index: 5; }
   .resize-handle.left { left: 0; }
   .resize-handle.right { right: 0; }
 
@@ -285,6 +285,7 @@
   body.read-only .modal-actions-right { display: none !important; }
   body.read-only .event-bar { cursor: pointer; }
   body.read-only .footer-controls { display: none !important; }
+  body.read-only #topSignInBtn, body.read-only #topCopyLinkBtn { display: none !important; }
 
   @media (max-width: 1100px) {
     .app { padding: 0 24px 60px; }
@@ -323,18 +324,16 @@
         <div class="brand">NewsLab</div>
         <div class="brand-mark" data-i18n="brand_mark">PRODUCTION PLANNER</div>
       </div>
-      <div class="header-meta" style="display:flex; align-items:center; gap: 16px;">
-        <div class="cloud-status" id="cloudStatus"></div>
-        <div>
-          <div id="metaDate">—</div>
-          <div>N_</div>
-        </div>
+      <div class="header-meta" style="display:flex; align-items:center; gap: 12px;">
+        <button class="action-btn ghost-danger" id="topSignInBtn" data-i18n="sign_in_drive" style="display: none; background: #fbeae9; color: var(--danger); font-weight: 500; font-size: 11px; padding: 6px 12px; border-radius: 4px;">Sign in</button>
+        <div class="cloud-status" id="cloudStatus" style="display: none;"></div>
+        <button class="action-btn" id="topCopyLinkBtn" data-i18n="copy_client_link" style="font-weight: 500;">Copy Client Link</button>
       </div>
     </header>
 
     <div class="title-row">
-      <input class="project-title" id="projectTitle" data-i18n-placeholder="title_placeholder" placeholder="Title" value="Vampyr — Pre-teaser" />
-      <textarea class="project-desc" id="projectDesc" data-i18n-placeholder="desc_placeholder" placeholder="Project description, scope notes, context…">Pre-teaser, teaser and main campaign for the Norwegian horror film Vampyr (Maipo Film / Nordisk Film). Edvard Munch visual universe. Premiere February 2027.</textarea>
+      <input class="project-title" id="projectTitle" data-i18n-placeholder="title_placeholder" placeholder="Title" value="" />
+      <textarea class="project-desc" id="projectDesc" data-i18n-placeholder="desc_placeholder" placeholder="Project description, scope notes, context…"></textarea>
     </div>
 
     <div class="controls">
@@ -515,6 +514,7 @@ let tokenClient; let gapiInited = false; let gisInited = false;
 let currentDriveFileId = localStorage.getItem('newslab-current-drive-file') || null;
 
 window.onload = function() {
+  updateCloudStatus('Disconnected');
   if (typeof gapi !== 'undefined') { gapi.load('client', initializeGapiClient); }
   if (typeof google !== 'undefined') {
     tokenClient = google.accounts.oauth2.initTokenClient({
@@ -543,13 +543,17 @@ async function initializeGapiClient() {
       if (Date.now() < parsed.expiresAt - 60000) { 
         gapi.client.setToken({ access_token: parsed.token }); document.getElementById('driveLoginSection').style.display = 'none'; document.getElementById('driveWorkspaceSection').style.display = 'flex';
         updateCloudStatus('Connected'); fetchDriveFiles();
+        return;
       }
     } catch(e) {}
   }
+  updateCloudStatus('Disconnected');
 }
 
-document.getElementById('btnDriveLogin').addEventListener('click', () => { if (gapiInited && gisInited) { if (gapi.client.getToken() === null) tokenClient.requestAccessToken({prompt: 'consent'}); else tokenClient.requestAccessToken({prompt: ''}); } });
-document.getElementById('driveFolderId').addEventListener('change', (e) => { localStorage.setItem('newslab-drive-folder', e.target.value.trim()); fetchDriveFiles(); });
+document.getElementById('btnDriveLogin')?.addEventListener('click', () => { if (gapiInited && gisInited) { if (gapi.client.getToken() === null) tokenClient.requestAccessToken({prompt: 'consent'}); else tokenClient.requestAccessToken({prompt: ''}); } });
+document.getElementById('topSignInBtn')?.addEventListener('click', () => { document.getElementById('btnDriveLogin')?.click(); });
+
+document.getElementById('driveFolderId')?.addEventListener('change', (e) => { localStorage.setItem('newslab-drive-folder', e.target.value.trim()); fetchDriveFiles(); });
 
 async function fetchDriveFiles() {
   const folderId = document.getElementById('driveFolderId').value.trim(); if (!folderId || !gapi.client.getToken()) return;
@@ -565,7 +569,7 @@ async function fetchDriveFiles() {
   } catch (err) { updateCloudStatus('Sync Error'); }
 }
 
-document.getElementById('driveFileSelect').addEventListener('change', async (e) => {
+document.getElementById('driveFileSelect')?.addEventListener('change', async (e) => {
   const fileId = e.target.value; if (!fileId) return;
   try {
     updateCloudStatus('Downloading...');
@@ -578,7 +582,7 @@ document.getElementById('driveFileSelect').addEventListener('change', async (e) 
   } catch(err) { updateCloudStatus('Error'); customAlert("Could not load file from Drive.", "Error"); }
 });
 
-document.getElementById('btnNewDriveFile').addEventListener('click', async () => {
+document.getElementById('btnNewDriveFile')?.addEventListener('click', async () => {
   const folderId = document.getElementById('driveFolderId').value.trim(); if (!folderId) return customAlert('Please enter a Folder ID');
   const safeTitle = (state.title || 'Untitled Project').replace(/[^a-z0-9 _-]/gi, '').trim(); 
   
@@ -611,13 +615,24 @@ function triggerAutoSave() {
 
 function updateCloudStatus(msg) {
   const el = document.getElementById('cloudStatus');
-  if (el) { el.textContent = '☁️ ' + msg; el.className = 'cloud-status ' + (msg === 'Saved' || msg === 'Connected' ? 'saved' : (msg === 'Saving...' ? 'saving' : '')); }
+  const topSignIn = document.getElementById('topSignInBtn');
+  if (el) { 
+    if (msg === 'Disconnected') {
+        el.style.display = 'none';
+        if (topSignIn && !window.__isReadOnly) topSignIn.style.display = 'inline-flex';
+    } else {
+        el.style.display = 'flex';
+        el.textContent = '☁️ ' + msg; 
+        el.className = 'cloud-status ' + (msg === 'Saved' || msg === 'Connected' ? 'saved' : (msg === 'Saving...' ? 'saving' : '')); 
+        if (topSignIn) topSignIn.style.display = 'none';
+    }
+  }
 }
 
 // ============ I18N ============
 const i18n = {
-  en: { brand_mark: 'PRODUCTION PLANNER', title_placeholder: 'Title', desc_placeholder: 'Project description, scope notes, context…', start: 'START', end: 'END', today: 'Today', add_event: '+ Add Event', settings: 'Settings', language: 'Language', read_only_link: 'Read-Only Link', share_link: 'Copy Share Link', link_copied: 'Link copied to clipboard!', link_copied_fallback: 'Copy this link to share:', export_pdf: 'Export PDF', export_csv: 'Export to CSV', export_data: 'Save Backup (JSON)', import_data: 'Load Local File', show_weekends: 'Weekends', clear_all: 'Clear all', uke: 'WK', weekdays_full: ['MON','TUE','WED','THU','FRI','SAT','SUN'], weekdays_no_weekend: ['MON','TUE','WED','THU','FRI'], months: ['January','February','March','April','May','June','July','August','September','October','November','December'], new_event: 'New event', edit_event: 'Edit event', label_title: 'Title', label_start: 'Start date', label_end: 'End date', label_color: 'Color', label_notes: 'Notes', event_name_placeholder: 'e.g. Concept Phase or Workshop', save: 'Save', add_event_btn: 'Add event', delete: 'Delete', cancel: 'Cancel', clear_title: 'Clear everything?', clear_description: 'This will permanently remove all project details and events from this planner. The action cannot be undone.', clear_events: (n) => `→ ${n} event${n === 1 ? '' : 's'}`, clear_meta: '→ Title, description & dates', clear_confirm_prefix: 'Type', clear_confirm_word: 'CLEAR', clear_confirm_suffix: 'to confirm.', clear_button: 'Clear everything', label_time_off: 'Time Off (Holiday)', view_tooltip: 'Switch views for more detail' },
-  nb: { brand_mark: 'PRODUKSJONSPLANLEGGER', title_placeholder: 'Tittel', desc_placeholder: 'Prosjektbeskrivelse, omfang, kontekst…', start: 'START', end: 'SLUTT', today: 'I dag', add_event: '+ Nytt element', settings: 'Innstillinger', language: 'Språk', read_only_link: 'Skrivebeskyttet', share_link: 'Kopier delingslenke', link_copied: 'Lenken er kopiert til utklippstavlen!', link_copied_fallback: 'Kopier denne lenken for å dele:', export_pdf: 'Eksporter PDF', export_csv: 'Eksporter til CSV', export_data: 'Lagre Backup (JSON)', import_data: 'Åpne Lokal Fil', show_weekends: 'Helger', clear_all: 'Nullstill', uke: 'UKE', weekdays_full: ['MAN','TIR','ONS','TOR','FRE','LØR','SØN'], weekdays_no_weekend: ['MAN','TIR','ONS','TOR','FRE'], months: ['Januar','Februar','Mars','April','Mai','Juni','Juli','August','September','Oktober','November','Desember'], new_event: 'Nytt element', edit_event: 'Rediger element', label_title: 'Tittel', label_start: 'Startdato', label_end: 'Sluttdato', label_color: 'Farge', label_notes: 'Notater', event_name_placeholder: 'F.eks. Konseptfase eller Workshop', save: 'Lagre', add_event_btn: 'Legg til element', delete: 'Slett', cancel: 'Avbryt', clear_title: 'Nullstill alt?', clear_description: 'Dette fjerner permanent alle prosjektdetaljer og elementer fra denne planleggeren. Handlingen kan ikke angres.', clear_events: (n) => `→ ${n} element${n === 1 ? '' : 'er'}`, clear_meta: '→ Tittel, beskrivelse og datoer', clear_confirm_prefix: 'Skriv', clear_confirm_word: 'SLETT', clear_confirm_suffix: 'for å bekrefte.', clear_button: 'Nullstill alt', label_time_off: 'Ferie / Fridag', view_tooltip: 'Bytt visning for flere detaljer' }
+  en: { brand_mark: 'PRODUCTION PLANNER', title_placeholder: 'Title', desc_placeholder: 'Project description, scope notes, context…', start: 'START', end: 'END', today: 'Today', add_event: '+ Add Event', settings: 'Settings', language: 'Language', read_only_link: 'Read-Only Link', share_link: 'Copy Share Link', link_copied: 'Link copied to clipboard!', link_copied_fallback: 'Copy this link to share:', export_pdf: 'Export PDF', export_csv: 'Export to CSV', export_data: 'Save Backup (JSON)', import_data: 'Load Local File', show_weekends: 'Weekends', clear_all: 'Clear all', uke: 'WK', weekdays_full: ['MON','TUE','WED','THU','FRI','SAT','SUN'], weekdays_no_weekend: ['MON','TUE','WED','THU','FRI'], months: ['January','February','March','April','May','June','July','August','September','October','November','December'], new_event: 'New event', edit_event: 'Edit event', label_title: 'Title', label_start: 'Start date', label_end: 'End date', label_color: 'Color', label_notes: 'Notes', event_name_placeholder: 'e.g. Concept Phase or Workshop', save: 'Save', add_event_btn: 'Add event', delete: 'Delete', cancel: 'Cancel', clear_title: 'Clear everything?', clear_description: 'This will permanently remove all project details and events from this planner. The action cannot be undone.', clear_events: (n) => `→ ${n} event${n === 1 ? '' : 's'}`, clear_meta: '→ Title, description & dates', clear_confirm_prefix: 'Type', clear_confirm_word: 'CLEAR', clear_confirm_suffix: 'to confirm.', clear_button: 'Clear everything', label_time_off: 'Time Off (Holiday)', view_tooltip: 'Switch views for more detail', copy_client_link: 'Copy Client Link', sign_in_drive: 'Sign In' },
+  nb: { brand_mark: 'PRODUKSJONSPLANLEGGER', title_placeholder: 'Tittel', desc_placeholder: 'Prosjektbeskrivelse, omfang, kontekst…', start: 'START', end: 'SLUTT', today: 'I dag', add_event: '+ Nytt element', settings: 'Innstillinger', language: 'Språk', read_only_link: 'Skrivebeskyttet', share_link: 'Kopier delingslenke', link_copied: 'Lenken er kopiert til utklippstavlen!', link_copied_fallback: 'Kopier denne lenken for å dele:', export_pdf: 'Eksporter PDF', export_csv: 'Eksporter til CSV', export_data: 'Lagre Backup (JSON)', import_data: 'Åpne Lokal Fil', show_weekends: 'Helger', clear_all: 'Nullstill', uke: 'UKE', weekdays_full: ['MAN','TIR','ONS','TOR','FRE','LØR','SØN'], weekdays_no_weekend: ['MAN','TIR','ONS','TOR','FRE'], months: ['Januar','Februar','Mars','April','Mai','Juni','Juli','August','September','Oktober','November','Desember'], new_event: 'Nytt element', edit_event: 'Rediger element', label_title: 'Tittel', label_start: 'Startdato', label_end: 'Sluttdato', label_color: 'Farge', label_notes: 'Notater', event_name_placeholder: 'F.eks. Konseptfase eller Workshop', save: 'Lagre', add_event_btn: 'Legg til element', delete: 'Slett', cancel: 'Avbryt', clear_title: 'Nullstill alt?', clear_description: 'Dette fjerner permanent alle prosjektdetaljer og elementer fra denne planleggeren. Handlingen kan ikke angres.', clear_events: (n) => `→ ${n} element${n === 1 ? '' : 'er'}`, clear_meta: '→ Tittel, beskrivelse og datoer', clear_confirm_prefix: 'Skriv', clear_confirm_word: 'SLETT', clear_confirm_suffix: 'for å bekrefte.', clear_button: 'Nullstill alt', label_time_off: 'Ferie / Fridag', view_tooltip: 'Bytt visning for flere detaljer', copy_client_link: 'Kopier klientlenke', sign_in_drive: 'Logg inn' }
 };
 
 let currentLang = localStorage.getItem('newslab-planner-lang') || 'en';
@@ -626,8 +641,8 @@ function applyStaticTranslations() { document.querySelectorAll('[data-i18n]').fo
 function updateLangToggle() { const toggle = document.getElementById('langToggleBtn'); if (currentLang === 'nb') { toggle.classList.add('on', 'is-nb'); } else { toggle.classList.remove('on', 'is-nb'); } }
 function setLanguage(lang) { if (!i18n[lang]) return; currentLang = lang; localStorage.setItem('newslab-planner-lang', lang); document.documentElement.lang = lang === 'nb' ? 'no' : 'en'; applyStaticTranslations(); updateLangToggle(); render(); }
 
-const PRESETS = ['cyan','pink','green','coral','yellow','lavender'];
-const PRESET_HEX = { cyan:{bg:'#d4f1ee',edge:'#a8ddd7'}, pink:{bg:'#f7d8ec',edge:'#e8b3d3'}, green:{bg:'#dcefcf',edge:'#b8d99e'}, coral:{bg:'#f1c9c0',edge:'#d99587'}, yellow:{bg:'#f5ecb8',edge:'#d9c876'}, lavender:{bg:'#ddd6ef',edge:'#b0a3d4'} };
+const PRESETS = ['cyan','pink','green','coral','yellow','lavender','grey','blue','mint','peach'];
+const PRESET_HEX = { cyan:{bg:'#d4f1ee',edge:'#a8ddd7'}, pink:{bg:'#f7d8ec',edge:'#e8b3d3'}, green:{bg:'#dcefcf',edge:'#b8d99e'}, coral:{bg:'#f1c9c0',edge:'#d99587'}, yellow:{bg:'#f5ecb8',edge:'#d9c876'}, lavender:{bg:'#ddd6ef',edge:'#b0a3d4'}, grey:{bg:'#e2e2e2',edge:'#b8b8b8'}, blue:{bg:'#d3e1f5',edge:'#a9bedc'}, mint:{bg:'#d4f0df',edge:'#a9ccb7'}, peach:{bg:'#fbe1cc',edge:'#dcb392'} };
 function resolveColor(c) { if (!c) return PRESET_HEX.cyan; if (typeof c === 'string' && c.startsWith('#')) return { bg: c, edge: darken(c, 0.22) }; return PRESET_HEX[c] || PRESET_HEX.cyan; }
 function darken(hex, amount) { const h = hex.replace('#',''); const r = parseInt(h.slice(0,2), 16); const g = parseInt(h.slice(2,4), 16); const b = parseInt(h.slice(4,6), 16); const f = 1 - amount; const c = (v) => Math.max(0, Math.round(v * f)).toString(16).padStart(2,'0'); return `#${c(r)}${c(g)}${c(b)}`; }
 
@@ -674,7 +689,7 @@ function loadState() {
   } catch(e){}
   
   const today = new Date(); const start = new Date(today.getFullYear(), today.getMonth(), 1); const end = addDays(start, 70);
-  return { title: 'Vampyr — Pre-teaser', desc: 'Pre-teaser, teaser and main campaign.', start: toISO(start), end: toISO(end), viewMode: 'vertical', currentWeekStart: toISO(startOfWeek(today)), showWeekends: true, events: [] };
+  return { title: '', desc: '', start: toISO(start), end: toISO(end), viewMode: 'vertical', currentWeekStart: toISO(startOfWeek(today)), showWeekends: true, events: [] };
 }
 
 let state = loadState();
@@ -754,7 +769,6 @@ function render() {
   document.getElementById('nextWeekBtn').style.display = state.viewMode === 'single_week' ? 'inline-flex' : 'none';
 
   document.getElementById('projectTitle').value = state.title; document.getElementById('projectDesc').value = state.desc; document.getElementById('projectStart').value = state.start || ''; document.getElementById('projectEnd').value = state.end || '';
-  const now = new Date(); document.getElementById('metaDate').textContent = `${String(now.getDate()).padStart(2,'0')}.${String(now.getMonth()+1).padStart(2,'0')}.${now.getFullYear()}`;
   document.getElementById('weekendToggle').classList.toggle('on', !!state.showWeekends);
   
   let hzScrollLeft = 0;
@@ -1349,6 +1363,16 @@ document.addEventListener('keydown', (e) => {
 });
 
 // ============ JSON EXPORT / IMPORT / SHARE / CSV ============
+document.getElementById('topCopyLinkBtn')?.addEventListener('click', (e) => {
+  try {
+    state.lang = currentLang; 
+    const encoded = btoa(unescape(encodeURIComponent(JSON.stringify(state)))); 
+    const baseUrl = window.location.href.split('#')[0]; 
+    const shareUrl = baseUrl + '#plan=' + encoded + '&ro=1';
+    if (navigator.clipboard && window.isSecureContext) { navigator.clipboard.writeText(shareUrl).then(() => { customAlert(t('link_copied'), 'Success'); }); } else { customPrompt(t('link_copied_fallback'), shareUrl, () => {}); }
+  } catch (err) { customAlert("Failed to generate link.", "Error"); }
+});
+
 document.getElementById('shareLinkBtn')?.addEventListener('click', (e) => {
   document.getElementById('settingsMenu').classList.remove('open');
   try {
