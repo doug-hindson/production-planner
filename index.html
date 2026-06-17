@@ -474,6 +474,15 @@
 <div class="modal-backdrop" id="folderPickerModal" style="z-index: 200;">
   <div class="modal" style="max-width: 400px; padding: 24px; border-radius: 0;">
     <h2 class="modal-title" style="font-size: 16px; margin-bottom: 12px; font-weight: 600;">Select Workspace Folder</h2>
+    
+    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
+        <div style="display: flex; align-items: center; gap: 8px; overflow: hidden; max-width: 70%;">
+            <button class="action-btn" id="folderPickerBack" style="padding: 2px 6px; font-size: 10px;" disabled>&larr; Back</button>
+            <span id="folderPickerCurrentName" style="font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">My Drive</span>
+        </div>
+        <button class="action-btn primary" id="folderPickerSelectCurrent" style="padding: 4px 8px; font-size: 10px;">Select this folder</button>
+    </div>
+
     <div id="folderPickerList" style="max-height: 300px; overflow-y: auto; border: 1px solid var(--line); margin-bottom: 24px; background: var(--bg);">
        <div style="padding: 12px; text-align: center; color: var(--ink-faint);">Loading folders...</div>
     </div>
@@ -606,31 +615,47 @@ document.getElementById('btnDriveLogin')?.addEventListener('click', () => { if (
 document.getElementById('topSignInBtn')?.addEventListener('click', () => { document.getElementById('btnDriveLogin')?.click(); });
 
 // Custom Drive Picker Logic
+let pickerHistory = [{id: 'root', name: 'My Drive'}];
+
 document.getElementById('btnBrowseFolder')?.addEventListener('click', async () => {
   const token = gapi.client.getToken()?.access_token;
   if (!token) return customAlert("Please sign in first.");
   
+  pickerHistory = [{id: 'root', name: 'My Drive'}];
   document.getElementById('folderPickerModal').classList.add('open');
+  loadPickerFolders();
+});
+
+async function loadPickerFolders() {
   const listContainer = document.getElementById('folderPickerList');
+  const backBtn = document.getElementById('folderPickerBack');
+  const currentNameEl = document.getElementById('folderPickerCurrentName');
+
+  const currentFolder = pickerHistory[pickerHistory.length - 1];
+
+  currentNameEl.textContent = currentFolder.name;
+  backBtn.disabled = pickerHistory.length <= 1;
+
   listContainer.innerHTML = '<div style="padding: 12px; text-align: center; font-family: \'JetBrains Mono\', monospace; font-size: 11px; color: var(--ink-faint);">Loading folders...</div>';
 
   try {
     const response = await gapi.client.drive.files.list({
-      q: "mimeType='application/vnd.google-apps.folder' and trashed=false",
-      orderBy: "modifiedTime desc",
-      pageSize: 50,
+      q: `'${currentFolder.id}' in parents and mimeType='application/vnd.google-apps.folder' and trashed=false`,
+      orderBy: "name",
+      pageSize: 100,
       fields: "files(id, name)",
       supportsAllDrives: true,
       includeItemsFromAllDrives: true
     });
 
     const folders = response.result.files;
+    listContainer.innerHTML = '';
+
     if (!folders || folders.length === 0) {
-        listContainer.innerHTML = '<div style="padding: 12px; text-align: center; font-family: \'JetBrains Mono\', monospace; font-size: 11px; color: var(--ink-soft);">No folders found.</div>';
+        listContainer.innerHTML = '<div style="padding: 12px; text-align: center; font-family: \'JetBrains Mono\', monospace; font-size: 11px; color: var(--ink-soft);">No subfolders found.</div>';
         return;
     }
 
-    listContainer.innerHTML = '';
     folders.forEach(folder => {
         const item = document.createElement('div');
         item.style.padding = '10px 12px';
@@ -638,21 +663,39 @@ document.getElementById('btnBrowseFolder')?.addEventListener('click', async () =
         item.style.cursor = 'pointer';
         item.style.fontFamily = "'JetBrains Mono', monospace";
         item.style.fontSize = '12px';
+        item.style.display = 'flex';
+        item.style.justifyContent = 'space-between';
+        item.style.alignItems = 'center';
+        
         item.onmouseover = () => item.style.background = 'var(--line-soft)';
         item.onmouseout = () => item.style.background = 'transparent';
-        item.textContent = `📁 ${folder.name}`;
+        item.innerHTML = `<span style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">📁 ${escapeHtml(folder.name)}</span> <span style="font-size: 10px; color: var(--ink-faint);">&rarr;</span>`;
+        
         item.onclick = () => {
-            localStorage.setItem('newslab-drive-folder', folder.id);
-            localStorage.setItem('newslab-drive-folder-name', folder.name);
-            document.getElementById('driveFolderNameLabel').textContent = folder.name;
-            document.getElementById('folderPickerModal').classList.remove('open');
-            fetchDriveFiles();
+            pickerHistory.push({id: folder.id, name: folder.name});
+            loadPickerFolders();
         };
         listContainer.appendChild(item);
     });
   } catch (err) {
     listContainer.innerHTML = '<div style="padding: 12px; text-align: center; font-family: \'JetBrains Mono\', monospace; font-size: 11px; color: var(--danger);">Failed to load folders. Check your connection.</div>';
   }
+}
+
+document.getElementById('folderPickerBack')?.addEventListener('click', () => {
+    if (pickerHistory.length > 1) {
+        pickerHistory.pop();
+        loadPickerFolders();
+    }
+});
+
+document.getElementById('folderPickerSelectCurrent')?.addEventListener('click', () => {
+    const currentFolder = pickerHistory[pickerHistory.length - 1];
+    localStorage.setItem('newslab-drive-folder', currentFolder.id);
+    localStorage.setItem('newslab-drive-folder-name', currentFolder.name);
+    document.getElementById('driveFolderNameLabel').textContent = currentFolder.name;
+    document.getElementById('folderPickerModal').classList.remove('open');
+    fetchDriveFiles();
 });
 
 document.getElementById('folderPickerCancel')?.addEventListener('click', () => {
