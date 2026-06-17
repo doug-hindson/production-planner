@@ -117,9 +117,9 @@
   .vertical-cell:last-child { border-right: none; }
   
   /* Strict "Today" styling */
-  .vertical-cell.today { outline: 2px solid var(--ink); outline-offset: -2px; z-index: 4; background: rgba(20, 19, 15, 0.02); border-radius: 4px; }
-  .hz-day.today { outline: 2px solid var(--ink); outline-offset: -2px; z-index: 4; background: rgba(20, 19, 15, 0.02); border-radius: 4px; }
-  .hz-col.today { outline: 2px solid var(--ink); outline-offset: -2px; z-index: 2; background: rgba(20, 19, 15, 0.02); border-radius: 4px; }
+  .vertical-cell.today { outline: 1px solid var(--ink); outline-offset: -1px; z-index: 1; background: rgba(20, 19, 15, 0.02); border-radius: 4px; }
+  .hz-day.today { outline: 1px solid var(--ink); outline-offset: -1px; z-index: 1; background: rgba(20, 19, 15, 0.02); border-radius: 4px; }
+  .hz-col.today { outline: 1px solid var(--ink); outline-offset: -1px; z-index: 1; background: rgba(20, 19, 15, 0.02); border-radius: 4px; }
 
   /* OVERRIDES FOR SINGLE WEEK */
   body[data-view="single_week"] .vertical-cell { min-height: 40vh; }
@@ -200,7 +200,7 @@
   .ov-grid { position: relative; width: 100%; background: var(--bg-card); }
   .ov-line { position: absolute; top: 0; bottom: 0; width: 1px; background: var(--line-soft); z-index: 1; pointer-events: none; }
   
-  .today-line { background: var(--ink); z-index: 5; pointer-events: none; }
+  .today-line { position: absolute; top: 0; bottom: 0; width: 1px; background: var(--ink); z-index: 5; pointer-events: none; }
   .today-tag { position: absolute; top: 4px; left: 0; transform: translateX(-50%); background: var(--ink); color: var(--bg); font-family: 'JetBrains Mono', monospace; font-size: 9px; padding: 4px 6px; letter-spacing: 0.1em; text-transform: uppercase; white-space: nowrap; border-radius: 0; line-height: 1; z-index: 10; }
 
   body[data-view="overview"] .phase-layer { left: 0; }
@@ -622,13 +622,13 @@ document.getElementById('btnDriveLogin')?.addEventListener('click', () => { if (
 document.getElementById('topSignInBtn')?.addEventListener('click', () => { document.getElementById('btnDriveLogin')?.click(); });
 
 // Custom Drive Picker Logic
-let pickerHistory = [{id: 'root', name: 'My Drive'}];
+let pickerHistory = [{id: 'top', name: 'Google Drive'}];
 
 document.getElementById('btnBrowseFolder')?.addEventListener('click', async () => {
   const token = gapi.client.getToken()?.access_token;
   if (!token) return customAlert("Please sign in first.");
   
-  pickerHistory = [{id: 'root', name: 'My Drive'}];
+  pickerHistory = [{id: 'top', name: 'Google Drive'}];
   document.getElementById('folderPickerModal').classList.add('open');
   loadPickerFolders();
 });
@@ -637,13 +637,56 @@ async function loadPickerFolders() {
   const listContainer = document.getElementById('folderPickerList');
   const backBtn = document.getElementById('folderPickerBack');
   const currentNameEl = document.getElementById('folderPickerCurrentName');
+  const selectBtn = document.getElementById('folderPickerSelectCurrent');
 
   const currentFolder = pickerHistory[pickerHistory.length - 1];
 
   currentNameEl.textContent = currentFolder.name;
   backBtn.disabled = pickerHistory.length <= 1;
 
+  if (currentFolder.id === 'top') {
+      selectBtn.style.display = 'none';
+  } else {
+      selectBtn.style.display = 'inline-flex';
+  }
+
   listContainer.innerHTML = '<div style="padding: 12px; text-align: center; font-family: \'JetBrains Mono\', monospace; font-size: 11px; color: var(--ink-faint);">Loading folders...</div>';
+
+  if (currentFolder.id === 'top') {
+      const drivesList = [{id: 'root', name: 'My Drive'}];
+      try {
+          const drivesRes = await gapi.client.drive.drives.list({pageSize: 100});
+          if (drivesRes.result.drives) {
+              drivesRes.result.drives.forEach(d => {
+                  drivesList.push({id: d.id, name: d.name});
+              });
+          }
+      } catch(e) { console.error(e); }
+      
+      listContainer.innerHTML = '';
+      drivesList.forEach(drive => {
+          const item = document.createElement('div');
+          item.style.padding = '10px 12px';
+          item.style.borderBottom = '1px solid var(--line)';
+          item.style.cursor = 'pointer';
+          item.style.fontFamily = "'JetBrains Mono', monospace";
+          item.style.fontSize = '12px';
+          item.style.display = 'flex';
+          item.style.justifyContent = 'space-between';
+          item.style.alignItems = 'center';
+          
+          item.onmouseover = () => item.style.background = 'var(--line-soft)';
+          item.onmouseout = () => item.style.background = 'transparent';
+          item.innerHTML = `<span style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">☁️ ${escapeHtml(drive.name)}</span> <span style="font-size: 10px; color: var(--ink-faint);">&rarr;</span>`;
+          
+          item.onclick = () => {
+              pickerHistory.push({id: drive.id, name: drive.name});
+              loadPickerFolders();
+          };
+          listContainer.appendChild(item);
+      });
+      return;
+  }
 
   try {
     const response = await gapi.client.drive.files.list({
