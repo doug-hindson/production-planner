@@ -877,7 +877,7 @@ function bindDayCellEvents(cell, day) {
   cell.addEventListener('dragover', (e) => { if(window.__isReadOnly) return; e.preventDefault(); e.dataTransfer.dropEffect = 'move'; cell.classList.add('drag-hover'); });
   cell.addEventListener('dragleave', () => cell.classList.remove('drag-hover'));
   cell.addEventListener('drop', (e) => {
-    if(window.__isReadOnly) return; e.preventDefault(); cell.classList.remove('drag-hover'); const dataStr = e.dataTransfer.getData('application/json'); if (!dataStr) return;
+    if(window.__isReadOnly) return; e.preventDefault(); cell.classList.remove('drag-hover'); document.body.classList.remove('is-dragging'); const dataStr = e.dataTransfer.getData('application/json'); if (!dataStr) return;
     try { const data = JSON.parse(dataStr); const ev = state.events.find(i => i.id === data.id); if (!ev) return;
       const targetDate = cell.dataset.date; const dur = diffDays(ev.start, ev.end); const newStart = toISO(addDays(fromISO(targetDate), -data.offsetDays));
       ev.start = newStart; ev.end = toISO(addDays(fromISO(newStart), dur)); saveState(); render();
@@ -899,11 +899,14 @@ function bindEventBarEvents(bar, ev, pxPerDay, segStart) {
   if (!window.__isReadOnly && state.viewMode !== 'overview') {
     bar.addEventListener('dragstart', (e) => {
       window.__isDraggingOrResizing = true; 
-      document.body.classList.add('is-dragging');
       const rect = bar.getBoundingClientRect(); let offsetDaysInSeg = Math.floor((e.clientX - rect.left) / pxPerDay); 
       const maxSpan = Math.round(rect.width / pxPerDay); offsetDaysInSeg = Math.max(0, Math.min(offsetDaysInSeg, maxSpan - 1));
       const totalOffsetDays = diffDays(ev.start, toISO(segStart)) + offsetDaysInSeg;
-      e.dataTransfer.effectAllowed = 'move'; e.dataTransfer.setData('application/json', JSON.stringify({ id: ev.id, offsetDays: totalOffsetDays })); setTimeout(() => bar.style.opacity = '0.3', 0);
+      e.dataTransfer.effectAllowed = 'move'; e.dataTransfer.setData('application/json', JSON.stringify({ id: ev.id, offsetDays: totalOffsetDays })); 
+      setTimeout(() => { 
+          bar.style.opacity = '0.3'; 
+          document.body.classList.add('is-dragging'); 
+      }, 0);
     });
     bar.addEventListener('dragend', () => { 
       bar.style.opacity = ''; 
@@ -1484,6 +1487,7 @@ document.addEventListener('mouseup', (e) => {
       saveState(false);
   }
   if (window.__resizeData) { saveState(); window.__resizeData = null; window.__resizeHoverDate = null; document.body.classList.remove('is-resizing'); render(); setTimeout(() => window.__isDraggingOrResizing = false, 100); }
+  document.body.classList.remove('is-dragging');
 });
 
 function setupStickyHeader() {
