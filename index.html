@@ -16,9 +16,9 @@
   .sticky-zone.compact { padding-top: 14px; }
   header.top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 36px; padding-bottom: 20px; border-bottom: 1px solid var(--line); transition: margin 0.25s ease, padding 0.25s ease; }
   .sticky-zone.compact header.top { margin-bottom: 14px; padding-bottom: 10px; }
-  .brand { font-size: 15px; font-weight: 500; letter-spacing: 0.02em; color: var(--ink-soft); }
-  .brand-mark { font-family: 'JetBrains Mono', monospace; font-size: 15px; color: var(--ink-soft); letter-spacing: 0.04em; }
-  .header-meta { text-align: right; font-family: 'JetBrains Mono', monospace; font-size: 13px; color: var(--ink-faint); letter-spacing: 0.06em; text-transform: uppercase; }
+  .brand { font-size: 13px; font-weight: 500; letter-spacing: 0.02em; color: var(--ink-soft); }
+  .brand-mark { font-family: 'JetBrains Mono', monospace; font-size: 13px; color: var(--ink-soft); letter-spacing: 0.04em; }
+  .header-meta { text-align: right; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--ink-faint); letter-spacing: 0.06em; text-transform: uppercase; }
   .title-row { display: grid; grid-template-columns: auto 1fr; gap: 64px; margin-bottom: 32px; align-items: start; transition: gap 0.25s ease, margin 0.25s ease; }
   .sticky-zone.compact .title-row { grid-template-columns: 1fr; gap: 0; margin-bottom: 16px; }
   .project-title { font-weight: 400; font-size: 64px; line-height: 1; letter-spacing: -0.035em; color: var(--ink); background: transparent; border: none; outline: none; width: 100%; padding: 0; transition: font-size 0.25s ease; }
@@ -34,8 +34,8 @@
   .ctl input[type="date"] { font-family: 'JetBrains Mono', monospace; font-size: 13px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--ink); background: transparent; border: none; border-bottom: 1px solid var(--line); padding: 4px 0; outline: none; cursor: pointer; }
   .ctl input:focus { border-bottom-color: var(--ink); }
   .toggle-switch { cursor: pointer; user-select: none; }
-  .toggle-switch-track { width: 28px; height: 14px; background: var(--line); border-radius: 999px; position: relative; transition: background 0.15s ease; }
-  .toggle-switch-track::after { content: ''; position: absolute; top: 2px; left: 2px; width: 10px; height: 10px; background: var(--bg-card); border-radius: 50%; transition: transform 0.15s ease; }
+  .toggle-switch-track { width: 28px; height: 14px; background: var(--line); border-radius: 0; position: relative; transition: background 0.15s ease; }
+  .toggle-switch-track::after { content: ''; position: absolute; top: 2px; left: 2px; width: 10px; height: 10px; background: var(--bg-card); border-radius: 0; transition: transform 0.15s ease; }
   .toggle-switch.on .toggle-switch-track { background: var(--ink); }
   .toggle-switch.on .toggle-switch-track::after { transform: translateX(14px); }
   .lang-toggle-wrap { display: flex; align-items: center; gap: 6px; margin: 0; }
@@ -45,7 +45,7 @@
   input[type="checkbox"] { accent-color: var(--ink); width: 16px; height: 16px; cursor: pointer; }
   
   /* Buttons & Toggles */
-  .nav-btn, .action-btn { font-family: 'JetBrains Mono', monospace; font-size: 13px; text-transform: uppercase; letter-spacing: 0.08em; background: transparent; border: 1px solid var(--line); color: var(--ink); padding: 10px 16px; cursor: pointer; transition: all 0.15s ease; display: inline-flex; align-items: center; justify-content: center; }
+  .nav-btn, .action-btn { font-family: 'JetBrains Mono', monospace; font-size: 13px; text-transform: uppercase; letter-spacing: 0.08em; background: transparent; border: 1px solid var(--line); border-radius: 0; color: var(--ink); padding: 10px 16px; cursor: pointer; transition: all 0.15s ease; display: inline-flex; align-items: center; justify-content: center; }
   .nav-btn:hover, .action-btn:hover { border-color: var(--ink); background: var(--ink); color: var(--bg); }
   .action-btn.primary { background: var(--ink); color: var(--bg); border-color: var(--ink); }
   .action-btn.primary:hover { background: transparent; color: var(--ink); }
@@ -53,14 +53,14 @@
   .action-btn.ghost-danger:hover { border-color: var(--danger); background: var(--danger); color: var(--bg); }
   
   .view-toggle-wrapper { position: relative; }
-  .view-toggle-tooltip { position: absolute; bottom: calc(100% + 8px); left: 50%; transform: translateX(-50%); background: var(--ink); color: var(--bg); padding: 6px 10px; border-radius: 4px; font-family: 'JetBrains Mono', monospace; font-size: 9px; text-transform: uppercase; letter-spacing: 0.08em; white-space: nowrap; opacity: 0; z-index: 100; display: none; align-items: center; gap: 8px; }
+  .view-toggle-tooltip { position: absolute; bottom: calc(100% + 8px); left: 50%; transform: translateX(-50%); background: var(--ink); color: var(--bg); padding: 6px 10px; border-radius: 0; font-family: 'JetBrains Mono', monospace; font-size: 9px; text-transform: uppercase; letter-spacing: 0.08em; white-space: nowrap; opacity: 0; z-index: 100; display: none; align-items: center; gap: 8px; }
   .view-toggle-tooltip::after { content: ''; position: absolute; top: 100%; left: 50%; transform: translateX(-50%); border-width: 4px; border-style: solid; border-color: var(--ink) transparent transparent transparent; }
   body.read-only .view-toggle-tooltip:not(.dismissed) { display: flex; animation: slideUpFade 0.4s ease forwards 1s; pointer-events: auto; }
   .view-toggle-tooltip-close { background: transparent; border: none; color: var(--bg); font-size: 12px; cursor: pointer; padding: 0 4px; opacity: 0.7; }
   .view-toggle-tooltip-close:hover { opacity: 1; }
   @keyframes slideUpFade { from { opacity: 0; transform: translate(-50%, 4px); } to { opacity: 1; transform: translate(-50%, 0); } }
 
-  .view-toggle { display: flex; border: 1px solid var(--line); border-radius: 2px; overflow: hidden; }
+  .view-toggle { display: flex; border: 1px solid var(--line); border-radius: 0; overflow: hidden; }
   .view-toggle button { border: none; font-family: 'JetBrains Mono', monospace; font-size: 12px; text-transform: uppercase; letter-spacing: 0.08em; padding: 10px 14px; cursor: pointer; background: transparent; color: var(--ink-soft); transition: all 0.15s ease; }
   .view-toggle button.active { background: var(--line); color: var(--ink); font-weight: 500; }
   .view-toggle button:hover:not(.active) { background: rgba(0,0,0,0.03); }
@@ -70,7 +70,7 @@
   .cloud-status.saving { color: #d99587; }
   .footer-controls { display: flex; justify-content: flex-end; margin-top: 16px; margin-bottom: 24px; }
   .settings-dropdown-wrap { position: relative; }
-  .settings-menu { position: absolute; bottom: calc(100% + 8px); right: 0; background: var(--bg-card); border: 1px solid var(--ink); z-index: 100; min-width: 260px; display: none; flex-direction: column; box-shadow: 0 -6px 16px rgba(0,0,0,0.08); max-height: 80vh; overflow-y: auto; }
+  .settings-menu { position: absolute; bottom: calc(100% + 8px); right: 0; background: var(--bg-card); border: 1px solid var(--ink); border-radius: 0; z-index: 100; min-width: 260px; display: none; flex-direction: column; box-shadow: 0 -6px 16px rgba(0,0,0,0.08); max-height: 80vh; overflow-y: auto; }
   .settings-menu.open { display: flex; }
   .settings-menu-item { display: flex; width: 100%; text-align: left; background: transparent; border: none; padding: 12px 16px; font-family: 'JetBrains Mono', monospace; font-size: 12px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--ink); cursor: pointer; }
   .settings-menu-item:hover { background: var(--ink); color: var(--bg); }
@@ -81,7 +81,7 @@
   .settings-toggle-row:hover { background: rgba(0,0,0,0.03); }
   .drive-panel { padding: 12px 16px; background: rgba(0,0,0,0.02); display: flex; flex-direction: column; gap: 10px; }
   .drive-panel label { font-family: 'JetBrains Mono', monospace; font-size: 9px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--ink-soft); }
-  .drive-input { width: 100%; padding: 6px; font-family: 'JetBrains Mono', monospace; font-size: 12px; border: 1px solid var(--line); background: var(--bg-card); color: var(--ink); outline: none; }
+  .drive-input { width: 100%; padding: 6px; font-family: 'JetBrains Mono', monospace; font-size: 12px; border: 1px solid var(--line); border-radius: 0; background: var(--bg-card); color: var(--ink); outline: none; }
   .drive-input:focus { border-color: var(--ink); }
   
   .month-label { font-weight: 500; font-size: 20px; letter-spacing: -0.02em; color: var(--ink); }
@@ -115,7 +115,7 @@
   .uke-cell .uke-num { font-size: 13px; font-weight: 500; color: var(--ink); }
   .vertical-cell { padding: 6px 8px; border-right: 1px solid var(--line-soft); min-height: 55px; }
   .vertical-cell:last-child { border-right: none; }
-  .vertical-cell.today .day-num { background: var(--ink); color: var(--bg); border-radius: 50%; width: 24px; height: 24px; display: inline-flex; align-items: center; justify-content: center; font-size: 12px; }
+  .vertical-cell.today .day-num { background: var(--ink); color: var(--bg); border-radius: 0; width: 24px; height: 24px; display: inline-flex; align-items: center; justify-content: center; font-size: 12px; }
 
   /* OVERRIDES FOR SINGLE WEEK */
   body[data-view="single_week"] .vertical-cell { min-height: 40vh; }
@@ -173,7 +173,7 @@
   .hz-day.end-of-week { border-right: 1px solid var(--line); }
   .hz-day .wk { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--ink-faint); }
   .hz-day .nm { font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 500; color: var(--ink); }
-  .hz-day.today .nm { background: var(--ink); color: var(--bg); border-radius: 50%; width: 24px; height: 24px; display: inline-flex; justify-content: center; align-items: center; }
+  .hz-day.today .nm { background: var(--ink); color: var(--bg); border-radius: 0; width: 24px; height: 24px; display: inline-flex; justify-content: center; align-items: center; }
   
   .hz-grid { display: flex; position: relative; min-height: 50vh; }
   .hz-col { width: 56px; flex-shrink: 0; border-right: 1px dashed var(--line-soft); position: relative; box-sizing: border-box; }
@@ -181,7 +181,7 @@
   
   /* Horizontal Bar Logic overrides */
   body[data-view="horizontal"] .event-bar.hz-single-day {
-      overflow: visible !important; justify-content: center; border-radius: 6px;
+      overflow: visible !important; justify-content: center; border-radius: 0;
   }
   body[data-view="horizontal"] .event-bar.hz-single-day .event-label {
       position: absolute; left: 100%; margin-left: 8px;
@@ -207,7 +207,7 @@
   /* CRITICAL CSS: OVERRIDES FOR OVERVIEW EVENT BARS */
   body[data-view="overview"] .event-bar {
       position: relative; top: 0; /* Overrides absolute positioning to allow natural flow */
-      min-height: 44px; height: auto; padding: 8px 10px; align-items: flex-start; overflow: visible;
+      min-height: 44px; height: auto; padding: 8px 10px; align-items: flex-start; overflow: visible; border-radius: 0;
   }
   body[data-view="overview"] .event-label { width: 100%; min-width: 120px; white-space: normal; line-height: 1.2; }
   body[data-view="overview"] .event-bar.ov-single-day .event-label {
@@ -239,7 +239,7 @@
       font-family: 'JetBrains Mono', monospace; font-size: 11px;
       text-transform: uppercase; letter-spacing: 0.1em;
       color: var(--ink-soft); background: var(--bg-card);
-      border: 1px solid var(--line); border-radius: 4px; padding: 4px 8px;
+      border: 1px solid var(--line); border-radius: 0; padding: 4px 8px;
       white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: calc(100% - 16px);
       box-shadow: 0 1px 3px rgba(0,0,0,0.02); height: max-content;
   }
@@ -249,26 +249,26 @@
   /* EVENT BARS */
   .phase-layer { position: absolute; left: 70px; right: 0; top: 0; bottom: 0; pointer-events: none; z-index: 2; }
   body[data-view="horizontal"] .phase-layer { left: 0; }
-  .event-bar { position: absolute; height: 30px; display: flex; align-items: center; padding: 0 10px; font-family: 'JetBrains Mono', monospace; font-size: 12px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--ink); pointer-events: auto; cursor: grab; transition: filter 0.12s ease, transform 0.12s ease, opacity 0.2s ease; border: 1px solid; border-radius: 4px; box-shadow: 0 2px 4px rgba(0,0,0,0.03); -ms-overflow-style: none; scrollbar-width: none; }
+  .event-bar { position: absolute; height: 30px; display: flex; align-items: center; padding: 0 10px; font-family: 'JetBrains Mono', monospace; font-size: 12px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--ink); pointer-events: auto; cursor: grab; transition: filter 0.12s ease, transform 0.12s ease, opacity 0.2s ease; border: 1px solid; border-radius: 0; box-shadow: 0 2px 4px rgba(0,0,0,0.03); -ms-overflow-style: none; scrollbar-width: none; }
   .event-bar::-webkit-scrollbar { display: none; }
   .event-bar:active { cursor: grabbing; }
   .event-bar:hover { filter: brightness(0.96); transform: translateY(-1px); z-index: 10; }
   .event-bar.is-preview { opacity: 0.5; border-style: dashed; z-index: 20; pointer-events: none !important; }
-  .event-bar.continues-left { border-left: 1px dashed var(--ink); border-top-left-radius: 0; border-bottom-left-radius: 0; padding-left: 6px; }
-  .event-bar.continues-right { border-right: 1px dashed var(--ink); border-top-right-radius: 0; border-bottom-right-radius: 0; }
+  .event-bar.continues-left { border-left: 1px dashed var(--ink); padding-left: 6px; }
+  .event-bar.continues-right { border-right: 1px dashed var(--ink); }
   .event-label { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; pointer-events: none; }
   .event-notes { display: none; }
   .resize-handle { position: absolute; top: 0; bottom: 0; width: 12px; cursor: ew-resize; z-index: 5; }
   .resize-handle.left { left: 0; }
   .resize-handle.right { right: 0; }
 
-  .day-add-btn { position: absolute; top: 3px; right: 3px; width: 18px; height: 18px; border-radius: 50%; background: var(--ink); color: var(--bg); font-family: 'JetBrains Mono', monospace; font-size: 13px; line-height: 1; display: none; align-items: center; justify-content: center; cursor: pointer; border: none; padding: 0; z-index: 3; }
+  .day-add-btn { position: absolute; top: 3px; right: 3px; width: 18px; height: 18px; border-radius: 0; background: var(--ink); color: var(--bg); font-family: 'JetBrains Mono', monospace; font-size: 13px; line-height: 1; display: none; align-items: center; justify-content: center; cursor: pointer; border: none; padding: 0; z-index: 3; }
   .day-cell:hover .day-add-btn { display: inline-flex; }
 
   /* ===== Modal ===== */
   .modal-backdrop { position: fixed; inset: 0; background: rgba(20,19,15,0.4); backdrop-filter: blur(4px); z-index: 100; display: none; align-items: center; justify-content: center; padding: 40px; }
   .modal-backdrop.open { display: flex; }
-  .modal { background: var(--bg-card); border: 1px solid var(--line); width: 100%; max-width: 480px; padding: 32px; position: relative; max-height: 90vh; overflow-y: auto; }
+  .modal { background: var(--bg-card); border: 1px solid var(--line); width: 100%; max-width: 480px; padding: 32px; position: relative; max-height: 90vh; overflow-y: auto; border-radius: 0; }
   .modal-title { font-weight: 500; font-size: 24px; letter-spacing: -0.025em; margin-bottom: 24px; }
   .modal-close { position: absolute; top: 20px; right: 20px; background: transparent; border: none; font-family: 'JetBrains Mono', monospace; font-size: 14px; cursor: pointer; color: var(--ink-soft); }
   .modal-close:hover { color: var(--ink); }
@@ -278,7 +278,7 @@
   .field input:focus, .field textarea:focus { border-bottom-color: var(--ink); }
   .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
   .color-picker { display: flex; gap: 8px; margin-top: 6px; flex-wrap: wrap; align-items: center; }
-  .color-swatch { width: 32px; height: 24px; border: 1px solid; border-radius: 4px; cursor: pointer; transition: transform 0.12s ease; position: relative; }
+  .color-swatch { width: 32px; height: 24px; border: 1px solid; border-radius: 0; cursor: pointer; transition: transform 0.12s ease; position: relative; }
   .color-swatch:hover { transform: translateY(-2px); }
   .color-swatch.selected { outline: 2px solid var(--ink); outline-offset: 2px; }
   .custom-swatch.empty { background: repeating-linear-gradient(45deg, var(--bg-card), var(--bg-card) 4px, var(--line) 4px, var(--line) 5px); border-color: var(--line); }
@@ -333,7 +333,7 @@
         <div class="brand-mark" data-i18n="brand_mark">PRODUCTION PLANNER</div>
       </div>
       <div class="header-meta" style="display:flex; align-items:center; gap: 12px;">
-        <button class="action-btn ghost-danger" id="topSignInBtn" data-i18n="sign_in_drive" style="display: none; background: #fbeae9; color: var(--danger); font-weight: 500; font-size: 11px; padding: 6px 12px; border-radius: 4px;">Sign in</button>
+        <button class="action-btn ghost-danger" id="topSignInBtn" data-i18n="sign_in_drive" style="display: none; background: #fbeae9; color: var(--danger); font-weight: 500; font-size: 11px; padding: 6px 12px; border-radius: 0;">Sign in</button>
         <div class="cloud-status" id="cloudStatus" style="display: none;"></div>
         <button class="action-btn" id="topCopyLinkBtn" data-i18n="copy_client_link" style="font-weight: 500;">Copy Client Link</button>
       </div>
@@ -399,7 +399,7 @@
           <div id="driveWorkspaceSection" style="display: none; flex-direction: column; gap: 10px;">
             <div>
               <label>Workspace Folder</label>
-              <div style="display: flex; align-items: center; gap: 8px; margin-top: 4px; margin-bottom: 8px; padding: 6px; background: var(--bg); border: 1px solid var(--line); border-radius: 4px;">
+              <div style="display: flex; align-items: center; gap: 8px; margin-top: 4px; margin-bottom: 8px; padding: 6px; background: var(--bg); border: 1px solid var(--line); border-radius: 0;">
                 <span id="driveFolderNameLabel" style="flex-grow: 1; font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--ink-soft); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Saved Folder</span>
                 <button class="action-btn" id="btnBrowseFolder" style="padding: 4px 8px; font-size: 10px; border-color: var(--line-soft);">Browse</button>
               </div>
@@ -458,7 +458,7 @@
 
 <!-- DIALOG MODAL: Replaces native alert/prompt boxes -->
 <div class="modal-backdrop" id="dialogModal" style="z-index: 200;">
-  <div class="modal" style="max-width: 400px; padding: 24px;">
+  <div class="modal" style="max-width: 400px; padding: 24px; border-radius: 0;">
     <h2 class="modal-title" id="dialogTitle" style="font-size: 16px; margin-bottom: 12px; font-weight: 600;"></h2>
     <div id="dialogMessage" style="font-size: 14px; color: var(--ink-soft); margin-bottom: 20px; line-height: 1.5;"></div>
     <input type="text" id="dialogInput" style="width: 100%; font-size: 14px; color: var(--ink); background: transparent; border: none; border-bottom: 1px solid var(--line); padding: 6px 0; outline: none; margin-bottom: 24px; display: none; font-family: 'JetBrains Mono', monospace;" />
@@ -470,7 +470,7 @@
 </div>
 
 <div class="modal-backdrop" id="modal">
-  <div class="modal">
+  <div class="modal" style="border-radius: 0;">
     <button class="modal-close" id="modalClose">✕</button>
     <h2 class="modal-title" id="modalTitle">—</h2>
     <div id="modalBody"></div>
@@ -834,6 +834,12 @@ function bindEventBarEvents(bar, ev, pxPerDay, segStart) {
 
 // ============ RENDERERS ============
 function render() {
+  const scrollX = window.scrollX;
+  const scrollY = window.scrollY;
+  let hzScrollLeft = 0;
+  const hzContainer = document.querySelector('.hz-layout');
+  if (hzContainer) hzScrollLeft = hzContainer.scrollLeft;
+
   document.body.setAttribute('data-view', state.viewMode);
   document.getElementById('viewOverviewBtn').classList.toggle('active', state.viewMode === 'overview');
   document.getElementById('viewHorizontalBtn').classList.toggle('active', state.viewMode === 'horizontal');
@@ -846,10 +852,6 @@ function render() {
   document.getElementById('projectTitle').value = state.title; document.getElementById('projectDesc').value = state.desc; document.getElementById('projectStart').value = state.start || ''; document.getElementById('projectEnd').value = state.end || '';
   document.getElementById('weekendToggle').classList.toggle('on', !!state.showWeekends);
   
-  let hzScrollLeft = 0;
-  const hzContainer = document.querySelector('.hz-layout');
-  if (hzContainer) hzScrollLeft = hzContainer.scrollLeft;
-  
   if (state.viewMode === 'horizontal') { renderHorizontalCalendar(); } 
   else if (state.viewMode === 'overview') { renderOverviewCalendar(); }
   else { renderVerticalCalendar(); }
@@ -857,7 +859,11 @@ function render() {
   const newHzContainer = document.querySelector('.hz-layout');
   if (newHzContainer && state.viewMode === 'horizontal') {
     newHzContainer.scrollLeft = hzScrollLeft;
+    setTimeout(() => newHzContainer.scrollLeft = hzScrollLeft, 0);
   }
+  
+  window.scrollTo(scrollX, scrollY);
+  setTimeout(() => window.scrollTo(scrollX, scrollY), 0);
   
   setupScrollAnchor(); setupStickyHeader();
 }
@@ -954,15 +960,22 @@ function renderVerticalCalendar() {
       return durB - durA || fromISO(a.start).getTime() - fromISO(b.start).getTime();
   });
   const tracks = [];
+  const nameToTrack = {};
+
   events.forEach(ev => {
-      let placed = false;
       const evS = fromISO(ev.start).getTime(); const evE = fromISO(ev.end).getTime();
+      if (nameToTrack[ev.name] !== undefined) {
+          ev._track = nameToTrack[ev.name];
+          tracks[ev._track].push({s: evS, e: evE});
+          return;
+      }
+      let placed = false;
       for (let i = 0; i < tracks.length; i++) {
           let overlap = false;
           for (let j = 0; j < tracks[i].length; j++) { if (evS <= tracks[i][j].e && evE >= tracks[i][j].s) { overlap = true; break; } }
-          if (!overlap) { tracks[i].push({s: evS, e: evE}); ev._track = i; placed = true; break; }
+          if (!overlap) { tracks[i].push({s: evS, e: evE}); ev._track = i; nameToTrack[ev.name] = i; placed = true; break; }
       }
-      if (!placed) { ev._track = tracks.length; tracks.push([{s: evS, e: evE}]); }
+      if (!placed) { ev._track = tracks.length; nameToTrack[ev.name] = tracks.length; tracks.push([{s: evS, e: evE}]); }
   });
   
   const isSingleWeek = state.viewMode === 'single_week'; const trackSpacing = isSingleWeek ? 140 : 36;
@@ -1055,10 +1068,16 @@ function renderHorizontalCalendar() {
   multiDayEvents.sort((a, b) => fromISO(a.start) - fromISO(b.start));
 
   const singleTracks = []; let maxSingleTrack = -1;
+  const singleNameToTrack = {};
 
   singleDayEvents.forEach(ev => {
     let startIdx = days.findIndex(d => d >= fromISO(ev.start)); 
     if (startIdx === -1) return;
+    
+    if (singleNameToTrack[ev.name] !== undefined) {
+        ev._track = singleNameToTrack[ev.name];
+        return;
+    }
     
     const textWidthPx = ev.name.length * 8.5 + 45; 
     const paddingDays = Math.ceil(textWidthPx / dayWidth);
@@ -1067,14 +1086,14 @@ function renderHorizontalCalendar() {
     for (let i = 0; i < singleTracks.length; i++) {
       let overlap = false;
       for (let j = 0; j < singleTracks[i].length; j++) { if (evS <= singleTracks[i][j].e && evE >= singleTracks[i][j].s) { overlap = true; break; } }
-      if (!overlap) { singleTracks[i].push({s: evS, e: evE}); ev._track = i; placed = true; break; }
+      if (!overlap) { singleTracks[i].push({s: evS, e: evE}); ev._track = i; singleNameToTrack[ev.name] = i; placed = true; break; }
     }
-    if (!placed) { ev._track = singleTracks.length; singleTracks.push([{s: evS, e: evE}]); }
+    if (!placed) { ev._track = singleTracks.length; singleNameToTrack[ev.name] = ev._track; singleTracks.push([{s: evS, e: evE}]); }
     maxSingleTrack = Math.max(maxSingleTrack, ev._track);
   });
 
   const startPhaseTrack = maxSingleTrack + 1;
-  const trackHeight = 56;
+  const trackHeight = 46;
   let sidebarHtml = '';
   
   // Dynamic calculation for sidebar width based on text length
@@ -1087,13 +1106,22 @@ function renderHorizontalCalendar() {
       calculatedSidebarWidth = Math.min(calculatedSidebarWidth, 480);
   }
   
+  const multiNameToTrack = {};
+  let currentMultiTrack = startPhaseTrack;
+  
   multiDayEvents.forEach((ev, idx) => { 
-      ev._track = startPhaseTrack + idx; 
-      const yPos = 6 + ev._track * trackHeight;
-      sidebarHtml += `<div class="hz-phase-label" style="top: ${yPos}px" title="${escapeAttr(ev.name)}">${escapeHtml(ev.name)}</div>`;
+      if (multiNameToTrack[ev.name] !== undefined) {
+          ev._track = multiNameToTrack[ev.name];
+      } else {
+          ev._track = currentMultiTrack;
+          multiNameToTrack[ev.name] = currentMultiTrack;
+          const yPos = 8 + ev._track * trackHeight;
+          sidebarHtml += `<div class="hz-phase-label" style="top: ${yPos}px" title="${escapeAttr(ev.name)}">${escapeHtml(ev.name)}</div>`;
+          currentMultiTrack++;
+      }
   });
   
-  const maxTrack = startPhaseTrack + multiDayEvents.length - 1;
+  const maxTrack = currentMultiTrack - 1;
 
   let gridLinesHtml = '';
   let sidebarLinesHtml = '';
@@ -1241,42 +1269,63 @@ function renderOverviewCalendar() {
     .filter(ev => ev.start !== ev.end && !ev.isTimeOff)
     .sort((a, b) => fromISO(a.start) - fromISO(b.start) || (fromISO(b.end) - fromISO(a.start)) - (fromISO(a.end) - fromISO(a.start)));
 
+  const groupedEvents = new Map();
   events.forEach((ev) => {
-    const eStart = fromISO(ev.start) < spanStart ? spanStart : fromISO(ev.start);
-    const eEnd = fromISO(ev.end) > spanEnd ? spanEnd : fromISO(ev.end);
-    if (eStart > spanEnd || eEnd < spanStart) return;
+      if (!groupedEvents.has(ev.name)) groupedEvents.set(ev.name, []);
+      groupedEvents.get(ev.name).push(ev);
+  });
 
-    const actualSpan = diffDays(toISO(eStart), toISO(eEnd)) + 1;
-    const startOffset = diffDays(toISO(spanStart), toISO(eStart));
-
+  let trackIdx = 0;
+  groupedEvents.forEach((group, name) => {
     const row = document.createElement('div');
     row.style.position = 'relative';
     row.style.width = '100%';
 
-    const bar = document.createElement('div'); 
-    bar.className = 'event-bar ov-phase';
-    bar.dataset.id = ev.id; bar.dataset.color = ev.color;
-    
-    const colors = resolveColor(ev.color); bar.style.background = colors.bg; bar.style.borderColor = colors.edge;
-    bar.style.left = `calc(${(startOffset / totalDays) * 100}% + 4px)`; bar.style.width = `calc(${(actualSpan / totalDays) * 100}% - 8px)`;
-    if (fromISO(ev.start) < spanStart) bar.classList.add('continues-left'); if (fromISO(ev.end) > spanEnd) bar.classList.add('continues-right');
+    let addedBar = false;
 
-    const formatD = (iso) => { const d = fromISO(iso); return `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}`; };
-    const dateStr = ev.start === ev.end ? formatD(ev.start) : `${formatD(ev.start)} - ${formatD(ev.end)}`;
+    group.forEach((ev, idx) => {
+        const eStart = fromISO(ev.start) < spanStart ? spanStart : fromISO(ev.start);
+        const eEnd = fromISO(ev.end) > spanEnd ? spanEnd : fromISO(ev.end);
+        if (eStart > spanEnd || eEnd < spanStart) return;
 
-    const label = document.createElement('div'); label.className = 'event-label'; 
-    label.innerHTML = `<div style="margin-bottom: 2px;">${escapeHtml(ev.name)}</div><div style="color: var(--ink-soft); font-weight: 400;">${dateStr}</div>`; 
-    bar.appendChild(label);
-    
-    bar.draggable = false;
-    bar.addEventListener('click', (e) => { e.stopPropagation(); openEventModal(ev); });
+        const actualSpan = diffDays(toISO(eStart), toISO(eEnd)) + 1;
+        const startOffset = diffDays(toISO(spanStart), toISO(eStart));
 
-    row.appendChild(bar);
-    ovEventsContainer.appendChild(row);
+        const bar = document.createElement('div'); 
+        bar.className = 'event-bar ov-phase';
+        bar.dataset.id = ev.id; bar.dataset.color = ev.color;
+        
+        const colors = resolveColor(ev.color); bar.style.background = colors.bg; bar.style.borderColor = colors.edge;
+        bar.style.left = `calc(${(startOffset / totalDays) * 100}% + 4px)`; bar.style.width = `calc(${(actualSpan / totalDays) * 100}% - 8px)`;
+        if (fromISO(ev.start) < spanStart) bar.classList.add('continues-left'); if (fromISO(ev.end) > spanEnd) bar.classList.add('continues-right');
+
+        // Layout hack for flex-grouped identical events
+        bar.style.position = idx === 0 ? 'relative' : 'absolute';
+        bar.style.top = '0';
+        if (idx > 0) bar.style.height = '100%';
+
+        const formatD = (iso) => { const d = fromISO(iso); return `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}`; };
+        const dateStr = ev.start === ev.end ? formatD(ev.start) : `${formatD(ev.start)} - ${formatD(ev.end)}`;
+
+        const label = document.createElement('div'); label.className = 'event-label'; 
+        label.innerHTML = `<div style="margin-bottom: 2px;">${escapeHtml(ev.name)}</div><div style="color: var(--ink-soft); font-weight: 400;">${dateStr}</div>`; 
+        bar.appendChild(label);
+        
+        bar.draggable = false;
+        bar.addEventListener('click', (e) => { e.stopPropagation(); openEventModal(ev); });
+
+        row.appendChild(bar);
+        addedBar = true;
+    });
+
+    if (addedBar) {
+        ovEventsContainer.appendChild(row);
+        trackIdx++;
+    }
   });
   
   grid.appendChild(ovEventsContainer);
-  grid.style.minHeight = '300px';
+  grid.style.minHeight = Math.max(300, trackIdx * 46 + 40) + 'px';
 }
 
 // ============ GLOBAL RESIZE LOGIC ============
@@ -1461,13 +1510,34 @@ document.getElementById('projectTitle')?.addEventListener('input', (e) => { if (
 document.getElementById('projectDesc')?.addEventListener('input', (e) => { if (window.__isReadOnly) return; state.desc = e.target.value; saveState(); });
 document.getElementById('projectStart')?.addEventListener('change', (e) => { if (window.__isReadOnly) return; state.start = e.target.value; saveState(); render(); });
 document.getElementById('projectEnd')?.addEventListener('change', (e) => { if (window.__isReadOnly) return; state.end = e.target.value; saveState(); render(); });
+
 document.getElementById('todayBtn')?.addEventListener('click', () => {
   if (state.viewMode === 'single_week') {
     state.currentWeekStart = toISO(startOfWeek(new Date())); saveState(false); render();
   } else {
     const todayCell = document.querySelector('.day-cell.today');
-    if (todayCell) { const stickyH = document.getElementById('stickyZone').getBoundingClientRect().height; const weekdayH = document.querySelector('.weekday-row')?.getBoundingClientRect().height || 0; window.scrollTo({ top: todayCell.getBoundingClientRect().top + window.scrollY - stickyH - weekdayH - 20, behavior: 'smooth' }); } 
-    else { const firstWeek = document.querySelector('.week-row'); if (firstWeek) firstWeek.scrollIntoView({ behavior: 'smooth', block: 'start' }); }
+    if (todayCell) { 
+      const stickyH = document.getElementById('stickyZone').getBoundingClientRect().height; 
+      const weekdayH = document.querySelector('.weekday-row')?.getBoundingClientRect().height || 0; 
+      
+      if (state.viewMode === 'horizontal') {
+          const hzContainer = document.querySelector('.hz-layout');
+          if (hzContainer) {
+              const sidebarW = document.querySelector('.hz-sidebar').offsetWidth;
+              const cellRect = todayCell.getBoundingClientRect();
+              const containerRect = hzContainer.getBoundingClientRect();
+              const targetScroll = hzContainer.scrollLeft + (cellRect.left - containerRect.left) - sidebarW - 24;
+              hzContainer.scrollTo({ left: targetScroll, behavior: 'smooth' });
+              window.scrollTo({ top: todayCell.getBoundingClientRect().top + window.scrollY - stickyH - weekdayH - 20, behavior: 'smooth' }); 
+          }
+      } else {
+          window.scrollTo({ top: todayCell.getBoundingClientRect().top + window.scrollY - stickyH - weekdayH - 20, behavior: 'smooth' }); 
+      }
+    } 
+    else { 
+        const firstWeek = document.querySelector('.week-row'); 
+        if (firstWeek) firstWeek.scrollIntoView({ behavior: 'smooth', block: 'start' }); 
+    }
   }
 });
 
@@ -1545,7 +1615,14 @@ document.getElementById('importJsonInput')?.addEventListener('change', (event) =
 });
 
 if (window.__isReadOnly) document.querySelectorAll('#projectTitle, #projectDesc, #projectStart, #projectEnd').forEach(el => el.disabled = true);
-applyStaticTranslations(); updateLangToggle(); document.documentElement.lang = currentLang === 'nb' ? 'no' : 'en'; render();
+applyStaticTranslations(); updateLangToggle(); document.documentElement.lang = currentLang === 'nb' ? 'no' : 'en'; 
+
+let initialLoad = true;
+render();
+if (initialLoad) {
+    setTimeout(() => document.getElementById('todayBtn')?.click(), 300);
+    initialLoad = false;
+}
 </script>
 </body>
 </html>
