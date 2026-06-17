@@ -65,7 +65,7 @@
   .view-toggle button.active { background: var(--line); color: var(--ink); font-weight: 500; }
   .view-toggle button:hover:not(.active) { background: rgba(0,0,0,0.03); }
 
-  .cloud-status { font-family: 'JetBrains Mono', monospace; font-size: 12px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--ink-faint); align-items: center; gap: 6px; }
+  .cloud-status { font-family: 'JetBrains Mono', monospace; font-size: 12px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--ink-faint); display: flex; align-items: center; gap: 6px; }
   .cloud-status.saved { color: #539853; }
   .cloud-status.saving { color: #d99587; }
   .footer-controls { display: flex; justify-content: flex-end; margin-top: 16px; margin-bottom: 24px; }
@@ -390,8 +390,11 @@
           </div>
           <div id="driveWorkspaceSection" style="display: none; flex-direction: column; gap: 10px;">
             <div>
-              <label>Drive Folder ID</label>
-              <input type="text" class="drive-input" id="driveFolderId" />
+              <label>Workspace Folder</label>
+              <div style="display: flex; align-items: center; gap: 8px; margin-top: 4px; margin-bottom: 8px; padding: 6px; background: var(--bg); border: 1px solid var(--line); border-radius: 4px;">
+                <span id="driveFolderNameLabel" style="flex-grow: 1; font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--ink-soft); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Saved Folder</span>
+                <button class="action-btn" id="btnBrowseFolder" style="padding: 4px 8px; font-size: 10px; border-color: var(--line-soft);">Browse</button>
+              </div>
             </div>
             <div>
               <label>Load Plan</label>
@@ -399,7 +402,7 @@
                 <option value="">Select a file...</option>
               </select>
             </div>
-            <button class="action-btn" style="width: 100%;" id="btnNewDriveFile">+ Save as New File in Drive</button>
+            <button class="action-btn" style="width: 100%;" id="btnNewDriveFile">+ Save as New File</button>
           </div>
         </div>
 
@@ -515,7 +518,7 @@ let currentDriveFileId = localStorage.getItem('newslab-current-drive-file') || n
 
 window.onload = function() {
   updateCloudStatus('Disconnected');
-  if (typeof gapi !== 'undefined') { gapi.load('client', initializeGapiClient); }
+  if (typeof gapi !== 'undefined') { gapi.load('client:picker', initializeGapiClient); }
   if (typeof google !== 'undefined') {
     tokenClient = google.accounts.oauth2.initTokenClient({
       client_id: GOOGLE_CLIENT_ID, scope: SCOPES,
@@ -523,40 +526,97 @@ window.onload = function() {
         if (tokenResponse && tokenResponse.access_token) {
           if (!google.accounts.oauth2.hasGrantedAllScopes(tokenResponse, SCOPES)) { customAlert("Warning: You did not grant Google Drive permissions."); return; }
           gapi.client.setToken({ access_token: tokenResponse.access_token });
-          sessionStorage.setItem('newslab_drive_token', JSON.stringify({ token: tokenResponse.access_token, expiresAt: Date.now() + (tokenResponse.expires_in * 1000) }));
+          localStorage.setItem('newslab_drive_token', JSON.stringify({ token: tokenResponse.access_token, expiresAt: Date.now() + (tokenResponse.expires_in * 1000) }));
+          localStorage.setItem('newslab_drive_connected', '1');
           document.getElementById('driveLoginSection').style.display = 'none'; document.getElementById('driveWorkspaceSection').style.display = 'flex';
           updateCloudStatus('Connected'); fetchDriveFiles();
         }
       },
+      error_callback: (err) => {
+          if (err.type === 'popup_closed' || err.type === 'access_denied') return;
+          localStorage.removeItem('newslab_drive_connected');
+          updateCloudStatus('Disconnected');
+          document.getElementById('driveLoginSection').style.display = 'flex'; document.getElementById('driveWorkspaceSection').style.display = 'none';
+      }
     });
     gisInited = true;
+
+    // Automatic silent login refresh if previously connected
+    if (localStorage.getItem('newslab_drive_connected') === '1' && !window.__isReadOnly) {
+        const savedToken = localStorage.getItem('newslab_drive_token');
+        let needsRefresh = true;
+        if (savedToken) {
+            try {
+                const parsed = JSON.parse(savedToken);
+                if (Date.now() < parsed.expiresAt - 60000) needsRefresh = false;
+            } catch(e) {}
+        }
+        if (needsRefresh) {
+            tokenClient.requestAccessToken({prompt: 'none'});
+        }
+    }
   }
 };
 
 async function initializeGapiClient() {
   await gapi.client.init({ apiKey: GOOGLE_API_KEY, discoveryDocs: [DRIVE_DISCOVERY_DOC] }); gapiInited = true;
-  document.getElementById('driveFolderId').value = localStorage.getItem('newslab-drive-folder') || '1c4WDZlXaWREt_luuf7cy03n6Iu0He97M';
-  const savedToken = sessionStorage.getItem('newslab_drive_token');
+  
+  const storedFolderName = localStorage.getItem('newslab-drive-folder-name');
+  if (storedFolderName) {
+      document.getElementById('driveFolderNameLabel').textContent = storedFolderName;
+  }
+  
+  const savedToken = localStorage.getItem('newslab_drive_token');
   if (savedToken) {
     try {
       const parsed = JSON.parse(savedToken);
       if (Date.now() < parsed.expiresAt - 60000) { 
-        gapi.client.setToken({ access_token: parsed.token }); document.getElementById('driveLoginSection').style.display = 'none'; document.getElementById('driveWorkspaceSection').style.display = 'flex';
+        gapi.client.setToken({ access_token: parsed.token }); 
+        document.getElementById('driveLoginSection').style.display = 'none'; document.getElementById('driveWorkspaceSection').style.display = 'flex';
         updateCloudStatus('Connected'); fetchDriveFiles();
         return;
       }
     } catch(e) {}
   }
-  updateCloudStatus('Disconnected');
+  if (localStorage.getItem('newslab_drive_connected') !== '1') updateCloudStatus('Disconnected');
 }
 
 document.getElementById('btnDriveLogin')?.addEventListener('click', () => { if (gapiInited && gisInited) { if (gapi.client.getToken() === null) tokenClient.requestAccessToken({prompt: 'consent'}); else tokenClient.requestAccessToken({prompt: ''}); } });
 document.getElementById('topSignInBtn')?.addEventListener('click', () => { document.getElementById('btnDriveLogin')?.click(); });
 
-document.getElementById('driveFolderId')?.addEventListener('change', (e) => { localStorage.setItem('newslab-drive-folder', e.target.value.trim()); fetchDriveFiles(); });
+// Drive Picker Logic
+document.getElementById('btnBrowseFolder')?.addEventListener('click', () => {
+  const token = gapi.client.getToken()?.access_token;
+  if (!token) return customAlert("Please sign in first.");
+  
+  const view = new google.picker.DocsView(google.picker.ViewId.FOLDERS)
+    .setIncludeFolders(true)
+    .setSelectFolderEnabled(true)
+    .setMimeTypes('application/vnd.google-apps.folder');
+
+  const picker = new google.picker.PickerBuilder()
+    .enableFeature(google.picker.Feature.NAV_HIDDEN)
+    .setDeveloperKey(GOOGLE_API_KEY)
+    .setAppId(GOOGLE_CLIENT_ID.split('-')[0])
+    .setOAuthToken(token)
+    .addView(view)
+    .setTitle('Select Workspace Folder')
+    .setCallback((data) => {
+      if (data.action === google.picker.Action.PICKED) {
+        const doc = data.docs[0];
+        localStorage.setItem('newslab-drive-folder', doc.id);
+        localStorage.setItem('newslab-drive-folder-name', doc.name);
+        document.getElementById('driveFolderNameLabel').textContent = doc.name;
+        fetchDriveFiles();
+      }
+    })
+    .build();
+  picker.setVisible(true);
+});
 
 async function fetchDriveFiles() {
-  const folderId = document.getElementById('driveFolderId').value.trim(); if (!folderId || !gapi.client.getToken()) return;
+  const folderId = localStorage.getItem('newslab-drive-folder') || '1c4WDZlXaWREt_luuf7cy03n6Iu0He97M'; 
+  if (!folderId || !gapi.client.getToken()) return;
   try {
     updateCloudStatus('Syncing...');
     const response = await gapi.client.drive.files.list({ q: `'${folderId}' in parents and trashed=false`, fields: 'files(id, name, mimeType)', spaces: 'drive', supportsAllDrives: true, includeItemsFromAllDrives: true });
@@ -583,7 +643,8 @@ document.getElementById('driveFileSelect')?.addEventListener('change', async (e)
 });
 
 document.getElementById('btnNewDriveFile')?.addEventListener('click', async () => {
-  const folderId = document.getElementById('driveFolderId').value.trim(); if (!folderId) return customAlert('Please enter a Folder ID');
+  const folderId = localStorage.getItem('newslab-drive-folder') || '1c4WDZlXaWREt_luuf7cy03n6Iu0He97M'; 
+  if (!folderId) return customAlert('Please select a workspace folder first.');
   const safeTitle = (state.title || 'Untitled Project').replace(/[^a-z0-9 _-]/gi, '').trim(); 
   
   customPrompt("Enter a name for the new file:", safeTitle, async (fileName) => {
